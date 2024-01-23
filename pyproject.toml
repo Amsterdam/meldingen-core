@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "meldingen-core"
 version = "0.1.0"
-description = ""
+description = "Framework agnostic package containing the core code for the meldingen project."
 authors = ["Youri Westerman <y.westerman@amsterdam.nl>"]
 readme = "README.md"
 
