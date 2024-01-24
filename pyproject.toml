@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 authors = ["Youri Westerman <y.westerman@amsterdam.nl>"]
 readme = "README.md"
+license = "EUPL-2.1"
 
 [tool.poetry.dependencies]
 python = "^3.12"
