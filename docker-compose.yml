@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  meldingen-core:
+    image: amsterdam/meldingen-core
+    build:
+      context: .
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-true}
+    volumes:
+      - ".:/opt/meldingen-core"
+
+  docs:
+    image: amsterdam/meldingen-core
+    ports:
+      - "8001:8000"
+    volumes:
+      - ".:/opt/meldingen-core"
+    entrypoint: mkdocs serve -f /opt/meldingen-core/mkdocs.yml --dev-addr=0.0.0.0:8000
