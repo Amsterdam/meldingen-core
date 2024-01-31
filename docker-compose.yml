@@ -13,7 +13,7 @@ services:
   docs:
     image: amsterdam/meldingen-core
     ports:
-      - "8001:8000"
+      - "8101:8000"
     volumes:
       - ".:/opt/meldingen-core"
     entrypoint: mkdocs serve -f /opt/meldingen-core/mkdocs.yml --dev-addr=0.0.0.0:8000
