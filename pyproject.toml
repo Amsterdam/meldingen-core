@@ -22,3 +22,21 @@ mkdocs-literate-nav = "^0.6.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.env
+  | \.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_third_party = ["meldingen_core"]
+known_first_party = ["meldingen"]
