@@ -38,5 +38,4 @@ exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 120
-known_third_party = ["meldingen_core"]
-known_first_party = ["meldingen"]
+known_first_party = ["meldingen_core"]

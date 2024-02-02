@@ -1,4 +1,5 @@
 import pytest
+
 from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
