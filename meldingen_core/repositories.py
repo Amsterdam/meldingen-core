@@ -3,7 +3,7 @@ from typing import Generic, TypeVar
 
 from meldingen_core.models import Melding
 
-T = TypeVar('T')
+T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 
 
