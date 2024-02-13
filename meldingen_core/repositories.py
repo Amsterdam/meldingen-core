@@ -9,7 +9,7 @@ T_co = TypeVar("T_co", covariant=True)
 
 class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
     @abstractmethod
-    def add(self, obj: T) -> None:
+    async def add(self, obj: T) -> None:
         ...
 
     @abstractmethod
