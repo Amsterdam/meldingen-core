@@ -18,6 +18,7 @@ pytest = "^8.0.0"
 mkdocstrings = {version = "^0.24.0", extras = ["python"]}
 mkdocs-material = "^9.5.6"
 mkdocs-literate-nav = "^0.6.1"
+pytest-asyncio = "^0.23.5"
 
 [build-system]
 requires = ["poetry-core"]
