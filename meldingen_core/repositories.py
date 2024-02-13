@@ -17,7 +17,7 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def retrieve(self, pk: int) -> T_co | None:
+    async def retrieve(self, pk: int) -> T_co | None:
         ...
 
 

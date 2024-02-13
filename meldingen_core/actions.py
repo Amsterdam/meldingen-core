@@ -34,5 +34,5 @@ class MeldingRetrieveAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    def __call__(self, pk: int) -> Melding | None:
-        return self.repository.retrieve(pk=pk)
+    async def __call__(self, pk: int) -> Melding | None:
+        return await self.repository.retrieve(pk=pk)
