@@ -13,7 +13,7 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
+    async def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
         ...
 
     @abstractmethod

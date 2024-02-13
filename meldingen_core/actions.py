@@ -22,8 +22,8 @@ class MeldingListAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    def __call__(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
-        return self.repository.list(limit=limit, offset=offset)
+    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
+        return await self.repository.list(limit=limit, offset=offset)
 
 
 class MeldingRetrieveAction:
