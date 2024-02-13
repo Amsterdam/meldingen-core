@@ -1,3 +1,5 @@
+from collections.abc import Collection
+
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
@@ -22,7 +24,7 @@ class MeldingListAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
+    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[Melding]:
         return await self.repository.list(limit=limit, offset=offset)
 
 
