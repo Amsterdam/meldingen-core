@@ -13,7 +13,7 @@ class MeldingCreateAction:
         self.repository = repository
 
     async def __call__(self, melding: Melding) -> None:
-        await self.repository.add(melding)
+        await self.repository.save(melding)
 
 
 class MeldingListAction:

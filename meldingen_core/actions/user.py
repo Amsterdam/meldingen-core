@@ -13,7 +13,7 @@ class UserCreateAction:
         self.repository = repository
 
     async def __call__(self, user: User) -> None:
-        await self.repository.add(user)
+        await self.repository.save(user)
 
 
 class UserListAction:
