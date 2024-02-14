@@ -1,7 +1,7 @@
-import pytest_asyncio
 import pytest
+import pytest_asyncio
 
-from meldingen_core.actions.user import UserCreateAction, UserListAction, UserRetrieveAction, UserDeleteAction
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
