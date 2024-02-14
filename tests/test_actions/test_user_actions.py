@@ -1,5 +1,7 @@
+from collections.abc import Collection
+
 import pytest
-import pytest_asyncio
+from pytest_mock import MockerFixture
 
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
 from meldingen_core.models import User
@@ -9,87 +11,50 @@ from meldingen_core.repositories import BaseUserRepository
 
 
 @pytest.fixture
-def unpopulated_users_repository() -> BaseUserRepository:
-    class TestUserRepository(BaseUserRepository):
-        data: list[User]
-
-        def __init__(self) -> None:
-            self.data = []
-
-        async def add(self, user: User) -> None:
-            self.data.append(user)
-
-        async def list(self, *, limit: int | None = None, offset: int | None = None) -> list[User]:
-            if limit and offset:
-                return self.data[offset : offset + limit]
-            elif limit and not offset:
-                return self.data[:limit]
-            elif not limit and offset:
-                return self.data[offset:]
-            else:
-                return self.data
-
-        async def retrieve(self, pk: int) -> User | None:
-            for _user in self.data:
-                if _user.username == str(pk):
-                    return _user
+def mocked_repository() -> BaseUserRepository:
+    class MockMeldingRepository(BaseUserRepository):
+        async def save(self, obj: User) -> None:
             return None
 
-        async def find_by_email(self, email: str) -> User | None:
-            for _user in self.data:
-                if _user.email == email:
-                    return _user
+        async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[User]:
+            return []
+
+        async def retrieve(self, pk: int) -> User | None:
             return None
 
         async def delete(self, pk: int) -> None:
-            for _user in self.data[:]:
-                if _user.username == str(pk):
-                    self.data.remove(_user)
             return None
 
-    repository = TestUserRepository()
-    return repository
-
-
-@pytest_asyncio.fixture
-async def populated_users_repository(
-    unpopulated_users_repository: BaseUserRepository,
-) -> BaseUserRepository:
-    for _pk in range(10):
-        user = User()
-        user.username = f"{_pk}"
-        user.email = f"user-{_pk}@example.com"
-        await unpopulated_users_repository.add(user)
-
-    return unpopulated_users_repository
+    mocked_repository = MockMeldingRepository()
+    return mocked_repository
 
 
 @pytest.fixture
 def users_create_action(
-    unpopulated_users_repository: BaseUserRepository,
+    mocked_repository: BaseUserRepository,
 ) -> UserCreateAction:
-    return UserCreateAction(unpopulated_users_repository)
+    return UserCreateAction(mocked_repository)
 
 
 @pytest.fixture
 def users_list_action(
-    populated_users_repository: BaseUserRepository,
+    mocked_repository: BaseUserRepository,
 ) -> UserListAction:
-    return UserListAction(populated_users_repository)
+    return UserListAction(mocked_repository)
 
 
 @pytest.fixture
 def users_retrieve_action(
-    populated_users_repository: BaseUserRepository,
+    mocked_repository: BaseUserRepository,
 ) -> UserRetrieveAction:
-    return UserRetrieveAction(populated_users_repository)
+    return UserRetrieveAction(mocked_repository)
 
 
 @pytest.fixture
 def users_delete_action(
-    populated_users_repository: BaseUserRepository,
+    mocked_repository: BaseUserRepository,
 ) -> UserDeleteAction:
-    return UserDeleteAction(populated_users_repository)
+    return UserDeleteAction(mocked_repository)
 
 
 # PyTest Classes
@@ -97,50 +62,55 @@ def users_delete_action(
 
 class TestUserCreateAction:
     @pytest.mark.asyncio
-    async def test_add(self, users_create_action: UserCreateAction) -> None:
-        assert len(await users_create_action.repository.list()) == 0
+    async def test_add(self, users_create_action: UserCreateAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_create_action.repository, "save")
 
         user = User()
         user.username = "1"
 
         await users_create_action(user)
 
-        assert len(await users_create_action.repository.list()) == 1
-        assert await users_create_action.repository.retrieve(pk=1) == user
+        spy.assert_called_once_with(user)
 
 
 class TestUserListAction:
     @pytest.mark.asyncio
-    async def test_list_all(self, users_list_action: UserListAction) -> None:
-        users = await users_list_action()
+    async def test_list_all(self, users_list_action: UserListAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_list_action.repository, "list")
 
-        assert len(users) == 10
+        await users_list_action()
+
+        spy.assert_called_once()
 
     @pytest.mark.parametrize(
-        "limit, expected_result",
-        [(1, 1), (5, 5), (10, 10), (20, 10)],
+        "limit",
+        [1, 5, 10, 20],
     )
     @pytest.mark.asyncio
-    async def test_list_limit(self, users_list_action: UserListAction, limit: int, expected_result: int) -> None:
-        users = await users_list_action(limit=limit)
+    async def test_list_limit(self, users_list_action: UserListAction, limit: int, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_list_action.repository, "list")
 
-        assert len(users) == expected_result
+        await users_list_action(limit=limit)
 
-    @pytest.mark.parametrize("offset, expected_result", [(1, 9), (5, 5), (10, 0), (20, 0)])
+        spy.assert_called_once_with(limit=limit, offset=None)
+
+    @pytest.mark.parametrize("offset", [1, 5, 10, 20])
     @pytest.mark.asyncio
     async def test_list_offset(
         self,
         users_list_action: UserListAction,
         offset: int,
-        expected_result: int,
+        mocker: MockerFixture,
     ) -> None:
-        users = await users_list_action(offset=offset)
+        spy = mocker.spy(users_list_action.repository, "list")
 
-        assert len(users) == expected_result
+        await users_list_action(offset=offset)
+
+        spy.assert_called_once_with(limit=None, offset=offset)
 
     @pytest.mark.parametrize(
-        "limit, offset, expected_result",
-        [(10, 0, 10), (5, 0, 5), (10, 10, 0), (20, 0, 10)],
+        "limit, offset",
+        [(10, 0), (5, 0), (10, 10), (20, 0)],
     )
     @pytest.mark.asyncio
     async def test_list_limit_offset(
@@ -148,48 +118,34 @@ class TestUserListAction:
         users_list_action: UserListAction,
         limit: int,
         offset: int,
-        expected_result: int,
+        mocker: MockerFixture,
     ) -> None:
-        users = await users_list_action(limit=limit, offset=offset)
+        spy = mocker.spy(users_list_action.repository, "list")
 
-        assert len(users) == expected_result
+        await users_list_action(limit=limit, offset=offset)
+
+        spy.assert_called_once_with(limit=limit, offset=offset)
 
 
 class TestUserRetrieveAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
-    async def test_retrieve_existing_users(self, users_retrieve_action: UserRetrieveAction, pk: int) -> None:
-        user = await users_retrieve_action(pk=pk)
+    async def test_retrieve_user(
+        self, users_retrieve_action: UserRetrieveAction, pk: int, mocker: MockerFixture
+    ) -> None:
+        spy = mocker.spy(users_retrieve_action.repository, "retrieve")
 
-        assert user is not None
-        assert user.username == str(pk)
+        await users_retrieve_action(pk=pk)
 
-    @pytest.mark.parametrize("pk", [101, 102, 103, 104, 105])
-    @pytest.mark.asyncio
-    async def test_retrieve_non_existing_users(self, users_retrieve_action: UserRetrieveAction, pk: int) -> None:
-        user = await users_retrieve_action(pk=pk)
-
-        assert user is None
+        spy.assert_called_once_with(pk=pk)
 
 
 class TestUserDeleteAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
-    async def test_delete_existing_user(self, users_delete_action: UserDeleteAction, pk: int) -> None:
-        assert await users_delete_action.repository.retrieve(pk=pk) is not None
-        assert len(await users_delete_action.repository.list()) == 10
+    async def test_delete_user(self, users_delete_action: UserDeleteAction, pk: int, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_delete_action.repository, "delete")
 
         await users_delete_action(pk=pk)
 
-        assert await users_delete_action.repository.retrieve(pk=pk) is None
-        assert len(await users_delete_action.repository.list()) == 9
-
-    @pytest.mark.parametrize("pk", [101, 102, 103, 104, 105])
-    @pytest.mark.asyncio
-    async def test_delete_non_existing_user(self, users_delete_action: UserDeleteAction, pk: int) -> None:
-        assert await users_delete_action.repository.retrieve(pk=pk) is None
-        assert len(await users_delete_action.repository.list()) == 10
-
-        await users_delete_action(pk=pk)
-
-        assert len(await users_delete_action.repository.list()) == 10
+        spy.assert_called_once_with(pk=pk)
