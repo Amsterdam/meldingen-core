@@ -1,3 +1,5 @@
+from collections.abc import Collection
+
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
@@ -10,8 +12,8 @@ class MeldingCreateAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    def __call__(self, melding: Melding) -> None:
-        self.repository.add(melding)
+    async def __call__(self, melding: Melding) -> None:
+        await self.repository.add(melding)
 
 
 class MeldingListAction:
@@ -22,8 +24,8 @@ class MeldingListAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    def __call__(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
-        return self.repository.list(limit=limit, offset=offset)
+    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[Melding]:
+        return await self.repository.list(limit=limit, offset=offset)
 
 
 class MeldingRetrieveAction:
@@ -34,5 +36,5 @@ class MeldingRetrieveAction:
     def __init__(self, repository: BaseMeldingRepository):
         self.repository = repository
 
-    def __call__(self, pk: int) -> Melding | None:
-        return self.repository.retrieve(pk=pk)
+    async def __call__(self, pk: int) -> Melding | None:
+        return await self.repository.retrieve(pk=pk)

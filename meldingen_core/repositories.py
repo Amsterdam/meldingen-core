@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Collection
 from typing import Generic, TypeVar
 
 from meldingen_core.models import Melding
@@ -9,15 +10,15 @@ T_co = TypeVar("T_co", covariant=True)
 
 class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
     @abstractmethod
-    def add(self, obj: T) -> None:
+    async def add(self, obj: T) -> None:
         ...
 
     @abstractmethod
-    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
+    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
         ...
 
     @abstractmethod
-    def retrieve(self, pk: int) -> T_co | None:
+    async def retrieve(self, pk: int) -> T_co | None:
         ...
 
 
