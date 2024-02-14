@@ -36,3 +36,15 @@ class UserRetrieveAction:
 
     def __call__(self, pk: int) -> User | None:
         return self.repository.retrieve(pk=pk)
+
+
+class UserDeleteAction:
+    """Action that deletes a user."""
+
+    repository: BaseUserRepository
+
+    def __init__(self, repository: BaseUserRepository):
+        self.repository = repository
+
+    def __call__(self, pk: int) -> None:
+        return self.repository.delete(pk=pk)

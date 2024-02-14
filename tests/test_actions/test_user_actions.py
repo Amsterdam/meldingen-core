@@ -1,6 +1,6 @@
 import pytest
 
-from meldingen_core.actions.user import UserCreateAction, UserListAction, UserRetrieveAction
+from meldingen_core.actions.user import UserCreateAction, UserListAction, UserRetrieveAction, UserDeleteAction
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -40,6 +40,12 @@ def unpopulated_users_repository() -> BaseUserRepository:
                     return _user
             return None
 
+        def delete(self, pk: int) -> None:
+            for _user in self.data[:]:
+                if _user.username == str(pk):
+                    self.data.remove(_user)
+            return None
+
     repository = TestUserRepository()
     return repository
 
@@ -76,6 +82,13 @@ def users_retrieve_action(
     populated_users_repository: BaseUserRepository,
 ) -> UserRetrieveAction:
     return UserRetrieveAction(populated_users_repository)
+
+
+@pytest.fixture
+def users_delete_action(
+    populated_users_repository: BaseUserRepository,
+) -> UserDeleteAction:
+    return UserDeleteAction(populated_users_repository)
 
 
 # PyTest Classes
@@ -135,7 +148,6 @@ class TestUserListAction:
 
         assert len(users) == expected_result
 
-
 class TestUserRetrieveAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     def test_retrieve_existing_users(self, users_retrieve_action: UserRetrieveAction, pk: int) -> None:
@@ -149,3 +161,23 @@ class TestUserRetrieveAction:
         user = users_retrieve_action(pk=pk)
 
         assert user is None
+
+class TestUserDeleteAction:
+    @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
+    def test_delete_existing_user(self, users_delete_action: UserDeleteAction, pk: int) -> None:
+        assert users_delete_action.repository.retrieve(pk=pk) is not None
+        assert len(users_delete_action.repository.list()) == 10
+
+        users_delete_action(pk=pk)
+
+        assert users_delete_action.repository.retrieve(pk=pk) is None
+        assert len(users_delete_action.repository.list()) == 9
+
+    @pytest.mark.parametrize("pk", [101, 102, 103, 104, 105])
+    def test_delete_non_existing_user(self, users_delete_action: UserDeleteAction, pk: int) -> None:
+        assert users_delete_action.repository.retrieve(pk=pk) is None
+        assert len(users_delete_action.repository.list()) == 10
+
+        users_delete_action(pk=pk)
+
+        assert len(users_delete_action.repository.list()) == 10
