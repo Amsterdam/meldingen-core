@@ -148,6 +148,7 @@ class TestUserListAction:
 
         assert len(users) == expected_result
 
+
 class TestUserRetrieveAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     def test_retrieve_existing_users(self, users_retrieve_action: UserRetrieveAction, pk: int) -> None:
@@ -161,6 +162,7 @@ class TestUserRetrieveAction:
         user = users_retrieve_action(pk=pk)
 
         assert user is None
+
 
 class TestUserDeleteAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
