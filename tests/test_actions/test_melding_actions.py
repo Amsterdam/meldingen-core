@@ -1,6 +1,7 @@
 from collections.abc import Collection
 
 import pytest
+from pytest_mock import MockerFixture
 
 from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen_core.models import Melding
@@ -10,7 +11,7 @@ from meldingen_core.repositories import BaseMeldingRepository
 
 
 @pytest.fixture
-def mocked_repository(mocker) -> BaseMeldingRepository:
+def mocked_repository() -> BaseMeldingRepository:
     class MockMeldingRepository(BaseMeldingRepository):
         async def save(self, obj: Melding) -> None:
             return None
@@ -51,8 +52,8 @@ def meldingen_retrieve_action(
 
 class TestMeldingCreateAction:
     @pytest.mark.asyncio
-    async def test_add(self, meldingen_create_action: MeldingCreateAction, mocker) -> None:
-        spy = mocker.spy(meldingen_create_action.repository, 'save')
+    async def test_add(self, meldingen_create_action: MeldingCreateAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(meldingen_create_action.repository, "save")
 
         melding = Melding()
         melding.text = "1"
@@ -64,8 +65,8 @@ class TestMeldingCreateAction:
 
 class TestMeldingListAction:
     @pytest.mark.asyncio
-    async def test_list_all(self, meldingen_list_action: MeldingListAction, mocker) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, 'list')
+    async def test_list_all(self, meldingen_list_action: MeldingListAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(meldingen_list_action.repository, "list")
 
         meldingen = await meldingen_list_action()
 
@@ -76,8 +77,10 @@ class TestMeldingListAction:
         [1, 5, 10, 20],
     )
     @pytest.mark.asyncio
-    async def test_list_limit(self, meldingen_list_action: MeldingListAction, limit: int, mocker) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, 'list')
+    async def test_list_limit(
+        self, meldingen_list_action: MeldingListAction, limit: int, mocker: MockerFixture
+    ) -> None:
+        spy = mocker.spy(meldingen_list_action.repository, "list")
 
         meldingen = await meldingen_list_action(limit=limit)
 
@@ -86,12 +89,9 @@ class TestMeldingListAction:
     @pytest.mark.parametrize("offset", [1, 5, 10, 20])
     @pytest.mark.asyncio
     async def test_list_offset(
-        self,
-        meldingen_list_action: MeldingListAction,
-        offset: int,
-        mocker
+        self, meldingen_list_action: MeldingListAction, offset: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, 'list')
+        spy = mocker.spy(meldingen_list_action.repository, "list")
 
         await meldingen_list_action(limit=None, offset=offset)
 
@@ -107,9 +107,9 @@ class TestMeldingListAction:
         meldingen_list_action: MeldingListAction,
         limit: int,
         offset: int,
-        mocker,
+        mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, 'list')
+        spy = mocker.spy(meldingen_list_action.repository, "list")
 
         await meldingen_list_action(limit=limit, offset=offset)
 
@@ -119,8 +119,10 @@ class TestMeldingListAction:
 class TestMeldingRetrieveAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
-    async def test_retrieve_melding(self, meldingen_retrieve_action: MeldingRetrieveAction, pk: int, mocker) -> None:
-        spy = mocker.spy(meldingen_retrieve_action.repository, 'retrieve')
+    async def test_retrieve_melding(
+        self, meldingen_retrieve_action: MeldingRetrieveAction, pk: int, mocker: MockerFixture
+    ) -> None:
+        spy = mocker.spy(meldingen_retrieve_action.repository, "retrieve")
 
         await meldingen_retrieve_action(pk=pk)
 

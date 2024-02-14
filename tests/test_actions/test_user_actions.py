@@ -1,6 +1,7 @@
 from collections.abc import Collection
 
 import pytest
+from pytest_mock import MockerFixture
 
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
 from meldingen_core.models import User
@@ -8,8 +9,9 @@ from meldingen_core.repositories import BaseUserRepository
 
 # Fixtures
 
+
 @pytest.fixture
-def mocked_repository(mocker) -> BaseUserRepository:
+def mocked_repository() -> BaseUserRepository:
     class MockMeldingRepository(BaseUserRepository):
         async def save(self, obj: User) -> None:
             return None
@@ -60,8 +62,8 @@ def users_delete_action(
 
 class TestUserCreateAction:
     @pytest.mark.asyncio
-    async def test_add(self, users_create_action: UserCreateAction, mocker) -> None:
-        spy = mocker.spy(users_create_action.repository, 'save')
+    async def test_add(self, users_create_action: UserCreateAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_create_action.repository, "save")
 
         user = User()
         user.username = "1"
@@ -73,8 +75,8 @@ class TestUserCreateAction:
 
 class TestUserListAction:
     @pytest.mark.asyncio
-    async def test_list_all(self, users_list_action: UserListAction, mocker) -> None:
-        spy = mocker.spy(users_list_action.repository, 'list')
+    async def test_list_all(self, users_list_action: UserListAction, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_list_action.repository, "list")
 
         await users_list_action()
 
@@ -85,8 +87,8 @@ class TestUserListAction:
         [1, 5, 10, 20],
     )
     @pytest.mark.asyncio
-    async def test_list_limit(self, users_list_action: UserListAction, limit: int, mocker) -> None:
-        spy = mocker.spy(users_list_action.repository, 'list')
+    async def test_list_limit(self, users_list_action: UserListAction, limit: int, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_list_action.repository, "list")
 
         await users_list_action(limit=limit)
 
@@ -98,9 +100,9 @@ class TestUserListAction:
         self,
         users_list_action: UserListAction,
         offset: int,
-        mocker,
+        mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(users_list_action.repository, 'list')
+        spy = mocker.spy(users_list_action.repository, "list")
 
         await users_list_action(offset=offset)
 
@@ -116,9 +118,9 @@ class TestUserListAction:
         users_list_action: UserListAction,
         limit: int,
         offset: int,
-        mocker,
+        mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(users_list_action.repository, 'list')
+        spy = mocker.spy(users_list_action.repository, "list")
 
         await users_list_action(limit=limit, offset=offset)
 
@@ -128,8 +130,10 @@ class TestUserListAction:
 class TestUserRetrieveAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
-    async def test_retrieve_user(self, users_retrieve_action: UserRetrieveAction, pk: int, mocker) -> None:
-        spy = mocker.spy(users_retrieve_action.repository, 'retrieve')
+    async def test_retrieve_user(
+        self, users_retrieve_action: UserRetrieveAction, pk: int, mocker: MockerFixture
+    ) -> None:
+        spy = mocker.spy(users_retrieve_action.repository, "retrieve")
 
         await users_retrieve_action(pk=pk)
 
@@ -139,8 +143,8 @@ class TestUserRetrieveAction:
 class TestUserDeleteAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
-    async def test_delete_user(self, users_delete_action: UserDeleteAction, pk: int, mocker) -> None:
-        spy = mocker.spy(users_delete_action.repository, 'delete')
+    async def test_delete_user(self, users_delete_action: UserDeleteAction, pk: int, mocker: MockerFixture) -> None:
+        spy = mocker.spy(users_delete_action.repository, "delete")
 
         await users_delete_action(pk=pk)
 
