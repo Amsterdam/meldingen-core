@@ -1,3 +1,5 @@
+from collections.abc import Collection
+
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -10,8 +12,8 @@ class UserCreateAction:
     def __init__(self, repository: BaseUserRepository):
         self.repository = repository
 
-    def __call__(self, user: User) -> None:
-        self.repository.add(user)
+    async def __call__(self, user: User) -> None:
+        await self.repository.add(user)
 
 
 class UserListAction:
@@ -22,8 +24,8 @@ class UserListAction:
     def __init__(self, repository: BaseUserRepository):
         self.repository = repository
 
-    def __call__(self, *, limit: int | None = None, offset: int | None = None) -> list[User]:
-        return self.repository.list(limit=limit, offset=offset)
+    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[User]:
+        return await self.repository.list(limit=limit, offset=offset)
 
 
 class UserRetrieveAction:
@@ -34,8 +36,8 @@ class UserRetrieveAction:
     def __init__(self, repository: BaseUserRepository):
         self.repository = repository
 
-    def __call__(self, pk: int) -> User | None:
-        return self.repository.retrieve(pk=pk)
+    async def __call__(self, pk: int) -> User | None:
+        return await self.repository.retrieve(pk=pk)
 
 
 class UserDeleteAction:
@@ -46,5 +48,5 @@ class UserDeleteAction:
     def __init__(self, repository: BaseUserRepository):
         self.repository = repository
 
-    def __call__(self, pk: int) -> None:
-        return self.repository.delete(pk=pk)
+    async def __call__(self, pk: int) -> None:
+        await self.repository.delete(pk=pk)
