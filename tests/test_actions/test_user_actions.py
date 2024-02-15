@@ -3,7 +3,13 @@ from collections.abc import Collection
 import pytest
 from pytest_mock import MockerFixture
 
-from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
+from meldingen_core.actions.user import (
+    UserCreateAction,
+    UserDeleteAction,
+    UserListAction,
+    UserRetrieveAction,
+    UserUpdateAction,
+)
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -34,6 +40,13 @@ def users_create_action(
     mocked_repository: BaseUserRepository,
 ) -> UserCreateAction:
     return UserCreateAction(mocked_repository)
+
+
+@pytest.fixture
+def users_update_action(
+    mocked_repository: BaseUserRepository,
+) -> UserUpdateAction:
+    return UserUpdateAction(mocked_repository)
 
 
 @pytest.fixture
@@ -149,3 +162,27 @@ class TestUserDeleteAction:
         await users_delete_action(pk=pk)
 
         spy.assert_called_once_with(pk=pk)
+
+
+class TestUserUpdateAction:
+    @pytest.mark.parametrize(
+        "pk, username, email",
+        [
+            (1, "user1", "user1@example.com"),
+            (1, "user1", "other-user-1@example.com"),
+            (1, "other-user-1", "user1@example.com"),
+            (1, "other-user-1", "other-user-1@example.com"),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_update_user(
+        self, users_update_action: UserUpdateAction, pk: int, username: str, email: str, mocker: MockerFixture
+    ) -> None:
+        spy = mocker.spy(users_update_action.repository, "save")
+
+        user = User()
+        user.username = "1"
+
+        await users_update_action(user)
+
+        spy.assert_called_once_with(user)

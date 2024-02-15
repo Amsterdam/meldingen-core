@@ -4,7 +4,7 @@ from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
 
-class UserCreateAction:
+class UserSaveAction:
     """Action that stores a user."""
 
     repository: BaseUserRepository
@@ -14,6 +14,14 @@ class UserCreateAction:
 
     async def __call__(self, user: User) -> None:
         await self.repository.save(user)
+
+
+class UserCreateAction(UserSaveAction):
+    """Action that add a user."""
+
+
+class UserUpdateAction(UserSaveAction):
+    """Action that updates a user."""
 
 
 class UserListAction:
