@@ -178,7 +178,7 @@ class TestUserUpdateAction:
     async def test_update_user(
         self, users_update_action: UserUpdateAction, pk: int, username: str, email: str, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(users_update_action.repository, "save")
+        spy = mocker.spy(users_update_action._repository, "save")
 
         user = User()
         user.username = "1"
