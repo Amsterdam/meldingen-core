@@ -66,7 +66,7 @@ class TestMeldingCreateAction:
 class TestMeldingListAction:
     @pytest.mark.asyncio
     async def test_list_all(self, meldingen_list_action: MeldingListAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         meldingen = await meldingen_list_action()
 
@@ -80,7 +80,7 @@ class TestMeldingListAction:
     async def test_list_limit(
         self, meldingen_list_action: MeldingListAction, limit: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         meldingen = await meldingen_list_action(limit=limit)
 
@@ -91,7 +91,7 @@ class TestMeldingListAction:
     async def test_list_offset(
         self, meldingen_list_action: MeldingListAction, offset: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         await meldingen_list_action(limit=None, offset=offset)
 
@@ -109,7 +109,7 @@ class TestMeldingListAction:
         offset: int,
         mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         await meldingen_list_action(limit=limit, offset=offset)
 
