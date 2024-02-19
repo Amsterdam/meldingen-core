@@ -32,3 +32,8 @@ class BaseListAction(BaseCRUDAction[T, T_co]):
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
     async def __call__(self, obj: T) -> None:
         await self._repository.save(obj)
+
+
+class BaseDeleteAction(BaseCRUDAction[T, T_co]):
+    async def __call__(self, pk: int) -> None:
+        await self._repository.delete(pk=pk)
