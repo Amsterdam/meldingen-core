@@ -53,7 +53,7 @@ def meldingen_retrieve_action(
 class TestMeldingCreateAction:
     @pytest.mark.asyncio
     async def test_add(self, meldingen_create_action: MeldingCreateAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(meldingen_create_action.repository, "save")
+        spy = mocker.spy(meldingen_create_action._repository, "save")
 
         melding = Melding()
         melding.text = "1"

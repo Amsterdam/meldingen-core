@@ -1,19 +1,12 @@
 from collections.abc import Collection
 
+from meldingen_core.actions.base import BaseCreateAction
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
 
-class MeldingCreateAction:
+class MeldingCreateAction(BaseCreateAction[Melding, Melding]):
     """Action that stores a melding."""
-
-    repository: BaseMeldingRepository
-
-    def __init__(self, repository: BaseMeldingRepository):
-        self.repository = repository
-
-    async def __call__(self, melding: Melding) -> None:
-        await self.repository.save(melding)
 
 
 class MeldingListAction:
