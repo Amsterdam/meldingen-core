@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import Generic, TypeVar
 
-from meldingen_core.models import Melding, User, Classification
+from meldingen_core.models import Classification, Melding, User
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)

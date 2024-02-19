@@ -1,5 +1,6 @@
 class Classification:
     """This is the base model a 'classification'."""
+
     name: str
 
 
