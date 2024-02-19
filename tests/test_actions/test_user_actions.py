@@ -146,7 +146,7 @@ class TestUserRetrieveAction:
     async def test_retrieve_user(
         self, users_retrieve_action: UserRetrieveAction, pk: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(users_retrieve_action.repository, "retrieve")
+        spy = mocker.spy(users_retrieve_action._repository, "retrieve")
 
         await users_retrieve_action(pk=pk)
 
