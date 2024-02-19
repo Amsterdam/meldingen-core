@@ -122,7 +122,7 @@ class TestMeldingRetrieveAction:
     async def test_retrieve_melding(
         self, meldingen_retrieve_action: MeldingRetrieveAction, pk: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_retrieve_action.repository, "retrieve")
+        spy = mocker.spy(meldingen_retrieve_action._repository, "retrieve")
 
         await meldingen_retrieve_action(pk=pk)
 
