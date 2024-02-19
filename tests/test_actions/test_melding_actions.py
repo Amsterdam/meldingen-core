@@ -53,7 +53,7 @@ def meldingen_retrieve_action(
 class TestMeldingCreateAction:
     @pytest.mark.asyncio
     async def test_add(self, meldingen_create_action: MeldingCreateAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(meldingen_create_action.repository, "save")
+        spy = mocker.spy(meldingen_create_action._repository, "save")
 
         melding = Melding()
         melding.text = "1"
@@ -66,7 +66,7 @@ class TestMeldingCreateAction:
 class TestMeldingListAction:
     @pytest.mark.asyncio
     async def test_list_all(self, meldingen_list_action: MeldingListAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         meldingen = await meldingen_list_action()
 
@@ -80,7 +80,7 @@ class TestMeldingListAction:
     async def test_list_limit(
         self, meldingen_list_action: MeldingListAction, limit: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         meldingen = await meldingen_list_action(limit=limit)
 
@@ -91,7 +91,7 @@ class TestMeldingListAction:
     async def test_list_offset(
         self, meldingen_list_action: MeldingListAction, offset: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         await meldingen_list_action(limit=None, offset=offset)
 
@@ -109,7 +109,7 @@ class TestMeldingListAction:
         offset: int,
         mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(meldingen_list_action.repository, "list")
+        spy = mocker.spy(meldingen_list_action._repository, "list")
 
         await meldingen_list_action(limit=limit, offset=offset)
 
@@ -122,7 +122,7 @@ class TestMeldingRetrieveAction:
     async def test_retrieve_melding(
         self, meldingen_retrieve_action: MeldingRetrieveAction, pk: int, mocker: MockerFixture
     ) -> None:
-        spy = mocker.spy(meldingen_retrieve_action.repository, "retrieve")
+        spy = mocker.spy(meldingen_retrieve_action._repository, "retrieve")
 
         await meldingen_retrieve_action(pk=pk)
 
