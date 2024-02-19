@@ -1,6 +1,4 @@
-from collections.abc import Collection
-
-from meldingen_core.actions.base import BaseCreateAction, BaseRetrieveAction
+from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -25,16 +23,8 @@ class UserUpdateAction(UserSaveAction):
     """Action that updates a user."""
 
 
-class UserListAction:
+class UserListAction(BaseListAction[User, User]):
     """Action that retrieves a list of users."""
-
-    repository: BaseUserRepository
-
-    def __init__(self, repository: BaseUserRepository):
-        self.repository = repository
-
-    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[User]:
-        return await self.repository.list(limit=limit, offset=offset)
 
 
 class UserRetrieveAction(BaseRetrieveAction[User, User]):

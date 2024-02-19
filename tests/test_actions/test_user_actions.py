@@ -89,7 +89,7 @@ class TestUserCreateAction:
 class TestUserListAction:
     @pytest.mark.asyncio
     async def test_list_all(self, users_list_action: UserListAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(users_list_action.repository, "list")
+        spy = mocker.spy(users_list_action._repository, "list")
 
         await users_list_action()
 
@@ -101,7 +101,7 @@ class TestUserListAction:
     )
     @pytest.mark.asyncio
     async def test_list_limit(self, users_list_action: UserListAction, limit: int, mocker: MockerFixture) -> None:
-        spy = mocker.spy(users_list_action.repository, "list")
+        spy = mocker.spy(users_list_action._repository, "list")
 
         await users_list_action(limit=limit)
 
@@ -115,7 +115,7 @@ class TestUserListAction:
         offset: int,
         mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(users_list_action.repository, "list")
+        spy = mocker.spy(users_list_action._repository, "list")
 
         await users_list_action(offset=offset)
 
@@ -133,7 +133,7 @@ class TestUserListAction:
         offset: int,
         mocker: MockerFixture,
     ) -> None:
-        spy = mocker.spy(users_list_action.repository, "list")
+        spy = mocker.spy(users_list_action._repository, "list")
 
         await users_list_action(limit=limit, offset=offset)
 
