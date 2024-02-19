@@ -34,5 +34,5 @@ class BaseUserRepository(BaseRepository[User, User], metaclass=ABCMeta):
     """Repository for User."""
 
 
-class ClassificationRepository(BaseRepository[Classification, Classification], metaclass=ABCMeta):
+class BaseClassificationRepository(BaseRepository[Classification, Classification], metaclass=ABCMeta):
     """Repository for Classification."""
