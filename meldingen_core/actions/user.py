@@ -6,7 +6,6 @@ from meldingen_core.actions.base import (
     BaseUpdateAction,
 )
 from meldingen_core.models import User
-from meldingen_core.repositories import BaseUserRepository
 
 
 class UserCreateAction(BaseCreateAction[User, User]):
