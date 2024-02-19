@@ -42,3 +42,6 @@ exclude = '''
 profile = "black"
 line_length = 120
 known_first_party = ["meldingen_core"]
+
+[tool.coverage.report]
+exclude_lines = ["@abstractmethod"]
