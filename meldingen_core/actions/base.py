@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from typing import Generic, TypeVar
 
 from meldingen_core.repositories import BaseRepository
@@ -21,3 +22,8 @@ class BaseCreateAction(BaseCRUDAction[T, T_co]):
 class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
     async def __call__(self, pk: int) -> T_co | None:
         return await self._repository.retrieve(pk=pk)
+
+
+class BaseListAction(BaseCRUDAction[T, T_co]):
+    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
+        return await self._repository.list(limit=limit, offset=offset)
