@@ -157,7 +157,7 @@ class TestUserDeleteAction:
     @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
     @pytest.mark.asyncio
     async def test_delete_user(self, users_delete_action: UserDeleteAction, pk: int, mocker: MockerFixture) -> None:
-        spy = mocker.spy(users_delete_action.repository, "delete")
+        spy = mocker.spy(users_delete_action._repository, "delete")
 
         await users_delete_action(pk=pk)
 

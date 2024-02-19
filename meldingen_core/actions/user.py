@@ -1,4 +1,10 @@
-from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction, BaseUpdateAction
+from meldingen_core.actions.base import (
+    BaseCreateAction,
+    BaseDeleteAction,
+    BaseListAction,
+    BaseRetrieveAction,
+    BaseUpdateAction,
+)
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -19,13 +25,5 @@ class UserRetrieveAction(BaseRetrieveAction[User, User]):
     """Action that retrieves a user."""
 
 
-class UserDeleteAction:
+class UserDeleteAction(BaseDeleteAction[User, User]):
     """Action that deletes a user."""
-
-    repository: BaseUserRepository
-
-    def __init__(self, repository: BaseUserRepository):
-        self.repository = repository
-
-    async def __call__(self, pk: int) -> None:
-        await self.repository.delete(pk=pk)
