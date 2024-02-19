@@ -1,5 +1,6 @@
 from collections.abc import Collection
 
+from meldingen_core.actions.base import BaseCreateAction
 from meldingen_core.models import User
 from meldingen_core.repositories import BaseUserRepository
 
@@ -16,7 +17,7 @@ class UserSaveAction:
         await self.repository.save(user)
 
 
-class UserCreateAction(UserSaveAction):
+class UserCreateAction(BaseCreateAction[User, User]):
     """Action that add a user."""
 
 

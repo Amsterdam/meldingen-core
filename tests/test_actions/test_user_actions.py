@@ -76,7 +76,7 @@ def users_delete_action(
 class TestUserCreateAction:
     @pytest.mark.asyncio
     async def test_add(self, users_create_action: UserCreateAction, mocker: MockerFixture) -> None:
-        spy = mocker.spy(users_create_action.repository, "save")
+        spy = mocker.spy(users_create_action._repository, "save")
 
         user = User()
         user.username = "1"
