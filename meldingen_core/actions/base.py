@@ -16,3 +16,8 @@ class BaseCRUDAction(Generic[T, T_co]):
 class BaseCreateAction(BaseCRUDAction[T, T_co]):
     async def __call__(self, obj: T) -> None:
         await self._repository.save(obj)
+
+
+class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
+    async def __call__(self, pk: int) -> T_co | None:
+        return await self._repository.retrieve(pk=pk)
