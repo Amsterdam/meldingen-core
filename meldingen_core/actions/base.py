@@ -27,3 +27,8 @@ class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
 class BaseListAction(BaseCRUDAction[T, T_co]):
     async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
         return await self._repository.list(limit=limit, offset=offset)
+
+
+class BaseUpdateAction(BaseCRUDAction[T, T_co]):
+    async def __call__(self, obj: T) -> None:
+        await self._repository.save(obj)
