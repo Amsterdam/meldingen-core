@@ -22,6 +22,9 @@ def mocked_repository() -> BaseMeldingRepository:
         async def retrieve(self, pk: int) -> Melding | None:
             return None
 
+        async def delete(self, pk: int) -> None:  # pragma: no cover
+            return None
+
     mocked_repository = MockMeldingRepository()
     return mocked_repository
 

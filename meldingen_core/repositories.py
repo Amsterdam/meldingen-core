@@ -21,8 +21,9 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
     async def retrieve(self, pk: int) -> T_co | None:
         ...
 
+    @abstractmethod
     async def delete(self, pk: int) -> None:
-        raise NotImplemented
+        ...
 
 
 class BaseMeldingRepository(BaseRepository[Melding, Melding], metaclass=ABCMeta):
