@@ -1,9 +1,14 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class Classification:
     """This is the base model a 'classification'."""
 
     name: str
 
 
+@dataclass
 class Melding:
     """This is the base model for a 'melding'."""
 
@@ -11,6 +16,7 @@ class Melding:
     classification: Classification | None = None
 
 
+@dataclass
 class User:
     """This is the base model for a 'user'."""
 
