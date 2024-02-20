@@ -78,8 +78,7 @@ class TestUserCreateAction:
     async def test_add(self, users_create_action: UserCreateAction, mocker: MockerFixture) -> None:
         spy = mocker.spy(users_create_action._repository, "save")
 
-        user = User()
-        user.username = "1"
+        user = User("1", "1")
 
         await users_create_action(user)
 
@@ -180,8 +179,7 @@ class TestUserUpdateAction:
     ) -> None:
         spy = mocker.spy(users_update_action._repository, "save")
 
-        user = User()
-        user.username = "1"
+        user = User("1", "1")
 
         await users_update_action(user)
 

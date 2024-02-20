@@ -58,8 +58,7 @@ class TestMeldingCreateAction:
     async def test_add(self, meldingen_create_action: MeldingCreateAction, mocker: MockerFixture) -> None:
         spy = mocker.spy(meldingen_create_action._repository, "save")
 
-        melding = Melding()
-        melding.text = "1"
+        melding = Melding("1")
 
         await meldingen_create_action(melding)
 
