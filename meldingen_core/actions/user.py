@@ -25,7 +25,7 @@ class UserListAction(BaseListAction[T, T_co]):
     """Action that retrieves a list of users."""
 
 
-class UserRetrieveAction(BaseRetrieveAction[User, User]):
+class UserRetrieveAction(BaseRetrieveAction[T, T_co]):
     """Action that retrieves a user."""
 
 
