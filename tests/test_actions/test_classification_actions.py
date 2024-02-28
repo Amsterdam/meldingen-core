@@ -7,6 +7,7 @@ from meldingen_core.actions.classification import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
 )
+from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
 
 
@@ -16,12 +17,16 @@ def test_can_instantiate_create_action() -> None:
 
 
 def test_can_instantiate_retrieve_action() -> None:
-    action = ClassificationRetrieveAction(Mock(BaseClassificationRepository))
+    action: ClassificationRetrieveAction[Classification, Classification] = ClassificationRetrieveAction(
+        Mock(BaseClassificationRepository)
+    )
     assert isinstance(action, ClassificationRetrieveAction)
 
 
 def test_can_instantiate_list_action() -> None:
-    action = ClassificationListAction(Mock(BaseClassificationRepository))
+    action: ClassificationListAction[Classification, Classification] = ClassificationListAction(
+        Mock(BaseClassificationRepository)
+    )
     assert isinstance(action, ClassificationListAction)
 
 
