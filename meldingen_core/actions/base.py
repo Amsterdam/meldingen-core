@@ -30,7 +30,12 @@ class BaseListAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, obj: T) -> None:
+    async def __call__(self, pk: int, values: dict) -> None:
+        obj = await self._repository.retrieve(pk=pk)
+
+        for key, value in values.items():
+            setattr(obj, key, value)
+
         await self._repository.save(obj)
 
 
