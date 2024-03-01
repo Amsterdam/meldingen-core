@@ -27,7 +27,7 @@ def test_can_instantiate_user_retrieve_action() -> None:
 
 
 def test_can_instantiate_user_update_action() -> None:
-    action = UserUpdateAction(Mock(BaseUserRepository))
+    action: UserUpdateAction[User, User] = UserUpdateAction(Mock(BaseUserRepository))
     assert isinstance(action, UserUpdateAction)
 
 

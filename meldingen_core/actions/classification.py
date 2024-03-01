@@ -25,7 +25,7 @@ class ClassificationRetrieveAction(BaseRetrieveAction[T, T_co]):
     ...
 
 
-class ClassificationUpdateAction(BaseUpdateAction[Classification, Classification]):
+class ClassificationUpdateAction(BaseUpdateAction[T, T_co]):
     ...
 
 
