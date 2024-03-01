@@ -108,7 +108,7 @@ async def test_base_retrieve_action(pk: int, mocker: MockerFixture) -> None:
 
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
 @pytest.mark.asyncio
-async def test_delete_user(pk: int, mocker: MockerFixture) -> None:
+async def test_base_delete_action(pk: int, mocker: MockerFixture) -> None:
     action: BaseDeleteAction[DummyModel, DummyModel] = BaseDeleteAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "delete")
@@ -119,7 +119,7 @@ async def test_delete_user(pk: int, mocker: MockerFixture) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_user(mocker: MockerFixture) -> None:
+async def test_base_update_action(mocker: MockerFixture) -> None:
     action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "save")
