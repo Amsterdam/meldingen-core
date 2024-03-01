@@ -1,6 +1,7 @@
 from collections.abc import Collection
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Any
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseRepository
 
 T = TypeVar("T")
@@ -30,8 +31,10 @@ class BaseListAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, pk: int, values: dict) -> None:
+    async def __call__(self, pk: int, values: dict[str, Any]) -> None:
         obj = await self._repository.retrieve(pk=pk)
+        if obj is None:
+            raise NotFoundException()
 
         for key, value in values.items():
             setattr(obj, key, value)
