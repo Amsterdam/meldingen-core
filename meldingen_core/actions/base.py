@@ -31,7 +31,7 @@ class BaseListAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, pk: int, values: dict[str, Any]) -> None:
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
         obj = await self._repository.retrieve(pk=pk)
         if obj is None:
             raise NotFoundException()
@@ -40,6 +40,8 @@ class BaseUpdateAction(BaseCRUDAction[T, T_co]):
             setattr(obj, key, value)
 
         await self._repository.save(obj)
+
+        return obj
 
 
 class BaseDeleteAction(BaseCRUDAction[T, T_co]):
