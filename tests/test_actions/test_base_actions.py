@@ -129,10 +129,10 @@ async def test_base_update_action(mocker: MockerFixture) -> None:
 
     mocker.patch.object(action._repository, "retrieve", return_value=dummy)
 
-    await action(101, {"name": "new name"})
+    output = await action(101, {"name": "new name"})
 
     spy.assert_called_once_with(dummy)
-    assert dummy.name == "new name"
+    assert output.name == "new name"
 
 
 @pytest.mark.asyncio
