@@ -45,3 +45,6 @@ known_first_party = ["meldingen_core"]
 
 [tool.coverage.report]
 exclude_lines = ["@abstractmethod", "pragma: no cover"]
+
+[tool.mypy]
+strict = true
