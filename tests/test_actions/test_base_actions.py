@@ -10,6 +10,7 @@ from meldingen_core.actions.base import (
     BaseRetrieveAction,
     BaseUpdateAction,
 )
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseRepository
 
 
@@ -124,12 +125,20 @@ async def test_base_update_action(mocker: MockerFixture) -> None:
 
     spy = mocker.spy(action._repository, "save")
 
-    pk = 101
     dummy = DummyModel()
 
     mocker.patch.object(action._repository, "retrieve", return_value=dummy)
 
-    await action(pk, {"name": "new name"})
+    await action(101, {"name": "new name"})
 
     spy.assert_called_once_with(dummy)
     assert dummy.name == "new name"
+
+
+@pytest.mark.asyncio
+async def test_base_delete_action_not_found(mocker: MockerFixture) -> None:
+    action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
+
+    mocker.patch.object(action._repository, "retrieve", return_value=None)
+    with pytest.raises(NotFoundException) as exc_info:
+        await action(101, {"name": "new name"})
