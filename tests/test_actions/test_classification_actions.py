@@ -31,7 +31,9 @@ def test_can_instantiate_list_action() -> None:
 
 
 def test_can_instantiate_update_action() -> None:
-    action = ClassificationUpdateAction(Mock(BaseClassificationRepository))
+    action: ClassificationUpdateAction[Classification, Classification] = ClassificationUpdateAction(
+        Mock(BaseClassificationRepository)
+    )
     assert isinstance(action, ClassificationUpdateAction)
 
 

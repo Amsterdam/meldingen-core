@@ -1,6 +1,7 @@
 from collections.abc import Collection
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseRepository
 
 T = TypeVar("T")
@@ -20,7 +21,7 @@ class BaseCreateAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, pk: int) -> T_co | None:
+    async def __call__(self, pk: int) -> T | None:
         return await self._repository.retrieve(pk=pk)
 
 
@@ -30,8 +31,17 @@ class BaseListAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, obj: T) -> None:
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
+        obj = await self._repository.retrieve(pk=pk)
+        if obj is None:
+            raise NotFoundException()
+
+        for key, value in values.items():
+            setattr(obj, key, value)
+
         await self._repository.save(obj)
+
+        return obj
 
 
 class BaseDeleteAction(BaseCRUDAction[T, T_co]):

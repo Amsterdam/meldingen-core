@@ -17,7 +17,7 @@ class UserCreateAction(BaseCreateAction[User, User]):
     """Action that add a user."""
 
 
-class UserUpdateAction(BaseUpdateAction[User, User]):
+class UserUpdateAction(BaseUpdateAction[T, T_co]):
     """Action that updates a user."""
 
 
