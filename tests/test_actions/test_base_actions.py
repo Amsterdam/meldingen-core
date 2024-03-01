@@ -14,7 +14,7 @@ from meldingen_core.repositories import BaseRepository
 
 
 class DummyModel:
-    ...
+    name: str | None
 
 
 @pytest.fixture
@@ -124,8 +124,12 @@ async def test_base_update_action(mocker: MockerFixture) -> None:
 
     spy = mocker.spy(action._repository, "save")
 
+    pk = 101
     dummy = DummyModel()
 
-    await action(dummy)
+    mocker.patch.object(action._repository, "retrieve", return_value=dummy)
+
+    await action(pk, {"name": "new name"})
 
     spy.assert_called_once_with(dummy)
+    assert dummy.name == "new name"
