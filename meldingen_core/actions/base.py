@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from typing import Generic, TypeVar, Any
+from typing import Any, Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseRepository
@@ -21,7 +21,7 @@ class BaseCreateAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, pk: int) -> T_co | None:
+    async def __call__(self, pk: int) -> T | None:
         return await self._repository.retrieve(pk=pk)
 
 
