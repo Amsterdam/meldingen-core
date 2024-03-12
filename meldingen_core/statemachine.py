@@ -15,7 +15,7 @@ class MeldingTransitions(StrEnum):
     COMPLETE = "complete"
 
 
-class MeldingStateMachine(metaclass=ABCMeta):
+class BaseMeldingStateMachine(metaclass=ABCMeta):
     @abstractmethod
     async def transition(self, melding: Melding, transition_name: str) -> None:
         ...
