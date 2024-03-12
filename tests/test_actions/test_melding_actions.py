@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from meldingen_core.actions.melding import (
+    MeldingCompleteAction,
     MeldingCreateAction,
     MeldingListAction,
     MeldingProcessAction,
@@ -50,6 +51,32 @@ async def test_process_action_not_found() -> None:
     repository.retrieve.return_value = None
 
     process = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.asyncio
+async def test_complete_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process = MeldingCompleteAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.asyncio
+async def test_complete_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1)

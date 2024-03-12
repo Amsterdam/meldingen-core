@@ -31,18 +31,29 @@ class BaseStateTransitionAction(metaclass=ABCMeta):
         self._state_machine = state_machine
         self._repository = repository
 
+    @property
     @abstractmethod
-    async def __call__(self, melding_id: int) -> Melding:
+    def transition_name(self) -> str:
         ...
 
-
-class MeldingProcessAction(BaseStateTransitionAction):
     async def __call__(self, melding_id: int) -> Melding:
         melding = await self._repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
 
-        await self._state_machine.transition(melding, MeldingTransitions.PROCESS)
+        await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
 
         return melding
+
+
+class MeldingProcessAction(BaseStateTransitionAction):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.PROCESS
+
+
+class MeldingCompleteAction(BaseStateTransitionAction):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.COMPLETE
