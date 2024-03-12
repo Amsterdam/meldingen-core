@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
@@ -23,11 +23,11 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
     """Action that retrieves a melding."""
 
 
-class BaseStateTransitionAction(metaclass=ABCMeta):
+class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     _state_machine: BaseMeldingStateMachine
-    _repository: BaseMeldingRepository
+    _repository: BaseMeldingRepository[T, T_co]
 
-    def __init__(self, state_machine: BaseMeldingStateMachine, repository: BaseMeldingRepository):
+    def __init__(self, state_machine: BaseMeldingStateMachine, repository: BaseMeldingRepository[T, T_co]):
         self._state_machine = state_machine
         self._repository = repository
 
@@ -36,7 +36,7 @@ class BaseStateTransitionAction(metaclass=ABCMeta):
     def transition_name(self) -> str:
         ...
 
-    async def __call__(self, melding_id: int) -> Melding:
+    async def __call__(self, melding_id: int) -> T:
         melding = await self._repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
@@ -47,13 +47,13 @@ class BaseStateTransitionAction(metaclass=ABCMeta):
         return melding
 
 
-class MeldingProcessAction(BaseStateTransitionAction):
+class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.PROCESS
 
 
-class MeldingCompleteAction(BaseStateTransitionAction):
+class MeldingCompleteAction(BaseStateTransitionAction[T, T_co]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.COMPLETE
