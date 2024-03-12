@@ -15,6 +15,6 @@ def test_can_instantiate_melding_list_action() -> None:
     assert isinstance(action, MeldingListAction)
 
 
-def test_can_instantie_melding_retrieve_action() -> None:
+def test_can_instantiate_melding_retrieve_action() -> None:
     action: MeldingRetrieveAction[Melding, Melding] = MeldingRetrieveAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingRetrieveAction)
