@@ -1,18 +1,42 @@
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, override
 
 from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
+from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
-from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 
 T = TypeVar("T", bound=Melding)
 T_co = TypeVar("T_co", covariant=True, bound=Melding)
 
 
-class MeldingCreateAction(BaseCreateAction[Melding, Melding]):
+class MeldingCreateAction(BaseCreateAction[T, T_co]):
     """Action that stores a melding."""
+
+    _classify: Classifier
+    _state_machine: BaseMeldingStateMachine[T]
+
+    def __init__(
+        self,
+        repository: BaseRepository[T, T_co],
+        classifier: Classifier,
+        state_machine: BaseMeldingStateMachine[T],
+    ):
+        super().__init__(repository)
+        self._classify = classifier
+        self._state_machine = state_machine
+
+    @override
+    async def __call__(self, obj: T) -> None:
+        await super().__call__(obj)
+
+        classification = await self._classify(obj.text)
+        obj.classification = classification
+
+        await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
+        await self._repository.save(obj)
 
 
 class MeldingListAction(BaseListAction[T, T_co]):

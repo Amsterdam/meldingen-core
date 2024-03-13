@@ -1,8 +1,8 @@
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from meldingen_core.classification import Classifier, BaseClassifierAdapter
+from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
 

@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -9,15 +9,31 @@ from meldingen_core.actions.melding import (
     MeldingProcessAction,
     MeldingRetrieveAction,
 )
+from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.models import Melding
+from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 
 
-def test_can_instantiate_melding_create_action() -> None:
-    action = MeldingCreateAction(Mock(BaseMeldingRepository))
-    assert isinstance(action, MeldingCreateAction)
+@pytest.mark.asyncio
+async def test_melding_create_action() -> None:
+    classification = Classification(name="test")
+    classifier = AsyncMock(Classifier, return_value=classification)
+
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    repository = Mock(BaseMeldingRepository)
+
+    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(repository, classifier, state_machine)
+
+    melding = Melding("text")
+
+    await action(melding)
+
+    assert repository.save.await_count == 2
+    classifier.assert_awaited_once()
+    state_machine.transition.assert_awaited_once()
 
 
 def test_can_instantiate_melding_list_action() -> None:
