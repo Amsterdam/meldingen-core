@@ -1,7 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from enum import StrEnum
+from typing import Generic, TypeVar
 
 from meldingen_core.models import Melding
+
+T = TypeVar("T", bound=Melding)
 
 
 class MeldingStates(StrEnum):
@@ -15,7 +18,7 @@ class MeldingTransitions(StrEnum):
     COMPLETE = "complete"
 
 
-class BaseMeldingStateMachine(metaclass=ABCMeta):
+class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
     @abstractmethod
-    async def transition(self, melding: Melding, transition_name: str) -> None:
+    async def transition(self, melding: T, transition_name: str) -> None:
         ...

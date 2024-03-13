@@ -24,10 +24,10 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
-    _state_machine: BaseMeldingStateMachine
+    _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
 
-    def __init__(self, state_machine: BaseMeldingStateMachine, repository: BaseMeldingRepository[T, T_co]):
+    def __init__(self, state_machine: BaseMeldingStateMachine[T], repository: BaseMeldingRepository[T, T_co]):
         self._state_machine = state_machine
         self._repository = repository
 
