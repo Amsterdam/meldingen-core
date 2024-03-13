@@ -20,13 +20,9 @@ from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransiti
 async def test_melding_create_action() -> None:
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
-
     state_machine = Mock(BaseMeldingStateMachine)
-
     repository = Mock(BaseMeldingRepository)
-
     action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(repository, classifier, state_machine)
-
     melding = Melding("text")
 
     await action(melding)
