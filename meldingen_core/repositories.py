@@ -26,7 +26,11 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
         ...
 
 
-class BaseMeldingRepository(BaseRepository[Melding, Melding], metaclass=ABCMeta):
+M = TypeVar("M", bound=Melding)
+M_co = TypeVar("M_co", covariant=True, bound=Melding)
+
+
+class BaseMeldingRepository(BaseRepository[M, M_co], metaclass=ABCMeta):
     """Repository for Melding."""
 
 
