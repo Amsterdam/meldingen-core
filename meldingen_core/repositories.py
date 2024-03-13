@@ -40,3 +40,7 @@ class BaseUserRepository(BaseRepository[User, User], metaclass=ABCMeta):
 
 class BaseClassificationRepository(BaseRepository[Classification, Classification], metaclass=ABCMeta):
     """Repository for Classification."""
+
+    @abstractmethod
+    async def find_by_name(self, name: str) -> Classification:
+        """Find a classification by name or raise NotFoundException if not found."""
