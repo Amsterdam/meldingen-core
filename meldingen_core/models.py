@@ -28,3 +28,10 @@ class User:
 class Question:
     text: str
     classification: Classification
+
+
+@dataclass
+class Answer:
+    text: str
+    question: Question
+    melding: Melding
