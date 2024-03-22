@@ -22,3 +22,9 @@ class User:
 
     username: str
     email: str
+
+
+@dataclass
+class Question:
+    text: str
+    classification: Classification
