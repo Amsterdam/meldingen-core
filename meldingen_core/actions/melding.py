@@ -57,8 +57,7 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def transition_name(self) -> str:
-        ...
+    def transition_name(self) -> str: ...
 
     async def __call__(self, melding_id: int) -> T:
         melding = await self._repository.retrieve(melding_id)

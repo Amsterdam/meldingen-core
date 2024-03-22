@@ -22,5 +22,4 @@ class MeldingTransitions(StrEnum):
 
 class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
     @abstractmethod
-    async def transition(self, melding: T, transition_name: str) -> None:
-        ...
+    async def transition(self, melding: T, transition_name: str) -> None: ...
