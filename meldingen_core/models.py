@@ -27,7 +27,6 @@ class User:
 @dataclass
 class Question:
     text: str
-    classification: Classification
 
 
 @dataclass
