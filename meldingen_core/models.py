@@ -22,3 +22,15 @@ class User:
 
     username: str
     email: str
+
+
+@dataclass
+class Question:
+    text: str
+
+
+@dataclass
+class Answer:
+    text: str
+    question: Question
+    melding: Melding

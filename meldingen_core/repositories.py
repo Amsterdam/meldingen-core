@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import Generic, TypeVar
 
-from meldingen_core.models import Classification, Melding, User
+from meldingen_core.models import Answer, Classification, Melding, Question, User
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -40,3 +40,9 @@ class BaseClassificationRepository(BaseRepository[Classification, Classification
     @abstractmethod
     async def find_by_name(self, name: str) -> Classification:
         """Find a classification by name or raise NotFoundException if not found."""
+
+
+class BaseQuestionRepository(BaseRepository[Question, Question], metaclass=ABCMeta): ...
+
+
+class BaseAnswerRepository(BaseRepository[Answer, Answer], metaclass=ABCMeta): ...
