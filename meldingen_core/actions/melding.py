@@ -7,6 +7,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator
 
 T = TypeVar("T", bound=Melding)
 T_co = TypeVar("T_co", covariant=True, bound=Melding)
@@ -17,20 +18,25 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
 
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
+    _generate_token: BaseTokenGenerator
 
     def __init__(
         self,
         repository: BaseRepository[T, T_co],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
+        token_generator: BaseTokenGenerator,
     ):
         super().__init__(repository)
         self._classify = classifier
         self._state_machine = state_machine
+        self._generate_token = token_generator
 
     @override
     async def __call__(self, obj: T) -> None:
         await super().__call__(obj)
+
+        obj.token = await self._generate_token()
 
         classification = await self._classify(obj.text)
         obj.classification = classification
