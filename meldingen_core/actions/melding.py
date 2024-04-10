@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from datetime import datetime, timedelta
 from typing import Generic, TypeVar, override
 
 from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
@@ -19,6 +20,7 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
     _generate_token: BaseTokenGenerator
+    _token_duration: timedelta
 
     def __init__(
         self,
@@ -26,17 +28,20 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
         token_generator: BaseTokenGenerator,
+        token_duration: timedelta,
     ):
         super().__init__(repository)
         self._classify = classifier
         self._state_machine = state_machine
         self._generate_token = token_generator
+        self._token_duration = token_duration
 
     @override
     async def __call__(self, obj: T) -> None:
         await super().__call__(obj)
 
         obj.token = await self._generate_token()
+        obj.token_expires = datetime.now() + self._token_duration
 
         classification = await self._classify(obj.text)
         obj.classification = classification
