@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -14,6 +15,8 @@ class Melding:
 
     text: str
     classification: Classification | None = None
+    token: str | None = None
+    token_expires: datetime | None = None
 
 
 @dataclass
