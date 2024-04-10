@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -14,6 +15,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator
 
 
 @pytest.mark.asyncio
@@ -22,7 +24,9 @@ async def test_melding_create_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(repository, classifier, state_machine)
+    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(
+        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
+    )
     melding = Melding("text")
 
     await action(melding)
