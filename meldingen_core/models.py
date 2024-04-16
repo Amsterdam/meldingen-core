@@ -30,8 +30,8 @@ class User:
 @dataclass
 class Form:
     title: str
-    classification: Classification
     questions: list["Question"]
+    classification: Classification | None = None
 
 
 @dataclass
