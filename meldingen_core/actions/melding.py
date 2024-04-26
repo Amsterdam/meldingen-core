@@ -83,17 +83,14 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
-    _verify_token: TokenVerifier[T]
 
     def __init__(
         self,
         state_machine: BaseMeldingStateMachine[T],
         repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T],
     ):
         self._state_machine = state_machine
         self._repository = repository
-        self._verify_token = token_verifier
 
     @property
     @abstractmethod
@@ -103,8 +100,6 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         melding = await self._repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
-
-        self._verify_token(melding, token)
 
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)

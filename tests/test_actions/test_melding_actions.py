@@ -78,8 +78,7 @@ async def test_process_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    token_verifier = MagicMock(TokenVerifier)
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository, token_verifier)
+    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository)
 
     melding = await process(1, "123456")
 
@@ -92,11 +91,8 @@ async def test_process_action() -> None:
 async def test_process_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier = MagicMock(TokenVerifier)
 
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(
-        Mock(BaseMeldingStateMachine), repository, token_verifier
-    )
+    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1, "123456")
@@ -108,8 +104,7 @@ async def test_complete_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    token_verifier = MagicMock(TokenVerifier)
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository, token_verifier)
+    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository)
 
     melding = await process(1, "123456")
 
@@ -122,11 +117,8 @@ async def test_complete_action() -> None:
 async def test_complete_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier = MagicMock(TokenVerifier)
 
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(
-        Mock(BaseMeldingStateMachine), repository, token_verifier
-    )
+    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1, "123456")
