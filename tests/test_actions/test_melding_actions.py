@@ -1,5 +1,5 @@
-from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
@@ -9,13 +9,14 @@ from meldingen_core.actions.melding import (
     MeldingListAction,
     MeldingProcessAction,
     MeldingRetrieveAction,
+    MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 
 @pytest.mark.asyncio
@@ -44,6 +45,31 @@ def test_can_instantiate_melding_list_action() -> None:
 def test_can_instantiate_melding_retrieve_action() -> None:
     action: MeldingRetrieveAction[Melding, Melding] = MeldingRetrieveAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingRetrieveAction)
+
+
+@pytest.mark.asyncio
+async def test_melding_update_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    token_verifier = MagicMock(TokenVerifier)
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository, token_verifier)
+
+    with pytest.raises(NotFoundException):
+        await action(123, {"text": "test"}, "123456")
+
+
+@pytest.mark.asyncio
+async def test_melding_update_action() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    token_verifier = MagicMock(TokenVerifier)
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository, token_verifier)
+
+    text = "new text"
+    melding = await action(123, {"text": text}, token)
+
+    assert melding.text == text
 
 
 @pytest.mark.asyncio

@@ -1,14 +1,14 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, override
 
-from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
+from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 T = TypeVar("T", bound=Melding)
 T_co = TypeVar("T_co", covariant=True, bound=Melding)
@@ -58,11 +58,37 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
     """Action that retrieves a melding."""
 
 
+class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
+    _verify_token: TokenVerifier[T]
+
+    def __init__(self, repository: BaseRepository[T, T_co], token_verifier: TokenVerifier[T]) -> None:
+        super().__init__(repository)
+        self._verify_token = token_verifier
+
+    async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
+        melding = await self._repository.retrieve(pk=pk)
+        if melding is None:
+            raise NotFoundException()
+
+        self._verify_token(melding, token)
+
+        for key, value in values.items():
+            setattr(melding, key, value)
+
+        await self._repository.save(melding)
+
+        return melding
+
+
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
 
-    def __init__(self, state_machine: BaseMeldingStateMachine[T], repository: BaseMeldingRepository[T, T_co]):
+    def __init__(
+        self,
+        state_machine: BaseMeldingStateMachine[T],
+        repository: BaseMeldingRepository[T, T_co],
+    ):
         self._state_machine = state_machine
         self._repository = repository
 
