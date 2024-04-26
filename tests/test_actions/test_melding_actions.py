@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -9,9 +9,10 @@ from meldingen_core.actions.melding import (
     MeldingListAction,
     MeldingProcessAction,
     MeldingRetrieveAction,
+    MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.exceptions import InvalidTokenException, NotFoundException, TokenExpiredException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -44,6 +45,39 @@ def test_can_instantiate_melding_list_action() -> None:
 def test_can_instantiate_melding_retrieve_action() -> None:
     action: MeldingRetrieveAction[Melding, Melding] = MeldingRetrieveAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingRetrieveAction)
+
+
+@pytest.mark.asyncio
+async def test_melding_update_action_token_invalid() -> None:
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(Mock(BaseMeldingRepository))
+    with pytest.raises(InvalidTokenException):
+        await action(123, {"text": "a new text"}, "the token")
+
+
+@pytest.mark.asyncio
+async def test_melding_update_action_token_expired() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() - timedelta(days=1))
+
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository)
+
+    with pytest.raises(TokenExpiredException):
+        await action(123, {"text": "new text"}, token)
+
+
+@pytest.mark.asyncio
+async def test_melding_update_action() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository)
+
+    text = "new text"
+    melding = await action(123, {"text": text}, token)
+
+    assert melding.text == text
 
 
 @pytest.mark.asyncio

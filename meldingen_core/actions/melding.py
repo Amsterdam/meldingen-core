@@ -1,10 +1,16 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, override
 
-from meldingen_core.actions.base import BaseCreateAction, BaseListAction, BaseRetrieveAction
+from meldingen_core.actions.base import (
+    BaseCreateAction,
+    BaseCRUDAction,
+    BaseListAction,
+    BaseRetrieveAction,
+    BaseUpdateAction,
+)
 from meldingen_core.classification import Classifier
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.exceptions import InvalidTokenException, NotFoundException, TokenExpiredException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -56,6 +62,26 @@ class MeldingListAction(BaseListAction[T, T_co]):
 
 class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
     """Action that retrieves a melding."""
+
+
+class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
+    async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
+        melding = await self._repository.retrieve(pk=pk)
+        if melding is None:
+            raise NotFoundException()
+
+        if token != melding.token:
+            raise InvalidTokenException()
+
+        if melding.token_expires is not None and melding.token_expires < datetime.now():
+            raise TokenExpiredException()
+
+        for key, value in values.items():
+            setattr(melding, key, value)
+
+        await self._repository.save(melding)
+
+        return melding
 
 
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
