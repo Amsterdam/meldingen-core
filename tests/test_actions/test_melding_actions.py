@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
@@ -12,11 +12,11 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
-from meldingen_core.exceptions import InvalidTokenException, NotFoundException, TokenExpiredException
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 
 @pytest.mark.asyncio
@@ -48,31 +48,12 @@ def test_can_instantiate_melding_retrieve_action() -> None:
 
 
 @pytest.mark.asyncio
-async def test_melding_update_action_token_invalid() -> None:
-    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(Mock(BaseMeldingRepository))
-    with pytest.raises(InvalidTokenException):
-        await action(123, {"text": "a new text"}, "the token")
-
-
-@pytest.mark.asyncio
-async def test_melding_update_action_token_expired() -> None:
-    token = "123456"
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() - timedelta(days=1))
-
-    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository)
-
-    with pytest.raises(TokenExpiredException):
-        await action(123, {"text": "new text"}, token)
-
-
-@pytest.mark.asyncio
 async def test_melding_update_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
-
-    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository)
+    token_verifier = MagicMock(TokenVerifier)
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository, token_verifier)
 
     text = "new text"
     melding = await action(123, {"text": text}, token)
@@ -86,9 +67,10 @@ async def test_process_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository)
+    token_verifier = MagicMock(TokenVerifier)
+    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository, token_verifier)
 
-    melding = await process(1)
+    melding = await process(1, "123456")
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.PROCESS)
@@ -99,11 +81,14 @@ async def test_process_action() -> None:
 async def test_process_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
+    token_verifier = MagicMock(TokenVerifier)
 
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
+    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(
+        Mock(BaseMeldingStateMachine), repository, token_verifier
+    )
 
     with pytest.raises(NotFoundException):
-        await process(1)
+        await process(1, "123456")
 
 
 @pytest.mark.asyncio
@@ -112,9 +97,10 @@ async def test_complete_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository)
+    token_verifier = MagicMock(TokenVerifier)
+    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository, token_verifier)
 
-    melding = await process(1)
+    melding = await process(1, "123456")
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
@@ -125,8 +111,11 @@ async def test_complete_action() -> None:
 async def test_complete_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
+    token_verifier = MagicMock(TokenVerifier)
 
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
+    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(
+        Mock(BaseMeldingStateMachine), repository, token_verifier
+    )
 
     with pytest.raises(NotFoundException):
-        await process(1)
+        await process(1, "123456")

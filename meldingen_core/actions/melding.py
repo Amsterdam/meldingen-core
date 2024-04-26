@@ -2,18 +2,13 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, override
 
-from meldingen_core.actions.base import (
-    BaseCreateAction,
-    BaseCRUDAction,
-    BaseListAction,
-    BaseRetrieveAction,
-)
+from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.classification import Classifier
-from meldingen_core.exceptions import InvalidTokenException, NotFoundException, TokenExpiredException
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 T = TypeVar("T", bound=Melding)
 T_co = TypeVar("T_co", covariant=True, bound=Melding)
@@ -64,16 +59,18 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 
 class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
+    _verify_token: TokenVerifier[T]
+
+    def __init__(self, repository: BaseRepository[T, T_co], token_verifier: TokenVerifier[T]) -> None:
+        super().__init__(repository)
+        self._verify_token = token_verifier
+
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._repository.retrieve(pk=pk)
         if melding is None:
             raise NotFoundException()
 
-        if token != melding.token:
-            raise InvalidTokenException()
-
-        if melding.token_expires is not None and melding.token_expires < datetime.now():
-            raise TokenExpiredException()
+        self._verify_token(melding, token)
 
         for key, value in values.items():
             setattr(melding, key, value)
@@ -86,19 +83,28 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
+    _verify_token: TokenVerifier[T]
 
-    def __init__(self, state_machine: BaseMeldingStateMachine[T], repository: BaseMeldingRepository[T, T_co]):
+    def __init__(
+        self,
+        state_machine: BaseMeldingStateMachine[T],
+        repository: BaseMeldingRepository[T, T_co],
+        token_verifier: TokenVerifier[T],
+    ):
         self._state_machine = state_machine
         self._repository = repository
+        self._verify_token = token_verifier
 
     @property
     @abstractmethod
     def transition_name(self) -> str: ...
 
-    async def __call__(self, melding_id: int) -> T:
+    async def __call__(self, melding_id: int, token: str) -> T:
         melding = await self._repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
+
+        self._verify_token(melding, token)
 
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
