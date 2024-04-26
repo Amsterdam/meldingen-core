@@ -48,6 +48,17 @@ def test_can_instantiate_melding_retrieve_action() -> None:
 
 
 @pytest.mark.asyncio
+async def test_melding_update_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    token_verifier = MagicMock(TokenVerifier)
+    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(repository, token_verifier)
+
+    with pytest.raises(NotFoundException):
+        await action(123, {"text": "test"}, "123456")
+
+
+@pytest.mark.asyncio
 async def test_melding_update_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
