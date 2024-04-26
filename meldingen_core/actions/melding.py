@@ -96,7 +96,7 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     @abstractmethod
     def transition_name(self) -> str: ...
 
-    async def __call__(self, melding_id: int, token: str) -> T:
+    async def __call__(self, melding_id: int) -> T:
         melding = await self._repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
