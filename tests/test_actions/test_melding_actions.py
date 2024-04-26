@@ -80,7 +80,7 @@ async def test_process_action() -> None:
     repository.retrieve.return_value = repo_melding
     process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository)
 
-    melding = await process(1, "123456")
+    melding = await process(1)
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.PROCESS)
@@ -95,7 +95,7 @@ async def test_process_action_not_found() -> None:
     process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
-        await process(1, "123456")
+        await process(1)
 
 
 @pytest.mark.asyncio
@@ -106,7 +106,7 @@ async def test_complete_action() -> None:
     repository.retrieve.return_value = repo_melding
     process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository)
 
-    melding = await process(1, "123456")
+    melding = await process(1)
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
@@ -121,4 +121,4 @@ async def test_complete_action_not_found() -> None:
     process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
-        await process(1, "123456")
+        await process(1)
