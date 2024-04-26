@@ -7,7 +7,6 @@ from meldingen_core.actions.base import (
     BaseCRUDAction,
     BaseListAction,
     BaseRetrieveAction,
-    BaseUpdateAction,
 )
 from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import InvalidTokenException, NotFoundException, TokenExpiredException
