@@ -1,7 +1,11 @@
 from abc import ABCMeta, abstractmethod
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
+
+
+class ClassificationNotFoundException(NotFoundException): ...
 
 
 class BaseClassifierAdapter(metaclass=ABCMeta):
@@ -21,4 +25,7 @@ class Classifier:
     async def __call__(self, text: str) -> Classification:
         name = await self._adapter(text)
 
-        return await self._repository.find_by_name(name)
+        try:
+            return await self._repository.find_by_name(name)
+        except NotFoundException as exception:
+            raise ClassificationNotFoundException() from exception
