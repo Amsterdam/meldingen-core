@@ -60,10 +60,20 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
     _verify_token: TokenVerifier[T]
+    _classify: Classifier
+    _state_machine: BaseMeldingStateMachine[T]
 
-    def __init__(self, repository: BaseRepository[T, T_co], token_verifier: TokenVerifier[T]) -> None:
+    def __init__(
+        self,
+        repository: BaseRepository[T, T_co],
+        token_verifier: TokenVerifier[T],
+        classifier: Classifier,
+        state_machine: BaseMeldingStateMachine[T],
+    ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier
+        self._classify = classifier
+        self._state_machine = state_machine
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._repository.retrieve(pk=pk)
@@ -75,6 +85,10 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         for key, value in values.items():
             setattr(melding, key, value)
 
+        classification = await self._classify(melding.text)
+        melding.classification = classification
+
+        await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
         await self._repository.save(melding)
 
         return melding
