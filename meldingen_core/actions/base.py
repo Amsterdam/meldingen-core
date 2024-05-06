@@ -1,6 +1,7 @@
 from collections.abc import Collection
 from typing import Any, Generic, TypeVar
 
+from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseRepository
 
@@ -26,8 +27,17 @@ class BaseRetrieveAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseListAction(BaseCRUDAction[T, T_co]):
-    async def __call__(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
-        return await self._repository.list(limit=limit, offset=offset)
+    async def __call__(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Collection[T_co]:
+        return await self._repository.list(
+            limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
+        )
 
 
 class BaseUpdateAction(BaseCRUDAction[T, T_co]):
