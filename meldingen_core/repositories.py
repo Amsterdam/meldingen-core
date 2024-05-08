@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import Generic, TypeVar
 
+from meldingen_core import SortingDirection
 from meldingen_core.models import Answer, Classification, Form, Melding, Question, User
 
 T = TypeVar("T")
@@ -13,7 +14,14 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
     async def save(self, obj: T) -> None: ...
 
     @abstractmethod
-    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]: ...
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Collection[T_co]: ...
 
     @abstractmethod
     async def retrieve(self, pk: int) -> T | None: ...

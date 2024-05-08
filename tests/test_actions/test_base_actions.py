@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
 
+from meldingen_core import SortingDirection
 from meldingen_core.actions.base import (
     BaseCreateAction,
     BaseDeleteAction,
@@ -60,7 +61,7 @@ async def test_base_list_action_limit(
 
     await base_list_action(limit=limit)
 
-    spy.assert_called_once_with(limit=limit, offset=None)
+    spy.assert_called_once_with(limit=limit, offset=None, sort_attribute_name=None, sort_direction=None)
 
 
 @pytest.mark.parametrize("offset", [1, 5, 10, 20])
@@ -74,7 +75,33 @@ async def test_base_list_action_offset(
 
     await base_list_action(offset=offset)
 
-    spy.assert_called_once_with(limit=None, offset=offset)
+    spy.assert_called_once_with(limit=None, offset=offset, sort_attribute_name=None, sort_direction=None)
+
+
+@pytest.mark.asyncio
+async def test_base_list_action_sort_attribute_name(
+    base_list_action: BaseListAction[DummyModel, DummyModel],
+    mocker: MockerFixture,
+) -> None:
+    spy = mocker.spy(base_list_action._repository, "list")
+
+    await base_list_action(sort_attribute_name="name")
+
+    spy.assert_called_once_with(limit=None, offset=None, sort_attribute_name="name", sort_direction=None)
+
+
+@pytest.mark.parametrize("direction", [SortingDirection.ASC, SortingDirection.DESC])
+@pytest.mark.asyncio
+async def test_base_list_action_sort_direction(
+    base_list_action: BaseListAction[DummyModel, DummyModel],
+    direction: SortingDirection,
+    mocker: MockerFixture,
+) -> None:
+    spy = mocker.spy(base_list_action._repository, "list")
+
+    await base_list_action(sort_direction=direction)
+
+    spy.assert_called_once_with(limit=None, offset=None, sort_attribute_name=None, sort_direction=direction)
 
 
 @pytest.mark.parametrize(
@@ -92,7 +119,51 @@ async def test_base_list_action_limit_offset(
 
     await base_list_action(limit=limit, offset=offset)
 
-    spy.assert_called_once_with(limit=limit, offset=offset)
+    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=None, sort_direction=None)
+
+
+@pytest.mark.parametrize(
+    "limit, offset, name",
+    [(10, 0, "name"), (5, 0, "another_name"), (10, 10, "yet_another_name"), (20, 0, "last_name")],
+)
+@pytest.mark.asyncio
+async def test_base_list_action_limit_offset_sort_attribute_name(
+    base_list_action: BaseListAction[DummyModel, DummyModel],
+    limit: int,
+    offset: int,
+    name: str,
+    mocker: MockerFixture,
+) -> None:
+    spy = mocker.spy(base_list_action._repository, "list")
+
+    await base_list_action(limit=limit, offset=offset, sort_attribute_name=name)
+
+    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=None)
+
+
+@pytest.mark.parametrize(
+    "limit, offset, name, direction",
+    [
+        (10, 0, "name", SortingDirection.ASC),
+        (5, 0, "another_name", SortingDirection.DESC),
+        (10, 10, "yet_another_name", SortingDirection.ASC),
+        (20, 0, "last_name", SortingDirection.DESC),
+    ],
+)
+@pytest.mark.asyncio
+async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
+    base_list_action: BaseListAction[DummyModel, DummyModel],
+    limit: int,
+    offset: int,
+    name: str,
+    direction: SortingDirection,
+    mocker: MockerFixture,
+) -> None:
+    spy = mocker.spy(base_list_action._repository, "list")
+
+    await base_list_action(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=direction)
+
+    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=direction)
 
 
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
