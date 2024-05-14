@@ -1,0 +1,15 @@
+{
+  "target": {
+    "meldingen-core": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-core:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-core:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+}
