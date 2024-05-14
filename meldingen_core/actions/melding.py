@@ -121,6 +121,12 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         return melding
 
 
+class MeldingAnswerQuestionsAction(BaseStateTransitionAction[T, T_co]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.ANSWER_QUESTIONS
+
+
 class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
     @property
     def transition_name(self) -> str:

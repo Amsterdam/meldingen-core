@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 import pytest
 
 from meldingen_core.actions.melding import (
+    MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingListAction,
@@ -15,7 +16,7 @@ from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 
@@ -78,6 +79,35 @@ async def test_melding_update_action() -> None:
 
     assert melding.text == text
     assert melding.classification == classification
+
+
+@pytest.mark.asyncio
+async def test_melding_answer_questions_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
+        state_machine, repository
+    )
+
+    melding = await answer_questions(123)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
+    repository.save.assert_awaited_once_with(repo_melding)
+
+
+@pytest.mark.asyncio
+async def test_melding_answer_questions_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
+        Mock(BaseMeldingStateMachine), repository
+    )
+    with pytest.raises(NotFoundException):
+        await answer_questions(1)
 
 
 @pytest.mark.asyncio
