@@ -87,15 +87,17 @@ async def test_melding_answer_questions_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
+    token_verifier = MagicMock(TokenVerifier)
     answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
-        state_machine, repository
+        state_machine, repository, token_verifier
     )
 
-    melding = await answer_questions(123)
+    melding = await answer_questions(123, "token")
 
     assert melding == repo_melding
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
+    token_verifier.assert_called_once_with(repo_melding, "token")
 
 
 @pytest.mark.asyncio
@@ -104,10 +106,10 @@ async def test_melding_answer_questions_action_not_found() -> None:
     repository.retrieve.return_value = None
 
     answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
-        Mock(BaseMeldingStateMachine), repository
+        Mock(BaseMeldingStateMachine), repository, Mock(TokenVerifier)
     )
     with pytest.raises(NotFoundException):
-        await answer_questions(1)
+        await answer_questions(1, "token")
 
 
 @pytest.mark.asyncio
