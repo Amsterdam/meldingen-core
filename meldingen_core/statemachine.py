@@ -10,6 +10,7 @@ T = TypeVar("T", bound=Melding)
 class MeldingStates(StrEnum):
     NEW = "new"
     CLASSIFIED = "classified"
+    QUESTIONS_ANSWERED = "questions_answered"
     PROCESSING = "processing"
     COMPLETED = "completed"
 
@@ -17,6 +18,7 @@ class MeldingStates(StrEnum):
 class MeldingTransitions(StrEnum):
     PROCESS = "process"
     CLASSIFY = "classify"
+    ANSWER_QUESTIONS = "answer_questions"
     COMPLETE = "complete"
 
 

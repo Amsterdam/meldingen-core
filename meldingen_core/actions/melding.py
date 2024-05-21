@@ -121,6 +121,34 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         return melding
 
 
+class MeldingAnswerQuestionsAction(Generic[T, T_co]):
+    _state_machine: BaseMeldingStateMachine[T]
+    _repository: BaseMeldingRepository[T, T_co]
+    _verify_token: TokenVerifier[T]
+
+    def __init__(
+        self,
+        state_machine: BaseMeldingStateMachine[T],
+        repository: BaseMeldingRepository[T, T_co],
+        token_verifier: TokenVerifier[T],
+    ):
+        self._state_machine = state_machine
+        self._repository = repository
+        self._verify_token = token_verifier
+
+    async def __call__(self, melding_id: int, token: str) -> T:
+        melding = await self._repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException()
+
+        self._verify_token(melding, token)
+
+        await self._state_machine.transition(melding, MeldingTransitions.ANSWER_QUESTIONS)
+        await self._repository.save(melding)
+
+        return melding
+
+
 class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
     @property
     def transition_name(self) -> str:
