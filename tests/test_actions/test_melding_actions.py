@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
+from structlog.testing import capture_logs
 
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
@@ -12,7 +13,7 @@ from meldingen_core.actions.melding import (
     MeldingRetrieveAction,
     MeldingUpdateAction,
 )
-from meldingen_core.classification import Classifier
+from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification, Melding
 from meldingen_core.repositories import BaseMeldingRepository
@@ -37,6 +38,24 @@ async def test_melding_create_action() -> None:
     classifier.assert_awaited_once()
     state_machine.transition.assert_awaited_once()
     assert melding.classification == classification
+
+
+@pytest.mark.asyncio
+async def test_melding_create_action_with_classification_not_found() -> None:
+    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
+    state_machine = Mock(BaseMeldingStateMachine)
+    repository = Mock(BaseMeldingRepository)
+    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(
+        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
+    )
+    melding = Melding("text")
+
+    with capture_logs() as captured_logs:
+        await action(melding)
+
+    assert len(captured_logs) == 1
+    assert captured_logs[0].get("log_level") == "error"
+    assert captured_logs[0].get("event") == "Classifier failed to find classification!"
 
 
 def test_can_instantiate_melding_list_action() -> None:
