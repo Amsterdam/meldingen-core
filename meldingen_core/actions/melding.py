@@ -50,10 +50,10 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
         try:
             classification = await self._classify(obj.text)
             obj.classification = classification
+            await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
         except ClassificationNotFoundException:
             log.error("Classifier failed to find classification!")
 
-        await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
         await self._repository.save(obj)
 
 

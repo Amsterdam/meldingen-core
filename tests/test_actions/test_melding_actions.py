@@ -56,6 +56,7 @@ async def test_melding_create_action_with_classification_not_found() -> None:
     assert len(captured_logs) == 1
     assert captured_logs[0].get("log_level") == "error"
     assert captured_logs[0].get("event") == "Classifier failed to find classification!"
+    state_machine.transition.assert_not_awaited()
 
 
 def test_can_instantiate_melding_list_action() -> None:
