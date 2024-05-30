@@ -28,6 +28,11 @@ class User:
 
 
 @dataclass
+class StaticForm:
+    title: str
+
+
+@dataclass
 class Form:
     title: str
     classification: Classification
