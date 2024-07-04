@@ -3,7 +3,7 @@ from collections.abc import Collection
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
-from meldingen_core.models import Answer, Classification, Form, Melding, Question, User
+from meldingen_core.models import Answer, Attachment, Classification, Form, Melding, Question, User
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -57,3 +57,6 @@ class BaseQuestionRepository(BaseRepository[Question, Question], metaclass=ABCMe
 
 
 class BaseAnswerRepository(BaseRepository[Answer, Answer], metaclass=ABCMeta): ...
+
+
+class BaseAttachmentRepository(BaseRepository[Attachment, Attachment], metaclass=ABCMeta): ...
