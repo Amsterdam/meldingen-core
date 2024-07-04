@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -17,6 +18,7 @@ class Melding:
     classification: Classification | None = None
     token: str | None = None
     token_expires: datetime | None = None
+    attachments: list["Attachment"] = field(default_factory=lambda: [], init=False)
 
 
 @dataclass
@@ -45,3 +47,10 @@ class Answer:
     text: str
     question: Question
     melding: Melding
+
+
+@dataclass
+class Attachment:
+    unique_identifier: str = field(default_factory=lambda: f"{uuid.uuid4()}", init=False)
+    file_path: str
+    original_filename: str
