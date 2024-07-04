@@ -18,7 +18,7 @@ class Melding:
     classification: Classification | None = None
     token: str | None = None
     token_expires: datetime | None = None
-    attachments: list["Attachment"] = field(default_factory=lambda: [], init=False)
+    attachments: list["Attachment"] = field(default_factory=list)
 
 
 @dataclass
