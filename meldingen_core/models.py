@@ -52,5 +52,6 @@ class Answer:
 @dataclass
 class Attachment:
     unique_identifier: str = field(default_factory=lambda: f"{uuid.uuid4()}", init=False)
-    file_path: str
+    file_path: str = field(init=False)
     original_filename: str
+    melding: Melding
