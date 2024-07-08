@@ -34,10 +34,10 @@ class UploadAttachmentAction(Generic[M, M_co]):
             raise NotFoundException("Melding not found")
 
         attachment = Attachment(original_filename, melding)
-        attachment.file_path = (
-            f"/{self._base_directory}/{attachment.unique_identifier.replace("-", "/")}/{original_filename}"
-        )
+        path = f"/{self._base_directory}/{attachment.unique_identifier.replace("-", "/")}/"
+        attachment.file_path = path + original_filename
 
+        await self._filesystem.makedirs(path)
         await self._filesystem.write(attachment.file_path, data)
 
         await self._attachment_repository.save(attachment)
