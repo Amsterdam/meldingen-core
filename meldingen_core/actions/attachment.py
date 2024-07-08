@@ -1,13 +1,18 @@
+from typing import Generic, TypeVar
+
 from plugfs.filesystem import Filesystem
 
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.models import Attachment
+from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 
+M = TypeVar("M", bound=Melding)
+M_co = TypeVar("M_co", bound=Melding, covariant=True)
 
-class UploadAttachmentAction:
+
+class UploadAttachmentAction(Generic[M, M_co]):
     _attachment_repository: BaseAttachmentRepository
-    _melding_repository: BaseMeldingRepository
+    _melding_repository: BaseMeldingRepository[M, M_co]
     _filesystem: Filesystem
 
     async def __call__(self, melding_id: int, original_filename: str, data: bytes) -> Attachment:
