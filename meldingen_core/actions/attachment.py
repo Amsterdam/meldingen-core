@@ -2,7 +2,7 @@ from plugfs.filesystem import Filesystem
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Attachment
-from meldingen_core.repositories import BaseMeldingRepository, BaseAttachmentRepository
+from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 
 
 class UploadAttachmentAction:
@@ -13,7 +13,7 @@ class UploadAttachmentAction:
     async def __call__(self, melding_id: int, original_filename: str, data: bytes) -> Attachment:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
-            raise NotFoundException('Melding not found')
+            raise NotFoundException("Melding not found")
 
         attachment = Attachment(original_filename, melding)
         attachment.file_path = attachment.unique_identifier.replace("-", "/") + "/" + original_filename
