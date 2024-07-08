@@ -3,14 +3,17 @@ from typing import Generic, TypeVar
 from plugfs.filesystem import Filesystem
 
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 
+A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
 M_co = TypeVar("M_co", bound=Melding, covariant=True)
 
 
-class UploadAttachmentAction(Generic[M, M_co]):
+class UploadAttachmentAction(Generic[A, M, M_co]):
+    _create_attachment: BaseAttachmentFactory[A]
     _attachment_repository: BaseAttachmentRepository
     _melding_repository: BaseMeldingRepository[M, M_co]
     _filesystem: Filesystem
@@ -18,11 +21,13 @@ class UploadAttachmentAction(Generic[M, M_co]):
 
     def __init__(
         self,
+        attachment_factory: BaseAttachmentFactory[A],
         attachment_repository: BaseAttachmentRepository,
         melding_repository: BaseMeldingRepository[M, M_co],
         filesystem: Filesystem,
         base_directory: str,
     ):
+        self._create_attachment = attachment_factory
         self._attachment_repository = attachment_repository
         self._melding_repository = melding_repository
         self._filesystem = filesystem
@@ -33,7 +38,7 @@ class UploadAttachmentAction(Generic[M, M_co]):
         if melding is None:
             raise NotFoundException("Melding not found")
 
-        attachment = Attachment(original_filename, melding)
+        attachment = self._create_attachment(original_filename, melding)
         path = f"/{self._base_directory}/{attachment.unique_identifier.replace("-", "/")}/"
         attachment.file_path = path + original_filename
 
