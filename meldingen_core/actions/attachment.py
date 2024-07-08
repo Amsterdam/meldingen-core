@@ -15,6 +15,16 @@ class UploadAttachmentAction(Generic[M, M_co]):
     _melding_repository: BaseMeldingRepository[M, M_co]
     _filesystem: Filesystem
 
+    def __init__(
+        self,
+        attachment_repository: BaseAttachmentRepository,
+        melding_repository: BaseMeldingRepository[M, M_co],
+        filesystem: Filesystem,
+    ):
+        self._attachment_repository = attachment_repository
+        self._melding_repository = melding_repository
+        self._filesystem = filesystem
+
     async def __call__(self, melding_id: int, original_filename: str, data: bytes) -> Attachment:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
