@@ -1,4 +1,5 @@
 from typing import Generic, TypeVar
+from uuid import uuid4
 
 from plugfs.filesystem import Filesystem
 
@@ -39,7 +40,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
             raise NotFoundException("Melding not found")
 
         attachment = self._create_attachment(original_filename, melding)
-        path = f"/{self._base_directory}/{attachment.unique_identifier.replace("-", "/")}/"
+        path = f"/{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
         attachment.file_path = path + original_filename
 
         await self._filesystem.makedirs(path)
