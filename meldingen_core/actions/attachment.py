@@ -14,7 +14,7 @@ M_co = TypeVar("M_co", bound=Melding, covariant=True)
 
 
 class UploadAttachmentAction(Generic[A, M, M_co]):
-    _create_attachment: BaseAttachmentFactory[A]
+    _create_attachment: BaseAttachmentFactory[A, M]
     _attachment_repository: BaseAttachmentRepository
     _melding_repository: BaseMeldingRepository[M, M_co]
     _filesystem: Filesystem
@@ -22,7 +22,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
 
     def __init__(
         self,
-        attachment_factory: BaseAttachmentFactory[A],
+        attachment_factory: BaseAttachmentFactory[A, M],
         attachment_repository: BaseAttachmentRepository,
         melding_repository: BaseMeldingRepository[M, M_co],
         filesystem: Filesystem,
