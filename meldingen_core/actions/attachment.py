@@ -34,7 +34,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._filesystem = filesystem
         self._base_directory = base_directory
 
-    async def __call__(self, melding_id: int, original_filename: str, data: bytes) -> Attachment:
+    async def __call__(self, melding_id: int, original_filename: str, data: bytes) -> A:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException("Melding not found")
