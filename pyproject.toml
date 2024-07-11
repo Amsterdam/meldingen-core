@@ -8,6 +8,7 @@ license = "EUPL-2.1"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+plugfs = {git = "https://github.com/amsterdam/plugfs.git"}
 structlog = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -44,6 +45,9 @@ profile = "black"
 line_length = 120
 known_first_party = ["meldingen_core"]
 overwrite_in_place = true
+
+[tool.coverage.run]
+source = ["meldingen_core"]
 
 [tool.coverage.report]
 exclude_lines = ["@abstractmethod", "pragma: no cover"]
