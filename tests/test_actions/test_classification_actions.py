@@ -38,5 +38,7 @@ def test_can_instantiate_update_action() -> None:
 
 
 def test_can_instantiate_delete_action() -> None:
-    action = ClassificationDeleteAction(Mock(BaseClassificationRepository))
+    action: ClassificationDeleteAction[Classification, Classification] = ClassificationDeleteAction(
+        Mock(BaseClassificationRepository)
+    )
     assert isinstance(action, ClassificationDeleteAction)
