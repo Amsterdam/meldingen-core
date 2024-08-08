@@ -12,7 +12,9 @@ from meldingen_core.repositories import BaseClassificationRepository
 
 
 def test_can_instantiate_create_action() -> None:
-    action = ClassificationCreateAction(Mock(BaseClassificationRepository))
+    action: ClassificationCreateAction[Classification, Classification] = ClassificationCreateAction(
+        Mock(BaseClassificationRepository)
+    )
     assert isinstance(action, ClassificationCreateAction)
 
 
