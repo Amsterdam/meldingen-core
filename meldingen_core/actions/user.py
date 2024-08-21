@@ -29,5 +29,5 @@ class UserRetrieveAction(BaseRetrieveAction[T, T_co]):
     """Action that retrieves a user."""
 
 
-class UserDeleteAction(BaseDeleteAction[User, User]):
+class UserDeleteAction(BaseDeleteAction[T, T_co]):
     """Action that deletes a user."""
