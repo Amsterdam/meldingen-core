@@ -13,7 +13,7 @@ T = TypeVar("T", bound=User)
 T_co = TypeVar("T_co", covariant=True, bound=User)
 
 
-class UserCreateAction(BaseCreateAction[User, User]):
+class UserCreateAction(BaseCreateAction[T, T_co]):
     """Action that add a user."""
 
 
