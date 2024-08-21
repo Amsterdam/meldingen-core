@@ -32,5 +32,5 @@ def test_can_instantiate_user_update_action() -> None:
 
 
 def test_can_instantiate_user_delete_action() -> None:
-    action = UserDeleteAction(Mock(BaseUserRepository))
+    action: UserDeleteAction[User, User] = UserDeleteAction(Mock(BaseUserRepository))
     assert isinstance(action, UserDeleteAction)
