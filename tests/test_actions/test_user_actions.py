@@ -12,7 +12,7 @@ from meldingen_core.repositories import BaseUserRepository
 
 
 def test_can_instantiate_user_create_action() -> None:
-    action = UserCreateAction(Mock(BaseUserRepository))
+    action: UserCreateAction[User, User] = UserCreateAction(Mock(BaseUserRepository))
     assert isinstance(action, UserCreateAction)
 
 
