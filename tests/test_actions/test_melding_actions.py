@@ -21,7 +21,7 @@ from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransiti
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_create_action() -> None:
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
@@ -40,7 +40,7 @@ async def test_melding_create_action() -> None:
     assert melding.classification == classification
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_create_action_with_classification_not_found() -> None:
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     state_machine = Mock(BaseMeldingStateMachine)
@@ -69,7 +69,7 @@ def test_can_instantiate_melding_retrieve_action() -> None:
     assert isinstance(action, MeldingRetrieveAction)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_update_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
@@ -82,7 +82,7 @@ async def test_melding_update_action_not_found() -> None:
         await action(123, {"text": "test"}, "123456")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_update_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
@@ -101,7 +101,7 @@ async def test_melding_update_action() -> None:
     assert melding.classification == classification
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_answer_questions_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repo_melding = Melding("melding text")
@@ -120,7 +120,7 @@ async def test_melding_answer_questions_action() -> None:
     token_verifier.assert_called_once_with(repo_melding, "token")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_answer_questions_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
@@ -132,7 +132,7 @@ async def test_melding_answer_questions_action_not_found() -> None:
         await answer_questions(1, "token")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_process_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repo_melding = Melding("melding text")
@@ -147,7 +147,7 @@ async def test_process_action() -> None:
     repository.save.assert_called_once_with(repo_melding)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_process_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
@@ -158,7 +158,7 @@ async def test_process_action_not_found() -> None:
         await process(1)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_complete_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repo_melding = Melding("melding text")
@@ -173,7 +173,7 @@ async def test_complete_action() -> None:
     repository.save.assert_called_once_with(repo_melding)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_complete_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None

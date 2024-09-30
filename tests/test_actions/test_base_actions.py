@@ -24,7 +24,7 @@ def base_list_action() -> BaseListAction[DummyModel, DummyModel]:
     return BaseListAction(Mock(BaseRepository))
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_create_action(mocker: MockerFixture) -> None:
     action: BaseCreateAction[DummyModel, DummyModel] = BaseCreateAction(Mock(BaseRepository))
 
@@ -37,7 +37,7 @@ async def test_base_create_action(mocker: MockerFixture) -> None:
     spy.assert_called_once_with(dummy)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     mocker: MockerFixture,
@@ -53,7 +53,7 @@ async def test_base_list_action(
     "limit",
     [1, 5, 10, 20],
 )
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_limit(
     base_list_action: BaseListAction[DummyModel, DummyModel], limit: int, mocker: MockerFixture
 ) -> None:
@@ -65,7 +65,7 @@ async def test_base_list_action_limit(
 
 
 @pytest.mark.parametrize("offset", [1, 5, 10, 20])
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_offset(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     offset: int,
@@ -78,7 +78,7 @@ async def test_base_list_action_offset(
     spy.assert_called_once_with(limit=None, offset=offset, sort_attribute_name=None, sort_direction=None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_sort_attribute_name(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     mocker: MockerFixture,
@@ -91,7 +91,7 @@ async def test_base_list_action_sort_attribute_name(
 
 
 @pytest.mark.parametrize("direction", [SortingDirection.ASC, SortingDirection.DESC])
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_sort_direction(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     direction: SortingDirection,
@@ -108,7 +108,7 @@ async def test_base_list_action_sort_direction(
     "limit, offset",
     [(10, 0), (5, 0), (10, 10), (20, 0)],
 )
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_limit_offset(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     limit: int,
@@ -126,7 +126,7 @@ async def test_base_list_action_limit_offset(
     "limit, offset, name",
     [(10, 0, "name"), (5, 0, "another_name"), (10, 10, "yet_another_name"), (20, 0, "last_name")],
 )
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_limit_offset_sort_attribute_name(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     limit: int,
@@ -150,7 +150,7 @@ async def test_base_list_action_limit_offset_sort_attribute_name(
         (20, 0, "last_name", SortingDirection.DESC),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
     base_list_action: BaseListAction[DummyModel, DummyModel],
     limit: int,
@@ -167,7 +167,7 @@ async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
 
 
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_retrieve_action(pk: int, mocker: MockerFixture) -> None:
     action: BaseRetrieveAction[DummyModel, DummyModel] = BaseRetrieveAction(Mock(BaseRepository))
 
@@ -179,7 +179,7 @@ async def test_base_retrieve_action(pk: int, mocker: MockerFixture) -> None:
 
 
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_delete_action(pk: int, mocker: MockerFixture) -> None:
     action: BaseDeleteAction[DummyModel, DummyModel] = BaseDeleteAction(Mock(BaseRepository))
 
@@ -190,7 +190,7 @@ async def test_base_delete_action(pk: int, mocker: MockerFixture) -> None:
     spy.assert_called_once_with(pk=pk)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_update_action(mocker: MockerFixture) -> None:
     action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 
@@ -206,7 +206,7 @@ async def test_base_update_action(mocker: MockerFixture) -> None:
     assert output.name == "new name"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_base_delete_action_not_found(mocker: MockerFixture) -> None:
     action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 

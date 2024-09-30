@@ -11,7 +11,7 @@ from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRep
 from meldingen_core.token import TokenVerifier
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_melding_not_found() -> None:
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve.return_value = None
@@ -31,7 +31,7 @@ async def test_melding_not_found() -> None:
     assert str(exception_info.value) == "Melding not found"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_can_handle_attachment() -> None:
     melding = Melding("melding text")
 
