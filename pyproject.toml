@@ -12,6 +12,7 @@ plugfs = {git = "https://github.com/amsterdam/plugfs.git"}
 structlog = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
+anyio = "^4.6.0"
 black = "^24.8.0"
 isort = "^5.13.2"
 mkdocs-literate-nav = "^0.6.1"
@@ -20,7 +21,6 @@ mkdocstrings = {version = "^0.26.1", extras = ["python"]}
 mypy = "^1.11.2"
 pre-commit = "^3.8.0"
 pytest = "^8.3.3"
-pytest-asyncio = "^0.24.0"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.12.0"
 

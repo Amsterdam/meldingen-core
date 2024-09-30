@@ -8,7 +8,7 @@ from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_classifier() -> None:
     adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
     repository = Mock(BaseClassificationRepository)
@@ -23,7 +23,7 @@ async def test_classifier() -> None:
     repository.find_by_name.assert_called_once_with("classification_name")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_classifier_classification_not_found() -> None:
     adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
     repository = Mock(BaseClassificationRepository)
