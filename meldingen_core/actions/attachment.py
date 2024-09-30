@@ -1,6 +1,7 @@
 from typing import Generic, TypeVar
 from uuid import uuid4
 
+from plugfs import filesystem
 from plugfs.filesystem import Filesystem
 
 from meldingen_core.exceptions import NotFoundException
@@ -89,6 +90,8 @@ class DownloadAttachmentAction(Generic[M, M_co]):
         if attachment.melding != melding:
             raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
 
-        file = await self._filesystem.get_file(attachment.file_path)
-
-        return await file.read()
+        try:
+            file = await self._filesystem.get_file(attachment.file_path)
+            return await file.read()
+        except filesystem.NotFoundException as exception:
+            raise NotFoundException("File not found") from exception
