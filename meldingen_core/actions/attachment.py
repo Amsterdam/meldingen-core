@@ -65,10 +65,12 @@ class DownloadAttachmentAction(Generic[M, M_co]):
 
     def __init__(
         self,
+        melding_repository: BaseMeldingRepository[M, M_co],
         token_verifier: TokenVerifier[M],
         attachment_repository: BaseAttachmentRepository,
         filesystem: Filesystem,
     ):
+        self._melding_repository = melding_repository
         self._verify_token = token_verifier
         self._attachment_repository = attachment_repository
         self._filesystem = filesystem
