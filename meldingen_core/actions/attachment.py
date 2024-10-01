@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import AsyncIterator, Generic, TypeVar
 from uuid import uuid4
 
 from plugfs import filesystem
@@ -76,7 +76,7 @@ class DownloadAttachmentAction(Generic[M, M_co]):
         self._attachment_repository = attachment_repository
         self._filesystem = filesystem
 
-    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> bytes:
+    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> AsyncIterator[bytes]:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException("Melding not found")
@@ -92,6 +92,6 @@ class DownloadAttachmentAction(Generic[M, M_co]):
 
         try:
             file = await self._filesystem.get_file(attachment.file_path)
-            return await file.read()
+            return await file.get_iterator()
         except filesystem.NotFoundException as exception:
             raise NotFoundException("File not found") from exception
