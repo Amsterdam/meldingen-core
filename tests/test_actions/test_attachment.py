@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 from unittest.mock import Mock
 
 import pytest
@@ -10,6 +11,11 @@ from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
+
+
+async def _iterator() -> AsyncIterator[bytes]:
+    for chunk in [b"Hello ", b"world", b"!"]:
+        yield chunk
 
 
 class TestUploadAttachmentAction:
@@ -27,8 +33,9 @@ class TestUploadAttachmentAction:
             "/tmp",
         )
 
+
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, "super_secret_token", "original_filename.ext", b"Hello World!")
+            await action(123, "super_secret_token", "original_filename.ext", _iterator())
 
         assert str(exception_info.value) == "Melding not found"
 
@@ -52,12 +59,12 @@ class TestUploadAttachmentAction:
             "/tmp",
         )
 
-        data = b"Hello World!"
+        iterator = _iterator()
 
-        attachment = await action(123, "super_secret_token", "original_filename.ext", data)
+        attachment = await action(123, "super_secret_token", "original_filename.ext", iterator)
 
         filesystem.makedirs.assert_awaited_once()
-        filesystem.write.assert_awaited_once_with(attachment.file_path, data)
+        filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
         attachment_repository.save.assert_awaited_once_with(attachment)
 
 
