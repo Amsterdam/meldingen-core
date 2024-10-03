@@ -1510,8 +1510,8 @@ azure-storage-blob = "^12.23.1"
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/plugfs.git"
-reference = "feat/provide-file-data-iterators"
-resolved_reference = "ed56a7d973a096a5a285b95c71651adddac55405"
+reference = "HEAD"
+resolved_reference = "04333bcd643991ef2305659203f66ec9b7e2f26a"
 
 [[package]]
 name = "pluggy"
@@ -2161,4 +2161,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "d23317b712aeb3c9c838e0114232afa264865b358964081ebe8e04c7920c2d97"
+content-hash = "b9e550eba8a8aab6b90a462ef3dbed4a0c3f313d86473a2825b6aa0d8470be14"
