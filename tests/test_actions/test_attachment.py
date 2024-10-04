@@ -33,7 +33,6 @@ class TestUploadAttachmentAction:
             "/tmp",
         )
 
-
         with pytest.raises(NotFoundException) as exception_info:
             await action(123, "super_secret_token", "original_filename.ext", _iterator())
 
