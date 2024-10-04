@@ -1511,7 +1511,7 @@ azure-storage-blob = "^12.23.1"
 type = "git"
 url = "https://github.com/amsterdam/plugfs.git"
 reference = "HEAD"
-resolved_reference = "17d46926819b24e633159850d5334e0c4d232484"
+resolved_reference = "04333bcd643991ef2305659203f66ec9b7e2f26a"
 
 [[package]]
 name = "pluggy"
