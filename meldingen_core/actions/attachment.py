@@ -39,7 +39,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._verify_token = token_verifier
         self._base_directory = base_directory
 
-    async def __call__(self, melding_id: int, token: str, original_filename: str, data: bytes) -> A:
+    async def __call__(self, melding_id: int, token: str, original_filename: str, data: AsyncIterator[bytes]) -> A:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException("Melding not found")
@@ -51,7 +51,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         attachment.file_path = path + original_filename
 
         await self._filesystem.makedirs(path)
-        await self._filesystem.write(attachment.file_path, data)
+        await self._filesystem.write_iterator(attachment.file_path, data)
 
         await self._attachment_repository.save(attachment)
 
