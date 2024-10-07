@@ -167,9 +167,11 @@ async def test_add_attachments_actions() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     token_verifier = MagicMock(TokenVerifier)
 
-    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
+    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
+        state_machine, repository, token_verifier
+    )
 
-    melding = await add_attachments(1, 'token')
+    melding = await add_attachments(1, "token")
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_ATTACHMENTS)
@@ -183,10 +185,12 @@ async def test_add_attachments_melding_not_found() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     token_verifier = MagicMock(TokenVerifier)
 
-    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
+    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
+        state_machine, repository, token_verifier
+    )
 
     with pytest.raises(NotFoundException):
-       await add_attachments(1, 'token')
+        await add_attachments(1, "token")
 
 
 @pytest.mark.anyio
