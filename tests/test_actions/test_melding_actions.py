@@ -5,6 +5,7 @@ import pytest
 from structlog.testing import capture_logs
 
 from meldingen_core.actions.melding import (
+    MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
@@ -156,6 +157,36 @@ async def test_process_action_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await process(1)
+
+
+@pytest.mark.anyio
+async def test_add_attachments_actions() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repo_melding = Melding("melding text")
+    repository.retrieve.return_value = repo_melding
+    state_machine = Mock(BaseMeldingStateMachine)
+    token_verifier = MagicMock(TokenVerifier)
+
+    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
+
+    melding = await add_attachments(1, 'token')
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_ATTACHMENTS)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_add_attachments_melding_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    state_machine = Mock(BaseMeldingStateMachine)
+    token_verifier = MagicMock(TokenVerifier)
+
+    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
+
+    with pytest.raises(NotFoundException):
+       await add_attachments(1, 'token')
 
 
 @pytest.mark.anyio
