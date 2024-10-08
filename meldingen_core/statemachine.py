@@ -11,6 +11,7 @@ class MeldingStates(StrEnum):
     NEW = "new"
     CLASSIFIED = "classified"
     QUESTIONS_ANSWERED = "questions_answered"
+    ATTACHMENTS_ADDED = "attachments_added"
     PROCESSING = "processing"
     COMPLETED = "completed"
 
@@ -19,6 +20,7 @@ class MeldingTransitions(StrEnum):
     PROCESS = "process"
     CLASSIFY = "classify"
     ANSWER_QUESTIONS = "answer_questions"
+    ADD_ATTACHMENTS = "add_attachments"
     COMPLETE = "complete"
 
 
