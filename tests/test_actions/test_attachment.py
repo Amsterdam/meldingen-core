@@ -11,6 +11,7 @@ from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
+from meldingen_core.validators import BaseMediaTypeValidator
 
 
 async def _iterator() -> AsyncIterator[bytes]:
@@ -30,11 +31,12 @@ class TestUploadAttachmentAction:
             melding_repository,
             Mock(Filesystem),
             Mock(TokenVerifier),
+            Mock(BaseMediaTypeValidator),
             "/tmp",
         )
 
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, "super_secret_token", "original_filename.ext", _iterator())
+            await action(123, "super_secret_token", "original_filename.ext", "image/png", _iterator())
 
         assert str(exception_info.value) == "Melding not found"
 
@@ -55,12 +57,13 @@ class TestUploadAttachmentAction:
             melding_repository,
             filesystem,
             Mock(TokenVerifier),
+            Mock(BaseMediaTypeValidator),
             "/tmp",
         )
 
         iterator = _iterator()
 
-        attachment = await action(123, "super_secret_token", "original_filename.ext", iterator)
+        attachment = await action(123, "super_secret_token", "original_filename.ext", "image/png", iterator)
 
         filesystem.makedirs.assert_awaited_once()
         filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
