@@ -9,7 +9,7 @@ from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
-from meldingen_core.validators import BaseMediaTypeValidator
+from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
 
 A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
@@ -24,6 +24,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
     _verify_token: TokenVerifier[M]
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
+    _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
 
     def __init__(
         self,
@@ -33,6 +34,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         filesystem: Filesystem,
         token_verifier: TokenVerifier[M],
         media_type_validator: BaseMediaTypeValidator,
+        media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
         base_directory: str,
     ):
         self._create_attachment = attachment_factory
@@ -41,6 +43,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._filesystem = filesystem
         self._verify_token = token_verifier
         self._validate_media_type = media_type_validator
+        self._validate_media_type_integrity = media_type_integrity_validator
         self._base_directory = base_directory
 
     async def __call__(
@@ -53,6 +56,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._verify_token(melding, token)
 
         self._validate_media_type(media_type)
+        self._validate_media_type_integrity(media_type, data)
 
         attachment = self._create_attachment(original_filename, melding)
         path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"

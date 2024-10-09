@@ -11,7 +11,7 @@ from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
-from meldingen_core.validators import BaseMediaTypeValidator
+from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
 
 
 async def _iterator() -> AsyncIterator[bytes]:
@@ -32,6 +32,7 @@ class TestUploadAttachmentAction:
             Mock(Filesystem),
             Mock(TokenVerifier),
             Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
             "/tmp",
         )
 
@@ -58,6 +59,7 @@ class TestUploadAttachmentAction:
             filesystem,
             Mock(TokenVerifier),
             Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
             "/tmp",
         )
 
