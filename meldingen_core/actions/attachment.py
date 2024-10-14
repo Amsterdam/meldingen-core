@@ -56,7 +56,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._verify_token(melding, token)
 
         self._validate_media_type(media_type)
-        self._validate_media_type_integrity(media_type, data)
+        await self._validate_media_type_integrity(media_type, data)
 
         attachment = self._create_attachment(original_filename, melding)
         path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
