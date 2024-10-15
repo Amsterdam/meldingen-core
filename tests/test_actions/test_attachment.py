@@ -1,5 +1,5 @@
 from typing import AsyncIterator
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from plugfs import filesystem
@@ -59,7 +59,7 @@ class TestUploadAttachmentAction:
             filesystem,
             Mock(TokenVerifier),
             Mock(BaseMediaTypeValidator),
-            Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseMediaTypeIntegrityValidator),
             "/tmp",
         )
 
