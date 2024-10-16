@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from typing import AsyncIterator
 
 
 class MediaTypeNotAllowed(Exception): ...
@@ -16,6 +15,6 @@ class MediaTypeIntegrityError(Exception): ...
 
 class BaseMediaTypeIntegrityValidator(metaclass=ABCMeta):
     @abstractmethod
-    def __call__(self, media_type: str, data: AsyncIterator[bytes]) -> None:
+    def __call__(self, media_type: str, data: bytes) -> None:
         """Checks if the provided media type matches the media type that is determined from the provided data,
         raises MediaTypeIntegrityError if not."""

@@ -1,5 +1,5 @@
 from typing import AsyncIterator
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from plugfs import filesystem
@@ -37,7 +37,7 @@ class TestUploadAttachmentAction:
         )
 
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, "super_secret_token", "original_filename.ext", "image/png", _iterator())
+            await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", _iterator())
 
         assert str(exception_info.value) == "Melding not found"
 
@@ -65,7 +65,7 @@ class TestUploadAttachmentAction:
 
         iterator = _iterator()
 
-        attachment = await action(123, "super_secret_token", "original_filename.ext", "image/png", iterator)
+        attachment = await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", iterator)
 
         filesystem.makedirs.assert_awaited_once()
         filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)

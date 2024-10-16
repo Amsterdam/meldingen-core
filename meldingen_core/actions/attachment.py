@@ -47,7 +47,13 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._base_directory = base_directory
 
     async def __call__(
-        self, melding_id: int, token: str, original_filename: str, media_type: str, data: AsyncIterator[bytes]
+        self,
+        melding_id: int,
+        token: str,
+        original_filename: str,
+        media_type: str,
+        data_header: bytes,
+        data: AsyncIterator[bytes],
     ) -> A:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
@@ -56,7 +62,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         self._verify_token(melding, token)
 
         self._validate_media_type(media_type)
-        self._validate_media_type_integrity(media_type, data)
+        self._validate_media_type_integrity(media_type, data_header)
 
         attachment = self._create_attachment(original_filename, melding)
         path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
