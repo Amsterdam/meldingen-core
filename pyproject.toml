@@ -17,7 +17,7 @@ black = "^24.10.0"
 isort = "^5.13.2"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.5.40"
-mkdocstrings = {version = "^0.26.1", extras = ["python"]}
+mkdocstrings = {version = "^0.26.2", extras = ["python"]}
 mypy = "^1.12.0"
 pre-commit = "^4.0.1"
 pytest = "^8.3.3"
