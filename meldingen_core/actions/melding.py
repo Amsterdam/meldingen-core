@@ -66,14 +66,14 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 
 class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
-    _verify_token: TokenVerifier[T]
+    _verify_token: TokenVerifier[T, T_co]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
 
     def __init__(
         self,
         repository: BaseRepository[T, T_co],
-        token_verifier: TokenVerifier[T],
+        token_verifier: TokenVerifier[T, T_co],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
     ) -> None:
@@ -83,11 +83,7 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         self._state_machine = state_machine
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
-        melding = await self._repository.retrieve(pk=pk)
-        if melding is None:
-            raise NotFoundException()
-
-        self._verify_token(melding, token)
+        melding = await self._verify_token(pk, token)
 
         for key, value in values.items():
             setattr(melding, key, value)
@@ -131,24 +127,20 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
 class MeldingAnswerQuestionsAction(Generic[T, T_co]):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
-    _verify_token: TokenVerifier[T]
+    _verify_token: TokenVerifier[T, T_co]
 
     def __init__(
         self,
         state_machine: BaseMeldingStateMachine[T],
         repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T],
+        token_verifier: TokenVerifier[T, T_co],
     ):
         self._state_machine = state_machine
         self._repository = repository
         self._verify_token = token_verifier
 
     async def __call__(self, melding_id: int, token: str) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
-        self._verify_token(melding, token)
+        melding = await self._verify_token(melding_id, token)
 
         await self._state_machine.transition(melding, MeldingTransitions.ANSWER_QUESTIONS)
         await self._repository.save(melding)
@@ -159,24 +151,20 @@ class MeldingAnswerQuestionsAction(Generic[T, T_co]):
 class MeldingAddAttachmentsAction(Generic[T, T_co]):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
-    _verify_token: TokenVerifier[T]
+    _verify_token: TokenVerifier[T, T_co]
 
     def __init__(
         self,
         state_machine: BaseMeldingStateMachine[T],
         repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T],
+        token_verifier: TokenVerifier[T, T_co],
     ):
         self._state_machine = state_machine
         self._repository = repository
         self._verify_token = token_verifier
 
     async def __call__(self, melding_id: int, token: str) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
-        self._verify_token(melding, token)
+        melding = await self._verify_token(melding_id, token)
 
         await self._state_machine.transition(melding, MeldingTransitions.ADD_ATTACHMENTS)
         await self._repository.save(melding)

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from structlog.testing import capture_logs
@@ -71,24 +71,11 @@ def test_can_instantiate_melding_retrieve_action() -> None:
 
 
 @pytest.mark.anyio
-async def test_melding_update_action_not_found() -> None:
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = None
-    token_verifier = MagicMock(TokenVerifier)
-    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(
-        repository, token_verifier, AsyncMock(Classifier), Mock(BaseMeldingStateMachine)
-    )
-
-    with pytest.raises(NotFoundException):
-        await action(123, {"text": "test"}, "123456")
-
-
-@pytest.mark.anyio
 async def test_melding_update_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
-    token_verifier = MagicMock(TokenVerifier)
+    token_verifier = AsyncMock(TokenVerifier)
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
     action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(
@@ -107,8 +94,10 @@ async def test_melding_answer_questions_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = repo_melding
-    token_verifier = MagicMock(TokenVerifier)
+
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
+
     answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
         state_machine, repository, token_verifier
     )
@@ -118,19 +107,7 @@ async def test_melding_answer_questions_action() -> None:
     assert melding == repo_melding
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
-    token_verifier.assert_called_once_with(repo_melding, "token")
-
-
-@pytest.mark.anyio
-async def test_melding_answer_questions_action_not_found() -> None:
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = None
-
-    answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
-        Mock(BaseMeldingStateMachine), repository, Mock(TokenVerifier)
-    )
-    with pytest.raises(NotFoundException):
-        await answer_questions(1, "token")
+    token_verifier.assert_awaited_once()
 
 
 @pytest.mark.anyio
@@ -165,7 +142,8 @@ async def test_add_attachments_actions() -> None:
     repo_melding = Melding("melding text")
     repository.retrieve.return_value = repo_melding
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier = MagicMock(TokenVerifier)
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
 
     add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
         state_machine, repository, token_verifier
@@ -176,21 +154,6 @@ async def test_add_attachments_actions() -> None:
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_ATTACHMENTS)
     repository.save.assert_called_once_with(repo_melding)
-
-
-@pytest.mark.anyio
-async def test_add_attachments_melding_not_found() -> None:
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = None
-    state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier = MagicMock(TokenVerifier)
-
-    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
-        state_machine, repository, token_verifier
-    )
-
-    with pytest.raises(NotFoundException):
-        await add_attachments(1, "token")
 
 
 @pytest.mark.anyio
