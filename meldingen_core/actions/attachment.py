@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from typing import AsyncIterator, Generic, TypeVar
 from uuid import uuid4
 
@@ -12,13 +13,14 @@ from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
 
 A = TypeVar("A", bound=Attachment)
+A_co = TypeVar("A_co", bound=Attachment, covariant=True)
 M = TypeVar("M", bound=Melding)
 M_co = TypeVar("M_co", bound=Melding, covariant=True)
 
 
-class UploadAttachmentAction(Generic[A, M, M_co]):
+class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
     _create_attachment: BaseAttachmentFactory[A, M]
-    _attachment_repository: BaseAttachmentRepository
+    _attachment_repository: BaseAttachmentRepository[A, A_co]
     _filesystem: Filesystem
     _verify_token: TokenVerifier[M, M_co]
     _base_directory: str
@@ -28,7 +30,7 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
     def __init__(
         self,
         attachment_factory: BaseAttachmentFactory[A, M],
-        attachment_repository: BaseAttachmentRepository,
+        attachment_repository: BaseAttachmentRepository[A, A_co],
         filesystem: Filesystem,
         token_verifier: TokenVerifier[M, M_co],
         media_type_validator: BaseMediaTypeValidator,
@@ -69,15 +71,15 @@ class UploadAttachmentAction(Generic[A, M, M_co]):
         return attachment
 
 
-class DownloadAttachmentAction(Generic[M, M_co]):
+class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
     _verify_token: TokenVerifier[M, M_co]
-    _attachment_repository: BaseAttachmentRepository
+    _attachment_repository: BaseAttachmentRepository[A, A_co]
     _filesystem: Filesystem
 
     def __init__(
         self,
         token_verifier: TokenVerifier[M, M_co],
-        attachment_repository: BaseAttachmentRepository,
+        attachment_repository: BaseAttachmentRepository[A, A_co],
         filesystem: Filesystem,
     ):
         self._verify_token = token_verifier
@@ -99,3 +101,19 @@ class DownloadAttachmentAction(Generic[M, M_co]):
             return await file.get_iterator()
         except filesystem.NotFoundException as exception:
             raise NotFoundException("File not found") from exception
+
+
+class ListAttachmentsAction(Generic[A, A_co, M, M_co]):
+    _verify_token: TokenVerifier[M, M_co]
+    _attachment_repository: BaseAttachmentRepository[A, A_co]
+
+    def __init__(
+        self, token_verifier: TokenVerifier[M, M_co], attachment_repository: BaseAttachmentRepository[A, A_co]
+    ):
+        self._verify_token = token_verifier
+        self._attachment_repository = attachment_repository
+
+    async def __call__(self, melding_id: int, token: str) -> Collection[A_co]:
+        await self._verify_token(melding_id, token)
+
+        return await self._attachment_repository.find_by_melding(melding_id)

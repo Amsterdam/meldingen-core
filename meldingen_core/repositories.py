@@ -59,4 +59,10 @@ class BaseQuestionRepository(BaseRepository[Question, Question], metaclass=ABCMe
 class BaseAnswerRepository(BaseRepository[Answer, Answer], metaclass=ABCMeta): ...
 
 
-class BaseAttachmentRepository(BaseRepository[Attachment, Attachment], metaclass=ABCMeta): ...
+A = TypeVar("A", bound=Attachment)
+A_co = TypeVar("A_co", covariant=True, bound=Attachment)
+
+
+class BaseAttachmentRepository(BaseRepository[A, A_co], metaclass=ABCMeta):
+    @abstractmethod
+    async def find_by_melding(self, melding_id: int) -> Collection[A_co]: ...
