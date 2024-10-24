@@ -117,3 +117,36 @@ class ListAttachmentsAction(Generic[A, A_co, M, M_co]):
         await self._verify_token(melding_id, token)
 
         return await self._attachment_repository.find_by_melding(melding_id)
+
+
+class DeleteAttachmentAction(Generic[A, A_co, M, M_co]):
+    _verify_token: TokenVerifier[M, M_co]
+    _attachment_repository: BaseAttachmentRepository[A, A_co]
+    _filesystem: Filesystem
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[M, M_co],
+        attachment_repository: BaseAttachmentRepository[A, A_co],
+        filesystem: Filesystem,
+    ):
+        self._verify_token = token_verifier
+        self._attachment_repository = attachment_repository
+        self._filesystem = filesystem
+
+    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> None:
+        melding = await self._verify_token(melding_id, token)
+
+        attachment = await self._attachment_repository.retrieve(attachment_id)
+        if attachment is None:
+            raise NotFoundException("Attachment not found")
+
+        if attachment.melding != melding:
+            raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
+
+        try:
+            await self._filesystem.delete(attachment.file_path)
+        except filesystem.NotFoundException as exception:
+            raise NotFoundException("File not found") from exception
+
+        await self._attachment_repository.delete(attachment_id)

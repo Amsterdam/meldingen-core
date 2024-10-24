@@ -5,7 +5,12 @@ import pytest
 from plugfs import filesystem
 from plugfs.filesystem import File, Filesystem
 
-from meldingen_core.actions.attachment import DownloadAttachmentAction, ListAttachmentsAction, UploadAttachmentAction
+from meldingen_core.actions.attachment import (
+    DeleteAttachmentAction,
+    DownloadAttachmentAction,
+    ListAttachmentsAction,
+    UploadAttachmentAction,
+)
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
@@ -68,7 +73,6 @@ class TestDownloadAttachmentAction:
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
-        melding = Melding(text="text")
         attachment = Attachment("bla", Melding(text="some text"))
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -153,3 +157,90 @@ class TestListAttachmentsAction:
         assert repo_attachments == attachments
         token_verifier.assert_awaited_once()
         repository.find_by_melding.assert_awaited_once_with(melding_id)
+
+
+class TestDeleteAttachmentAction:
+    @pytest.mark.anyio
+    async def test_attachment_not_found(self) -> None:
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = None
+
+        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+            AsyncMock(TokenVerifier),
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken")
+
+        assert str(exception_info.value) == "Attachment not found"
+
+    @pytest.mark.anyio
+    async def test_attachment_does_not_belong_to_melding(self) -> None:
+        attachment = Attachment("bla", Melding(text="some text"))
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+            AsyncMock(TokenVerifier),
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken")
+
+        assert str(exception_info.value) == "Melding with id 123 does not have attachment with id 456"
+
+    @pytest.mark.anyio
+    async def test_file_not_found(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment("bla", melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        filesystem_mock = Mock(Filesystem)
+        filesystem_mock.delete.side_effect = filesystem.NotFoundException
+
+        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken")
+
+        assert str(exception_info.value) == "File not found"
+
+    @pytest.mark.anyio
+    async def test_delete_attachment(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment("bla", melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        filesystem_mock = Mock(Filesystem)
+
+        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        await action(123, 456, "supersecrettoken")
+
+        filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
+        attachment_repository.delete.assert_awaited_once_with(456)
