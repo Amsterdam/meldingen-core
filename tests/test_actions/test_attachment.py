@@ -5,7 +5,7 @@ import pytest
 from plugfs import filesystem
 from plugfs.filesystem import File, Filesystem
 
-from meldingen_core.actions.attachment import DownloadAttachmentAction, UploadAttachmentAction
+from meldingen_core.actions.attachment import DownloadAttachmentAction, ListAttachmentsAction, UploadAttachmentAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.models import Attachment, Melding
@@ -28,9 +28,9 @@ class TestUploadAttachmentAction:
 
         filesystem = Mock(Filesystem)
 
-        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment, Attachment])
 
-        action: UploadAttachmentAction[Attachment, Melding, Melding] = UploadAttachmentAction(
+        action: UploadAttachmentAction[Attachment, Attachment, Melding, Melding] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             filesystem,
@@ -55,7 +55,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = None
 
-        action: DownloadAttachmentAction[Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -74,7 +74,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -97,7 +97,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -123,7 +123,7 @@ class TestDownloadAttachmentAction:
         filesystem_mock = Mock(Filesystem)
         filesystem_mock.get_file.return_value = file
 
-        action: DownloadAttachmentAction[Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
@@ -133,3 +133,23 @@ class TestDownloadAttachmentAction:
             await action(123, 456, "supersecrettoken")
 
         assert str(exception_info.value) == "File not found"
+
+
+class TestListAttachmentsAction:
+    @pytest.mark.anyio
+    async def test_can_list_attachments(self) -> None:
+        token = "supersecrettoken"
+        melding_id = 123
+        repo_attachments: list[Attachment] = []
+        token_verifier = AsyncMock(TokenVerifier)
+        repository = Mock(BaseAttachmentRepository)
+        repository.find_by_melding.return_value = repo_attachments
+
+        action: ListAttachmentsAction[Attachment, Attachment, Melding, Melding] = ListAttachmentsAction(
+            token_verifier, repository
+        )
+        attachments = await action(melding_id, token)
+
+        assert repo_attachments == attachments
+        token_verifier.assert_awaited_once()
+        repository.find_by_melding.assert_awaited_once_with(melding_id)
