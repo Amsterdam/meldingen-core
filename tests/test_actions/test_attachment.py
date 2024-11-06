@@ -6,6 +6,7 @@ from plugfs import filesystem
 from plugfs.filesystem import File, Filesystem
 
 from meldingen_core.actions.attachment import (
+    AttachmentTypes,
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
@@ -67,7 +68,7 @@ class TestDownloadAttachmentAction:
         )
 
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, 456, "supersecrettoken")
+            await action(123, 456, "supersecrettoken", AttachmentTypes.ORIGINAL)
 
         assert str(exception_info.value) == "Attachment not found"
 
@@ -85,12 +86,34 @@ class TestDownloadAttachmentAction:
         )
 
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, 456, "supersecrettoken")
+            await action(123, 456, "supersecrettoken", AttachmentTypes.ORIGINAL)
 
         assert str(exception_info.value) == "Melding with id 123 does not have attachment with id 456"
 
     @pytest.mark.anyio
-    async def test_can_handle_attachment_download(self) -> None:
+    @pytest.mark.parametrize("_type", AttachmentTypes)
+    async def test_can_handle_attachment_download(self, _type: AttachmentTypes) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment("bla", melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.optimized_path = "/path/to/file-optimized.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        await action(123, 456, "supersecrettoken", _type)
+
+    @pytest.mark.anyio
+    async def test_optimized_path_none(self) -> None:
         melding = Melding(text="text")
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
@@ -107,7 +130,10 @@ class TestDownloadAttachmentAction:
             Mock(Filesystem),
         )
 
-        await action(123, 456, "supersecrettoken")
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken", AttachmentTypes.OPTIMIZED)
+
+        assert str(exception_info.value) == "Optimized file not found"
 
     @pytest.mark.anyio
     async def test_file_not_found(self) -> None:
@@ -134,7 +160,7 @@ class TestDownloadAttachmentAction:
         )
 
         with pytest.raises(NotFoundException) as exception_info:
-            await action(123, 456, "supersecrettoken")
+            await action(123, 456, "supersecrettoken", AttachmentTypes.ORIGINAL)
 
         assert str(exception_info.value) == "File not found"
 
