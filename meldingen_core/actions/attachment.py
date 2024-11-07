@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from enum import StrEnum
 from typing import AsyncIterator, Generic, TypeVar
 from uuid import uuid4
 
@@ -71,6 +72,11 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         return attachment
 
 
+class AttachmentTypes(StrEnum):
+    ORIGINAL = "original"
+    OPTIMIZED = "optimized"
+
+
 class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
     _verify_token: TokenVerifier[M, M_co]
     _attachment_repository: BaseAttachmentRepository[A, A_co]
@@ -86,7 +92,9 @@ class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
         self._attachment_repository = attachment_repository
         self._filesystem = filesystem
 
-    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> AsyncIterator[bytes]:
+    async def __call__(
+        self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
+    ) -> AsyncIterator[bytes]:
         melding = await self._verify_token(melding_id, token)
 
         attachment = await self._attachment_repository.retrieve(attachment_id)
@@ -96,8 +104,14 @@ class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
         if attachment.melding != melding:
             raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
 
+        file_path = attachment.file_path
+        if _type == AttachmentTypes.OPTIMIZED:
+            if attachment.optimized_path is None:
+                raise NotFoundException("Optimized file not found")
+            file_path = attachment.optimized_path
+
         try:
-            file = await self._filesystem.get_file(attachment.file_path)
+            file = await self._filesystem.get_file(file_path)
             return await file.get_iterator()
         except filesystem.NotFoundException as exception:
             raise NotFoundException("File not found") from exception

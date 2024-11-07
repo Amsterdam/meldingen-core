@@ -53,3 +53,4 @@ class Attachment:
     file_path: str = field(init=False)
     original_filename: str
     melding: Melding
+    optimized_path: str | None = None
