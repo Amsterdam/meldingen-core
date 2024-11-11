@@ -54,3 +54,4 @@ class Attachment:
     original_filename: str
     melding: Melding
     optimized_path: str | None = None
+    thumbnail_path: str | None = None
