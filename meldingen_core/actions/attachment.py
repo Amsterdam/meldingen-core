@@ -1,7 +1,6 @@
 from collections.abc import Collection
 from enum import StrEnum
 from typing import AsyncIterator, Generic, TypeVar
-from uuid import uuid4
 
 from plugfs import filesystem
 from plugfs.filesystem import Filesystem
@@ -34,20 +33,16 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         self,
         attachment_factory: BaseAttachmentFactory[A, M],
         attachment_repository: BaseAttachmentRepository[A, A_co],
-        filesystem: Filesystem,
         token_verifier: TokenVerifier[M, M_co],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
         ingestor: BaseIngestor[A],
-        base_directory: str,
     ):
         self._create_attachment = attachment_factory
         self._attachment_repository = attachment_repository
-        self._filesystem = filesystem
         self._verify_token = token_verifier
         self._validate_media_type = media_type_validator
         self._validate_media_type_integrity = media_type_integrity_validator
-        self._base_directory = base_directory
         self._ingest = ingestor
 
     async def __call__(
@@ -65,15 +60,10 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         self._validate_media_type_integrity(media_type, data_header)
 
         attachment = self._create_attachment(original_filename, melding)
-        path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
-        attachment.file_path = path + original_filename
 
-        await self._filesystem.makedirs(path)
-        await self._filesystem.write_iterator(attachment.file_path, data)
+        await self._ingest(attachment, data)
 
         await self._attachment_repository.save(attachment)
-
-        await self._ingest(attachment)
 
         return attachment
 

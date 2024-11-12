@@ -33,27 +33,21 @@ class TestUploadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        filesystem = Mock(Filesystem)
-
         attachment_repository = Mock(BaseAttachmentRepository[Attachment, Attachment])
 
         action: UploadAttachmentAction[Attachment, Attachment, Melding, Melding] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
-            filesystem,
             token_verifier,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
             AsyncMock(BaseIngestor),
-            "/tmp",
         )
 
         iterator = _iterator()
 
         attachment = await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", iterator)
 
-        filesystem.makedirs.assert_awaited_once()
-        filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
         attachment_repository.save.assert_awaited_once_with(attachment)
 
 

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod  # pragma: no cover
-from typing import Generic, TypeVar
+from typing import AsyncIterator, Generic, TypeVar
 
 from meldingen_core.models import Attachment
 
@@ -19,4 +19,4 @@ T = TypeVar("T", bound=Attachment)
 
 class BaseIngestor(Generic[T], metaclass=ABCMeta):
     @abstractmethod
-    async def __call__(self, attachment: T) -> None: ...
+    async def __call__(self, attachment: T, data: AsyncIterator[bytes]) -> None: ...
