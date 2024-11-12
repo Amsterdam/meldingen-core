@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod  # pragma: no cover
+from typing import Generic, TypeVar
 
 from meldingen_core.models import Attachment
 
@@ -13,6 +14,9 @@ class BaseThumbnailGenerator(metaclass=ABCMeta):  # pragma: no cover
     async def __call__(self, image_path: str) -> str: ...
 
 
-class BaseIngestor(metaclass=ABCMeta):
+T = TypeVar("T", bound=Attachment)
+
+
+class BaseIngestor(Generic[T], metaclass=ABCMeta):
     @abstractmethod
-    async def __call__(self, attachment: Attachment) -> None: ...
+    async def __call__(self, attachment: T) -> None: ...

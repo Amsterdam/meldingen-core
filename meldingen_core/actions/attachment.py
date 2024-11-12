@@ -28,7 +28,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
-    _ingest: BaseIngestor
+    _ingest: BaseIngestor[A]
 
     def __init__(
         self,
@@ -38,7 +38,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         token_verifier: TokenVerifier[M, M_co],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        ingestor: BaseIngestor,
+        ingestor: BaseIngestor[A],
         base_directory: str,
     ):
         self._create_attachment = attachment_factory
