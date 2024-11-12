@@ -14,6 +14,7 @@ from meldingen_core.actions.attachment import (
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
+from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository
 from meldingen_core.token import TokenVerifier
@@ -43,6 +44,7 @@ class TestUploadAttachmentAction:
             token_verifier,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseIngestor),
             "/tmp",
         )
 

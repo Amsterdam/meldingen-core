@@ -8,6 +8,7 @@ from plugfs.filesystem import Filesystem
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
+from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding
 from meldingen_core.repositories import BaseAttachmentRepository
 from meldingen_core.token import TokenVerifier
@@ -27,6 +28,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
+    _ingest: BaseIngestor
 
     def __init__(
         self,
@@ -36,6 +38,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         token_verifier: TokenVerifier[M, M_co],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        ingestor: BaseIngestor,
         base_directory: str,
     ):
         self._create_attachment = attachment_factory
@@ -45,6 +48,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         self._validate_media_type = media_type_validator
         self._validate_media_type_integrity = media_type_integrity_validator
         self._base_directory = base_directory
+        self._ingest = ingestor
 
     async def __call__(
         self,
@@ -68,6 +72,8 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
         await self._filesystem.write_iterator(attachment.file_path, data)
 
         await self._attachment_repository.save(attachment)
+
+        await self._ingest(attachment)
 
         return attachment
 
