@@ -71,6 +71,7 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
 class AttachmentTypes(StrEnum):
     ORIGINAL = "original"
     OPTIMIZED = "optimized"
+    THUMBNAIL = "thumbnail"
 
 
 class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
@@ -105,6 +106,10 @@ class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
             if attachment.optimized_path is None:
                 raise NotFoundException("Optimized file not found")
             file_path = attachment.optimized_path
+        elif _type == AttachmentTypes.THUMBNAIL:
+            if attachment.thumbnail_path is None:
+                raise NotFoundException("Thumbnail file not found")
+            file_path = attachment.thumbnail_path
 
         try:
             file = await self._filesystem.get_file(file_path)
