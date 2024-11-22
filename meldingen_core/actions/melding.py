@@ -97,6 +97,27 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
+class MeldingAddLocationAction(Generic[T, T_co]):
+    _verify_token: TokenVerifier[T, T_co]
+    _repository: BaseMeldingRepository[T, T_co]
+
+    def __init__(
+        self,
+        repository: BaseMeldingRepository[T, T_co],
+        token_verifier: TokenVerifier[T, T_co],
+    ) -> None:
+        self._repository = repository
+        self._verify_token = token_verifier
+
+    async def __call__(self, melding_id: int, token: str, location: dict[str, Any]) -> T:
+        melding = await self._verify_token(melding_id, token)
+
+        melding.location = location
+        await self._repository.save(melding)
+
+        return melding
+
+
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
