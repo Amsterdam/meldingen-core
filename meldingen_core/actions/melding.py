@@ -124,7 +124,12 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         return melding
 
 
-class MeldingAnswerQuestionsAction(Generic[T, T_co]):
+class BaseMeldingFormStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
+    """
+    This action covers transitions that require the melding's token to be verified.
+    This is the case for unauthenticated state transitions where a user submits a melding.
+    """
+
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
     _verify_token: TokenVerifier[T, T_co]
@@ -139,37 +144,35 @@ class MeldingAnswerQuestionsAction(Generic[T, T_co]):
         self._repository = repository
         self._verify_token = token_verifier
 
+    @property
+    @abstractmethod
+    def transition_name(self) -> str: ...
+
     async def __call__(self, melding_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
-        await self._state_machine.transition(melding, MeldingTransitions.ANSWER_QUESTIONS)
+        await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
 
         return melding
 
 
-class MeldingAddAttachmentsAction(Generic[T, T_co]):
-    _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T, T_co]
-    _verify_token: TokenVerifier[T, T_co]
+class MeldingAnswerQuestionsAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.ANSWER_QUESTIONS
 
-    def __init__(
-        self,
-        state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T, T_co],
-    ):
-        self._state_machine = state_machine
-        self._repository = repository
-        self._verify_token = token_verifier
 
-    async def __call__(self, melding_id: int, token: str) -> T:
-        melding = await self._verify_token(melding_id, token)
+class MeldingAddAttachmentsAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.ADD_ATTACHMENTS
 
-        await self._state_machine.transition(melding, MeldingTransitions.ADD_ATTACHMENTS)
-        await self._repository.save(melding)
 
-        return melding
+class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.SUBMIT_LOCATION
 
 
 class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
