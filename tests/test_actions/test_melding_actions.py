@@ -168,7 +168,7 @@ async def test_add_attachments_action_not_found() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await process(1, 'token')
+        await process(1, "token")
 
 
 @pytest.mark.anyio
@@ -228,4 +228,4 @@ async def test_submit_location_action_not_found() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await process(1, 'token')
+        await process(1, "token")
