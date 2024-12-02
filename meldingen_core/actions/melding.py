@@ -98,6 +98,10 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
 
 
 class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
+    """
+    This action covers transitions that do not require the melding's token to be verified.
+    Typically these actions are performed by authenticated users.
+    """
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T, T_co]
 
