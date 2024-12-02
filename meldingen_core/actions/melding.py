@@ -112,7 +112,7 @@ class MeldingAddLocationAction(Generic[T, T_co]):
     async def __call__(self, melding_id: int, token: str, location: dict[str, Any]) -> T:
         melding = await self._verify_token(melding_id, token)
 
-        melding.location = location
+        melding.geo_location = location
         await self._repository.save(melding)
 
         return melding

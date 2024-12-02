@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Union
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -19,7 +19,7 @@ class Melding:
     token: str | None = None
     token_expires: datetime | None = None
     attachments: list["Attachment"] = field(default_factory=list)
-    geo_location: dict[str, Any] | None = None
+    geo_location: Union[str, bytes] | None = None  # WKT or WKB
 
 
 @dataclass
