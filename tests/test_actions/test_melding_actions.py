@@ -12,6 +12,7 @@ from meldingen_core.actions.melding import (
     MeldingListAction,
     MeldingProcessAction,
     MeldingRetrieveAction,
+    MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
@@ -137,7 +138,7 @@ async def test_process_action_not_found() -> None:
 
 
 @pytest.mark.anyio
-async def test_add_attachments_actions() -> None:
+async def test_add_attachments_action() -> None:
     repository = Mock(BaseMeldingRepository)
     repo_melding = Melding("melding text")
     repository.retrieve.return_value = repo_melding
@@ -154,6 +155,20 @@ async def test_add_attachments_actions() -> None:
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_ATTACHMENTS)
     repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_add_attachments_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+
+    process: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
+        Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
+    )
+
+    with pytest.raises(NotFoundException):
+        await process(1, "token")
 
 
 @pytest.mark.anyio
@@ -180,3 +195,37 @@ async def test_complete_action_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await process(1)
+
+
+@pytest.mark.anyio
+async def test_submit_location_action() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repo_melding = Melding("melding text")
+    repository.retrieve.return_value = repo_melding
+    state_machine = Mock(BaseMeldingStateMachine)
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
+
+    submit_location: MeldingSubmitLocationAction[Melding, Melding] = MeldingSubmitLocationAction(
+        state_machine, repository, token_verifier
+    )
+
+    melding = await submit_location(1, "token")
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT_LOCATION)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_submit_location_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+
+    process: MeldingSubmitLocationAction[Melding, Melding] = MeldingSubmitLocationAction(
+        Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
+    )
+
+    with pytest.raises(NotFoundException):
+        await process(1, "token")
