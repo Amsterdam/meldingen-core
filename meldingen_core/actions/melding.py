@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, override, Literal
+from typing import Any, Generic, Literal, TypeVar, override
 
 import structlog
 
@@ -67,6 +67,7 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
     """Action that updates the melding and reclassifies it"""
+
     _verify_token: TokenVerifier[T, T_co]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
@@ -103,6 +104,7 @@ CONTACT_OPTIONS = dict[Literal["phone", "email"], str | None]
 
 class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
     """Action that adds contact information to a melding."""
+
     _verify_token: TokenVerifier[T, T_co]
 
     def __init__(

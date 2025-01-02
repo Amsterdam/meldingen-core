@@ -15,11 +15,11 @@ class Melding:
 
     text: str
     classification: Classification | None = None
+    attachments: list["Attachment"] = field(default_factory=list)
     token: str | None = None
     token_expires: datetime | None = None
-    attachments: list["Attachment"] = field(default_factory=list)
-    email: str | None
-    phone: str | None
+    email: str | None = None
+    phone: str | None = None
 
 
 @dataclass
