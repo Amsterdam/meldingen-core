@@ -18,6 +18,8 @@ class Melding:
     token: str | None = None
     token_expires: datetime | None = None
     attachments: list["Attachment"] = field(default_factory=list)
+    email: str | None
+    phone: str | None
 
 
 @dataclass
