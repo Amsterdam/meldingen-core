@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, override, Literal
 
 import structlog
 
@@ -66,6 +66,7 @@ class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
 
 
 class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
+    """Action that updates the melding and reclassifies it"""
     _verify_token: TokenVerifier[T, T_co]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
@@ -92,6 +93,32 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         melding.classification = classification
 
         await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
+        await self._repository.save(melding)
+
+        return melding
+
+
+CONTACT_OPTIONS = dict[Literal["phone", "email"], str | None]
+
+
+class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
+    """Action that adds contact information to a melding."""
+    _verify_token: TokenVerifier[T, T_co]
+
+    def __init__(
+        self,
+        repository: BaseMeldingRepository[T, T_co],
+        token_verifier: TokenVerifier[T, T_co],
+    ) -> None:
+        super().__init__(repository)
+        self._verify_token = token_verifier
+
+    async def __call__(self, pk: int, values: CONTACT_OPTIONS, token: str) -> T:
+        melding = await self._verify_token(pk, token)
+
+        for key, value in values.items():
+            setattr(melding, key, value)
+
         await self._repository.save(melding)
 
         return melding
