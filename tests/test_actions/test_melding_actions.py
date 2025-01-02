@@ -5,7 +5,9 @@ import pytest
 from structlog.testing import capture_logs
 
 from meldingen_core.actions.melding import (
+    ContactOptions,
     MeldingAddAttachmentsAction,
+    MeldingAddContactAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
@@ -88,6 +90,22 @@ async def test_melding_update_action() -> None:
 
     assert melding.text == text
     assert melding.classification == classification
+
+
+@pytest.mark.anyio
+async def test_melding_add_contact_action() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    token_verifier = AsyncMock(TokenVerifier)
+
+    action: MeldingAddContactAction[Melding, Melding] = MeldingAddContactAction(repository, token_verifier)
+
+    contact_details: ContactOptions = {"phone": "1234567", "email": "user@test.com"}
+    melding = await action(123, contact_details, token)
+
+    assert melding.phone == contact_details["phone"]
+    assert melding.email == contact_details["email"]
 
 
 @pytest.mark.anyio
