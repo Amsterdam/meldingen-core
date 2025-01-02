@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Generic, Literal, TypeVar, override
+from typing import Any, Generic, TypedDict, TypeVar, override
 
 import structlog
 
@@ -99,7 +99,10 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
-CONTACT_OPTIONS = dict[Literal["phone", "email"], str | None]
+# TODO verplaatsen naar eigen file?
+class ContactOptions(TypedDict):
+    email: str | None
+    phone: str | None
 
 
 class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
@@ -115,7 +118,7 @@ class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
         super().__init__(repository)
         self._verify_token = token_verifier
 
-    async def __call__(self, pk: int, values: CONTACT_OPTIONS, token: str) -> T:
+    async def __call__(self, pk: int, values: ContactOptions, token: str) -> T:
         melding = await self._verify_token(pk, token)
 
         for key, value in values.items():
