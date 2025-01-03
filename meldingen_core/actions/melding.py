@@ -118,10 +118,10 @@ class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
         super().__init__(repository)
         self._verify_token = token_verifier
 
-    async def __call__(self, pk: int, values: ContactOptions, token: str) -> T:
+    async def __call__(self, pk: int, contact_details: ContactOptions, token: str) -> T:
         melding = await self._verify_token(pk, token)
 
-        for key, value in values.items():
+        for key, value in contact_details.items():
             setattr(melding, key, value)
 
         await self._repository.save(melding)
