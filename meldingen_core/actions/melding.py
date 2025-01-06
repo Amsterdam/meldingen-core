@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypedDict, TypeVar, override
+from typing import Any, Generic, TypeVar, override
 
 import structlog
 
