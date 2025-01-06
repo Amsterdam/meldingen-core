@@ -99,12 +99,6 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
-# TODO verplaatsen naar eigen file?
-class ContactOptions(TypedDict):
-    email: str | None
-    phone: str | None
-
-
 class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
     """Action that adds contact information to a melding."""
 
@@ -118,11 +112,11 @@ class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
         super().__init__(repository)
         self._verify_token = token_verifier
 
-    async def __call__(self, pk: int, contact_details: ContactOptions, token: str) -> T:
+    async def __call__(self, pk: int, phone: str, email: str, token: str) -> T:
         melding = await self._verify_token(pk, token)
 
-        for key, value in contact_details.items():
-            setattr(melding, key, value)
+        melding.phone = phone
+        melding.email = email
 
         await self._repository.save(melding)
 
