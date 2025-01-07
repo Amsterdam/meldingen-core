@@ -6,6 +6,7 @@ from structlog.testing import capture_logs
 
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
+    MeldingAddContactAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
@@ -88,6 +89,35 @@ async def test_melding_update_action() -> None:
 
     assert melding.text == text
     assert melding.classification == classification
+
+
+@pytest.mark.anyio
+async def test_melding_add_contact_action() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    token_verifier = AsyncMock(TokenVerifier)
+
+    action: MeldingAddContactAction[Melding, Melding] = MeldingAddContactAction(repository, token_verifier)
+
+    phone = "1234567"
+    email = "user@test.com"
+    melding = await action(123, phone, email, token)
+
+    assert melding.phone == phone
+    assert melding.email == email
+
+
+@pytest.mark.anyio
+async def test_melding_add_contact_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+
+    action: MeldingAddContactAction[Melding, Melding] = MeldingAddContactAction(repository, token_verifier)
+
+    with pytest.raises(NotFoundException):
+        await action(123, "1234567", "user@test.com", "token")
 
 
 @pytest.mark.anyio
