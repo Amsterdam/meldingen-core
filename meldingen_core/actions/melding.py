@@ -112,7 +112,7 @@ class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
         super().__init__(repository)
         self._verify_token = token_verifier
 
-    async def __call__(self, pk: int, phone: str, email: str, token: str) -> T:
+    async def __call__(self, pk: int, phone: str | None, email: str | None, token: str) -> T:
         melding = await self._verify_token(pk, token)
 
         melding.phone = phone
