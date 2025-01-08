@@ -13,6 +13,7 @@ class MeldingStates(StrEnum):
     QUESTIONS_ANSWERED = "questions_answered"
     ATTACHMENTS_ADDED = "attachments_added"
     LOCATION_SUBMITTED = "location_submitted"
+    CONTACT_INFO_ADDED = "contact_info_added"
     PROCESSING = "processing"
     COMPLETED = "completed"
 
@@ -23,6 +24,7 @@ class MeldingTransitions(StrEnum):
     ANSWER_QUESTIONS = "answer_questions"
     ADD_ATTACHMENTS = "add_attachments"
     SUBMIT_LOCATION = "submit_location"
+    ADD_CONTACT_INFO = "add_contact_info"
     COMPLETE = "complete"
 
 
