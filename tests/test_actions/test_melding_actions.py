@@ -6,9 +6,10 @@ from structlog.testing import capture_logs
 
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
-    MeldingAddContactAction,
+    MeldingAddContactInfoAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingListAction,
     MeldingProcessAction,
@@ -98,7 +99,7 @@ async def test_melding_add_contact_action() -> None:
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
     token_verifier = AsyncMock(TokenVerifier)
 
-    action: MeldingAddContactAction[Melding, Melding] = MeldingAddContactAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding, Melding] = MeldingAddContactInfoAction(repository, token_verifier)
 
     phone = "1234567"
     email = "user@test.com"
@@ -114,7 +115,7 @@ async def test_melding_add_contact_action_not_found() -> None:
     repository.retrieve.return_value = None
     token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
 
-    action: MeldingAddContactAction[Melding, Melding] = MeldingAddContactAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding, Melding] = MeldingAddContactInfoAction(repository, token_verifier)
 
     with pytest.raises(NotFoundException):
         await action(123, "1234567", "user@test.com", "token")
@@ -259,3 +260,38 @@ async def test_submit_location_action_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await process(1, "token")
+
+
+@pytest.mark.anyio
+async def test_contact_info_added_action() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repo_melding = Melding("melding text")
+    repository.retrieve.return_value = repo_melding
+    state_machine = Mock(BaseMeldingStateMachine)
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
+
+    add_contact_info: MeldingContactInfoAddedAction[Melding, Melding] = MeldingContactInfoAddedAction(
+        state_machine, repository, token_verifier
+    )
+
+    melding = await add_contact_info(1, "token")
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_CONTACT_INFO)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_contact_info_added_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+    state_machine = Mock(BaseMeldingStateMachine)
+    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+
+    add_contact_info: MeldingContactInfoAddedAction[Melding, Melding] = MeldingContactInfoAddedAction(
+        state_machine, repository, token_verifier
+    )
+
+    with pytest.raises(NotFoundException):
+        await add_contact_info(1, "token")

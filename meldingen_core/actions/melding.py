@@ -99,7 +99,7 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
-class MeldingAddContactAction(BaseCRUDAction[T, T_co]):
+class MeldingAddContactInfoAction(BaseCRUDAction[T, T_co]):
     """Action that adds contact information to a melding."""
 
     _verify_token: TokenVerifier[T, T_co]
@@ -204,6 +204,12 @@ class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T, T_co])
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT_LOCATION
+
+
+class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.ADD_CONTACT_INFO
 
 
 class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
