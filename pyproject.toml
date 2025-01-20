@@ -9,7 +9,7 @@ license = "EUPL-2.1"
 [tool.poetry.dependencies]
 python = "^3.12"
 plugfs = {git = "https://github.com/amsterdam/plugfs"}
-structlog = "^24.1.0"
+structlog = "^25.1.0"
 
 [tool.poetry.group.dev.dependencies]
 anyio = "^4.6.2"
