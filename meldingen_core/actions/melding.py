@@ -1,8 +1,7 @@
+import logging
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, override
-
-import structlog
 
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
@@ -12,7 +11,7 @@ from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
-log = structlog.get_logger()
+log = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=Melding)
 T_co = TypeVar("T_co", covariant=True, bound=Melding)
