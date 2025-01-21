@@ -1,8 +1,9 @@
+import logging
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from structlog.testing import capture_logs
+from _pytest.logging import LogCaptureFixture
 
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
@@ -45,7 +46,7 @@ async def test_melding_create_action() -> None:
 
 
 @pytest.mark.anyio
-async def test_melding_create_action_with_classification_not_found() -> None:
+async def test_melding_create_action_with_classification_not_found(caplog: LogCaptureFixture) -> None:
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
@@ -54,12 +55,13 @@ async def test_melding_create_action_with_classification_not_found() -> None:
     )
     melding = Melding("text")
 
-    with capture_logs() as captured_logs:
+    with caplog.at_level(logging.ERROR):
         await action(melding)
 
-    assert len(captured_logs) == 1
-    assert captured_logs[0].get("log_level") == "error"
-    assert captured_logs[0].get("event") == "Classifier failed to find classification!"
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "ERROR"
+    assert caplog.records[0].message == "Classifier failed to find classification!"
+
     state_machine.transition.assert_not_awaited()
 
 
