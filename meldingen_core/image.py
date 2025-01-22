@@ -19,10 +19,10 @@ T = TypeVar("T", bound=Attachment)
 
 
 class BaseIngestor(Generic[T], metaclass=ABCMeta):
-    _scan: BaseMalwareScanner
+    _scan_for_malware: BaseMalwareScanner
 
     def __init__(self, scanner: BaseMalwareScanner):
-        self._scan = scanner
+        self._scan_for_malware = scanner
 
     @abstractmethod
     async def __call__(self, attachment: T, data: AsyncIterator[bytes]) -> None: ...
