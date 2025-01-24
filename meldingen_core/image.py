@@ -18,7 +18,7 @@ class BaseThumbnailGenerator(metaclass=ABCMeta):  # pragma: no cover
 T = TypeVar("T", bound=Attachment)
 
 
-class BaseIngestor(Generic[T], metaclass=ABCMeta):
+class BaseIngestor(Generic[T], metaclass=ABCMeta):  # pragma: no cover
     _scan_for_malware: BaseMalwareScanner
 
     def __init__(self, scanner: BaseMalwareScanner):
