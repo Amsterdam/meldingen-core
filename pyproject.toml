@@ -12,7 +12,7 @@ plugfs = {git = "https://github.com/amsterdam/plugfs"}
 
 [tool.poetry.group.dev.dependencies]
 anyio = "^4.6.2"
-black = "^24.10.0"
+black = "^25.1.0"
 isort = "^6.0.0"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.5.50"
