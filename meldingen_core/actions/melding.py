@@ -224,7 +224,7 @@ class MeldingCompleteAction(BaseStateTransitionAction[T, T_co]):
         return MeldingTransitions.COMPLETE
 
 
-class MeldingListQuestionsAnswersAction(Generic[T, T_co], metaclass=ABCMeta):
+class MeldingListQuestionsAnswersAction(Generic[T, T_co]):
     _verify_token: TokenVerifier[T, T_co]
     _answer_repository: BaseAnswerRepository
 
