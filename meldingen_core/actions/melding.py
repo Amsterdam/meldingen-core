@@ -224,14 +224,18 @@ class MeldingCompleteAction(BaseStateTransitionAction[T, T_co]):
         return MeldingTransitions.COMPLETE
 
 
-class MeldingListQuestionsAnswersAction(Generic[T, T_co]):
+A = TypeVar("A", bound=Answer)
+A_co = TypeVar("A_co", bound=Answer, covariant=True)
+
+
+class MeldingListQuestionsAnswersAction(Generic[T, T_co, A, A_co]):
     _verify_token: TokenVerifier[T, T_co]
-    _answer_repository: BaseAnswerRepository
+    _answer_repository: BaseAnswerRepository[A, A_co]
 
     def __init__(
         self,
         token_verifier: TokenVerifier[T, T_co],
-        answer_repository: BaseAnswerRepository,
+        answer_repository: BaseAnswerRepository[A, A_co],
     ) -> None:
         self._verify_token = token_verifier
         self._answer_repository = answer_repository
