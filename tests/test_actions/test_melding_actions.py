@@ -13,6 +13,7 @@ from meldingen_core.actions.melding import (
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingListAction,
+    MeldingListQuestionsAnswersAction,
     MeldingProcessAction,
     MeldingRetrieveAction,
     MeldingSubmitLocationAction,
@@ -20,8 +21,8 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.models import Classification, Melding
-from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.models import Answer, Classification, Melding
+from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
@@ -297,3 +298,21 @@ async def test_contact_info_added_action_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await add_contact_info(1, "token")
+
+
+@pytest.mark.anyio
+async def test_list_answers() -> None:
+    repository = Mock(BaseAnswerRepository)
+    repository.find_by_melding.return_value = []
+
+    repo_melding = Melding("melding text")
+    repository.retrieve.return_value = repo_melding
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
+
+    action: MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer] = MeldingListQuestionsAnswersAction(
+        token_verifier, repository
+    )
+
+    answers = await action(1, "token")
+    assert answers == []
