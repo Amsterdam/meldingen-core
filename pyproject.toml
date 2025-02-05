@@ -7,7 +7,7 @@ authors = [
 ]
 readme = "README.md"
 license = "EUPL-2.1"
-requires-python = "^3.12"
+requires-python = "^3.13"
 
 dependencies = [
     "plugfs @ git+https://github.com/Amsterdam/plugfs.git"
