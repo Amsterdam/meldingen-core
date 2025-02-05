@@ -12,35 +12,27 @@ from meldingen_core.repositories import BaseClassificationRepository
 
 
 def test_can_instantiate_create_action() -> None:
-    action: ClassificationCreateAction[Classification, Classification] = ClassificationCreateAction(
-        Mock(BaseClassificationRepository)
-    )
+    action: ClassificationCreateAction[Classification] = ClassificationCreateAction(Mock(BaseClassificationRepository))
     assert isinstance(action, ClassificationCreateAction)
 
 
 def test_can_instantiate_retrieve_action() -> None:
-    action: ClassificationRetrieveAction[Classification, Classification] = ClassificationRetrieveAction(
+    action: ClassificationRetrieveAction[Classification] = ClassificationRetrieveAction(
         Mock(BaseClassificationRepository)
     )
     assert isinstance(action, ClassificationRetrieveAction)
 
 
 def test_can_instantiate_list_action() -> None:
-    action: ClassificationListAction[Classification, Classification] = ClassificationListAction(
-        Mock(BaseClassificationRepository)
-    )
+    action: ClassificationListAction[Classification] = ClassificationListAction(Mock(BaseClassificationRepository))
     assert isinstance(action, ClassificationListAction)
 
 
 def test_can_instantiate_update_action() -> None:
-    action: ClassificationUpdateAction[Classification, Classification] = ClassificationUpdateAction(
-        Mock(BaseClassificationRepository)
-    )
+    action: ClassificationUpdateAction[Classification] = ClassificationUpdateAction(Mock(BaseClassificationRepository))
     assert isinstance(action, ClassificationUpdateAction)
 
 
 def test_can_instantiate_delete_action() -> None:
-    action: ClassificationDeleteAction[Classification, Classification] = ClassificationDeleteAction(
-        Mock(BaseClassificationRepository)
-    )
+    action: ClassificationDeleteAction[Classification] = ClassificationDeleteAction(Mock(BaseClassificationRepository))
     assert isinstance(action, ClassificationDeleteAction)

@@ -1,15 +1,15 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.models import Answer, Attachment, Classification, Form, Melding, Question, User
 
 T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
 
 
-class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
+class BaseRepository(Generic[T], metaclass=ABCMeta):
     @abstractmethod
     async def save(self, obj: T) -> None: ...
 
@@ -21,7 +21,7 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Collection[T_co]: ...
+    ) -> Sequence[T]: ...
 
     @abstractmethod
     async def retrieve(self, pk: int) -> T | None: ...
@@ -31,18 +31,17 @@ class BaseRepository(Generic[T, T_co], metaclass=ABCMeta):
 
 
 M = TypeVar("M", bound=Melding)
-M_co = TypeVar("M_co", covariant=True, bound=Melding)
 
 
-class BaseMeldingRepository(BaseRepository[M, M_co], metaclass=ABCMeta):
+class BaseMeldingRepository(BaseRepository[M], metaclass=ABCMeta):
     """Repository for Melding."""
 
 
-class BaseUserRepository(BaseRepository[User, User], metaclass=ABCMeta):
+class BaseUserRepository(BaseRepository[User], metaclass=ABCMeta):
     """Repository for User."""
 
 
-class BaseClassificationRepository(BaseRepository[Classification, Classification], metaclass=ABCMeta):
+class BaseClassificationRepository(BaseRepository[Classification], metaclass=ABCMeta):
     """Repository for Classification."""
 
     @abstractmethod
@@ -50,25 +49,23 @@ class BaseClassificationRepository(BaseRepository[Classification, Classification
         """Find a classification by name or raise NotFoundException if not found."""
 
 
-class BaseFormRepository(BaseRepository[Form, Form], metaclass=ABCMeta): ...
+class BaseFormRepository(BaseRepository[Form], metaclass=ABCMeta): ...
 
 
-class BaseQuestionRepository(BaseRepository[Question, Question], metaclass=ABCMeta): ...
+class BaseQuestionRepository(BaseRepository[Question], metaclass=ABCMeta): ...
 
 
 Ans = TypeVar("Ans", bound=Answer)
-Ans_co = TypeVar("Ans_co", covariant=True, bound=Answer)
 
 
-class BaseAnswerRepository(BaseRepository[Ans, Ans_co], metaclass=ABCMeta):
+class BaseAnswerRepository(BaseRepository[Ans], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_melding(self, melding_id: int) -> Sequence[Ans]: ...
 
 
 A = TypeVar("A", bound=Attachment)
-A_co = TypeVar("A_co", covariant=True, bound=Attachment)
 
 
-class BaseAttachmentRepository(BaseRepository[A, A_co], metaclass=ABCMeta):
+class BaseAttachmentRepository(BaseRepository[A], metaclass=ABCMeta):
     @abstractmethod
-    async def find_by_melding(self, melding_id: int) -> Collection[A_co]: ...
+    async def find_by_melding(self, melding_id: int) -> Sequence[A]: ...

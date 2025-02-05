@@ -20,13 +20,13 @@ class DummyModel:
 
 
 @pytest.fixture
-def base_list_action() -> BaseListAction[DummyModel, DummyModel]:
+def base_list_action() -> BaseListAction[DummyModel]:
     return BaseListAction(Mock(BaseRepository))
 
 
 @pytest.mark.anyio
 async def test_base_create_action(mocker: MockerFixture) -> None:
-    action: BaseCreateAction[DummyModel, DummyModel] = BaseCreateAction(Mock(BaseRepository))
+    action: BaseCreateAction[DummyModel] = BaseCreateAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "save")
 
@@ -39,7 +39,7 @@ async def test_base_create_action(mocker: MockerFixture) -> None:
 
 @pytest.mark.anyio
 async def test_base_list_action(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     mocker: MockerFixture,
 ) -> None:
     spy = mocker.spy(base_list_action._repository, "list")
@@ -55,7 +55,7 @@ async def test_base_list_action(
 )
 @pytest.mark.anyio
 async def test_base_list_action_limit(
-    base_list_action: BaseListAction[DummyModel, DummyModel], limit: int, mocker: MockerFixture
+    base_list_action: BaseListAction[DummyModel], limit: int, mocker: MockerFixture
 ) -> None:
     spy = mocker.spy(base_list_action._repository, "list")
 
@@ -67,7 +67,7 @@ async def test_base_list_action_limit(
 @pytest.mark.parametrize("offset", [1, 5, 10, 20])
 @pytest.mark.anyio
 async def test_base_list_action_offset(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     offset: int,
     mocker: MockerFixture,
 ) -> None:
@@ -80,7 +80,7 @@ async def test_base_list_action_offset(
 
 @pytest.mark.anyio
 async def test_base_list_action_sort_attribute_name(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     mocker: MockerFixture,
 ) -> None:
     spy = mocker.spy(base_list_action._repository, "list")
@@ -93,7 +93,7 @@ async def test_base_list_action_sort_attribute_name(
 @pytest.mark.parametrize("direction", [SortingDirection.ASC, SortingDirection.DESC])
 @pytest.mark.anyio
 async def test_base_list_action_sort_direction(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     direction: SortingDirection,
     mocker: MockerFixture,
 ) -> None:
@@ -110,7 +110,7 @@ async def test_base_list_action_sort_direction(
 )
 @pytest.mark.anyio
 async def test_base_list_action_limit_offset(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     limit: int,
     offset: int,
     mocker: MockerFixture,
@@ -128,7 +128,7 @@ async def test_base_list_action_limit_offset(
 )
 @pytest.mark.anyio
 async def test_base_list_action_limit_offset_sort_attribute_name(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     limit: int,
     offset: int,
     name: str,
@@ -152,7 +152,7 @@ async def test_base_list_action_limit_offset_sort_attribute_name(
 )
 @pytest.mark.anyio
 async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
-    base_list_action: BaseListAction[DummyModel, DummyModel],
+    base_list_action: BaseListAction[DummyModel],
     limit: int,
     offset: int,
     name: str,
@@ -169,7 +169,7 @@ async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
 @pytest.mark.anyio
 async def test_base_retrieve_action(pk: int, mocker: MockerFixture) -> None:
-    action: BaseRetrieveAction[DummyModel, DummyModel] = BaseRetrieveAction(Mock(BaseRepository))
+    action: BaseRetrieveAction[DummyModel] = BaseRetrieveAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "retrieve")
 
@@ -181,7 +181,7 @@ async def test_base_retrieve_action(pk: int, mocker: MockerFixture) -> None:
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
 @pytest.mark.anyio
 async def test_base_delete_action(pk: int, mocker: MockerFixture) -> None:
-    action: BaseDeleteAction[DummyModel, DummyModel] = BaseDeleteAction(Mock(BaseRepository))
+    action: BaseDeleteAction[DummyModel] = BaseDeleteAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "delete")
 
@@ -192,7 +192,7 @@ async def test_base_delete_action(pk: int, mocker: MockerFixture) -> None:
 
 @pytest.mark.anyio
 async def test_base_update_action(mocker: MockerFixture) -> None:
-    action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
+    action: BaseUpdateAction[DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 
     spy = mocker.spy(action._repository, "save")
 
@@ -208,7 +208,7 @@ async def test_base_update_action(mocker: MockerFixture) -> None:
 
 @pytest.mark.anyio
 async def test_base_delete_action_not_found(mocker: MockerFixture) -> None:
-    action: BaseUpdateAction[DummyModel, DummyModel] = BaseUpdateAction(Mock(BaseRepository))
+    action: BaseUpdateAction[DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 
     mocker.patch.object(action._repository, "retrieve", return_value=None)
     with pytest.raises(NotFoundException) as exc_info:

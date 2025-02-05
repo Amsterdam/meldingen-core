@@ -33,7 +33,7 @@ async def test_melding_create_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -51,7 +51,7 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding, Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -67,12 +67,12 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
 
 
 def test_can_instantiate_melding_list_action() -> None:
-    action: MeldingListAction[Melding, Melding] = MeldingListAction(Mock(BaseMeldingRepository))
+    action: MeldingListAction[Melding] = MeldingListAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingListAction)
 
 
 def test_can_instantiate_melding_retrieve_action() -> None:
-    action: MeldingRetrieveAction[Melding, Melding] = MeldingRetrieveAction(Mock(BaseMeldingRepository))
+    action: MeldingRetrieveAction[Melding] = MeldingRetrieveAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingRetrieveAction)
 
 
@@ -84,7 +84,7 @@ async def test_melding_update_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
-    action: MeldingUpdateAction[Melding, Melding] = MeldingUpdateAction(
+    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine)
     )
 
@@ -102,7 +102,7 @@ async def test_melding_add_contact_action() -> None:
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
     token_verifier = AsyncMock(TokenVerifier)
 
-    action: MeldingAddContactInfoAction[Melding, Melding] = MeldingAddContactInfoAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository, token_verifier)
 
     phone = "1234567"
     email = "user@test.com"
@@ -116,9 +116,9 @@ async def test_melding_add_contact_action() -> None:
 async def test_melding_add_contact_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
-    action: MeldingAddContactInfoAction[Melding, Melding] = MeldingAddContactInfoAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository, token_verifier)
 
     with pytest.raises(NotFoundException):
         await action(123, "1234567", "user@test.com", "token")
@@ -133,7 +133,7 @@ async def test_melding_answer_questions_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    answer_questions: MeldingAnswerQuestionsAction[Melding, Melding] = MeldingAnswerQuestionsAction(
+    answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(
         state_machine, repository, token_verifier
     )
 
@@ -151,7 +151,7 @@ async def test_process_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(state_machine, repository)
+    process: MeldingProcessAction[Melding] = MeldingProcessAction(state_machine, repository)
 
     melding = await process(1)
 
@@ -165,7 +165,7 @@ async def test_process_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    process: MeldingProcessAction[Melding, Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
+    process: MeldingProcessAction[Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1)
@@ -180,7 +180,7 @@ async def test_add_attachments_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    add_attachments: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
+    add_attachments: MeldingAddAttachmentsAction[Melding] = MeldingAddAttachmentsAction(
         state_machine, repository, token_verifier
     )
 
@@ -195,9 +195,9 @@ async def test_add_attachments_action() -> None:
 async def test_add_attachments_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
-    process: MeldingAddAttachmentsAction[Melding, Melding] = MeldingAddAttachmentsAction(
+    process: MeldingAddAttachmentsAction[Melding] = MeldingAddAttachmentsAction(
         Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
     )
 
@@ -211,7 +211,7 @@ async def test_complete_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(state_machine, repository)
+    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository)
 
     melding = await process(1)
 
@@ -225,7 +225,7 @@ async def test_complete_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    process: MeldingCompleteAction[Melding, Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
+    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1)
@@ -240,7 +240,7 @@ async def test_submit_location_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    submit_location: MeldingSubmitLocationAction[Melding, Melding] = MeldingSubmitLocationAction(
+    submit_location: MeldingSubmitLocationAction[Melding] = MeldingSubmitLocationAction(
         state_machine, repository, token_verifier
     )
 
@@ -255,9 +255,9 @@ async def test_submit_location_action() -> None:
 async def test_submit_location_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
-    process: MeldingSubmitLocationAction[Melding, Melding] = MeldingSubmitLocationAction(
+    process: MeldingSubmitLocationAction[Melding] = MeldingSubmitLocationAction(
         Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
     )
 
@@ -274,7 +274,7 @@ async def test_contact_info_added_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    add_contact_info: MeldingContactInfoAddedAction[Melding, Melding] = MeldingContactInfoAddedAction(
+    add_contact_info: MeldingContactInfoAddedAction[Melding] = MeldingContactInfoAddedAction(
         state_machine, repository, token_verifier
     )
 
@@ -290,9 +290,9 @@ async def test_contact_info_added_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
-    add_contact_info: MeldingContactInfoAddedAction[Melding, Melding] = MeldingContactInfoAddedAction(
+    add_contact_info: MeldingContactInfoAddedAction[Melding] = MeldingContactInfoAddedAction(
         state_machine, repository, token_verifier
     )
 

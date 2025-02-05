@@ -14,7 +14,7 @@ async def test_melding_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    verify_token: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    verify_token: TokenVerifier[Melding] = TokenVerifier(repository)
     with pytest.raises(NotFoundException):
         await verify_token(123, "")
 
@@ -26,7 +26,7 @@ async def test_token_invalid() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = melding
 
-    verify_token: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    verify_token: TokenVerifier[Melding] = TokenVerifier(repository)
 
     with pytest.raises(InvalidTokenException):
         await verify_token(123, "12345")
@@ -39,7 +39,7 @@ async def test_token_expired() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = melding
 
-    verify_token: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    verify_token: TokenVerifier[Melding] = TokenVerifier(repository)
 
     with pytest.raises(TokenExpiredException):
         await verify_token(123, token)
@@ -53,7 +53,7 @@ async def test_token_valid() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
 
-    verify_token: TokenVerifier[Melding, Melding] = TokenVerifier(repository)
+    verify_token: TokenVerifier[Melding] = TokenVerifier(repository)
 
     melding = await verify_token(123, token)
     assert melding == repo_melding
