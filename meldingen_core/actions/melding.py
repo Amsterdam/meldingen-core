@@ -237,6 +237,6 @@ class MeldingListQuestionsAnswersAction(Generic[T, T_co]):
         self._answer_repository = answer_repository
 
     async def __call__(self, melding_id: int, token: str) -> Sequence[Answer]:
-        melding = await self._verify_token(melding_id, token)
+        await self._verify_token(melding_id, token)
 
-        return await self._answer_repository.find_by_melding(melding)
+        return await self._answer_repository.find_by_melding(melding_id)
