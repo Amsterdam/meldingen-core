@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
@@ -56,7 +56,9 @@ class BaseFormRepository(BaseRepository[Form, Form], metaclass=ABCMeta): ...
 class BaseQuestionRepository(BaseRepository[Question, Question], metaclass=ABCMeta): ...
 
 
-class BaseAnswerRepository(BaseRepository[Answer, Answer], metaclass=ABCMeta): ...
+class BaseAnswerRepository(BaseRepository[Answer, Answer], metaclass=ABCMeta):
+    @abstractmethod
+    async def find_by_melding(self, melding: Melding) -> Sequence[Answer]: ...
 
 
 A = TypeVar("A", bound=Attachment)
