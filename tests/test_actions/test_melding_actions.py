@@ -310,7 +310,7 @@ async def test_list_answers() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    action: MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer] = MeldingListQuestionsAnswersAction(
+    action: MeldingListQuestionsAnswersAction[Melding, Answer] = MeldingListQuestionsAnswersAction(
         token_verifier, repository
     )
 
