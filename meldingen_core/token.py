@@ -7,7 +7,6 @@ from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
 T = TypeVar("T", bound=Melding)
-T_co = TypeVar("T_co", bound=Melding, covariant=True)
 
 
 class BaseTokenGenerator(metaclass=ABCMeta):
@@ -25,10 +24,10 @@ class InvalidTokenException(TokenException): ...
 class TokenExpiredException(TokenException): ...
 
 
-class TokenVerifier(Generic[T, T_co]):
-    _repository: BaseMeldingRepository[T, T_co]
+class TokenVerifier(Generic[T]):
+    _repository: BaseMeldingRepository[T]
 
-    def __init__(self, repository: BaseMeldingRepository[T, T_co]):
+    def __init__(self, repository: BaseMeldingRepository[T]):
         self._repository = repository
 
     async def __call__(self, melding_id: int, token: str) -> T:

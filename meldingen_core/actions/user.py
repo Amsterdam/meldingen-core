@@ -10,24 +10,23 @@ from meldingen_core.actions.base import (
 from meldingen_core.models import User
 
 T = TypeVar("T", bound=User)
-T_co = TypeVar("T_co", covariant=True, bound=User)
 
 
-class UserCreateAction(BaseCreateAction[T, T_co]):
+class UserCreateAction(BaseCreateAction[T]):
     """Action that add a user."""
 
 
-class UserUpdateAction(BaseUpdateAction[T, T_co]):
+class UserUpdateAction(BaseUpdateAction[T]):
     """Action that updates a user."""
 
 
-class UserListAction(BaseListAction[T, T_co]):
+class UserListAction(BaseListAction[T]):
     """Action that retrieves a list of users."""
 
 
-class UserRetrieveAction(BaseRetrieveAction[T, T_co]):
+class UserRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a user."""
 
 
-class UserDeleteAction(BaseDeleteAction[T, T_co]):
+class UserDeleteAction(BaseDeleteAction[T]):
     """Action that deletes a user."""

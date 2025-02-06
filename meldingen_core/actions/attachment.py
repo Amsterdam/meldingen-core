@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import AsyncIterator, Generic, TypeVar
 
@@ -14,16 +14,14 @@ from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
 
 A = TypeVar("A", bound=Attachment)
-A_co = TypeVar("A_co", bound=Attachment, covariant=True)
 M = TypeVar("M", bound=Melding)
-M_co = TypeVar("M_co", bound=Melding, covariant=True)
 
 
-class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
+class UploadAttachmentAction(Generic[A, M]):
     _create_attachment: BaseAttachmentFactory[A, M]
-    _attachment_repository: BaseAttachmentRepository[A, A_co]
+    _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
-    _verify_token: TokenVerifier[M, M_co]
+    _verify_token: TokenVerifier[M]
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
@@ -32,8 +30,8 @@ class UploadAttachmentAction(Generic[A, A_co, M, M_co]):
     def __init__(
         self,
         attachment_factory: BaseAttachmentFactory[A, M],
-        attachment_repository: BaseAttachmentRepository[A, A_co],
-        token_verifier: TokenVerifier[M, M_co],
+        attachment_repository: BaseAttachmentRepository[A],
+        token_verifier: TokenVerifier[M],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
         ingestor: BaseIngestor[A],
@@ -74,15 +72,15 @@ class AttachmentTypes(StrEnum):
     THUMBNAIL = "thumbnail"
 
 
-class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
-    _verify_token: TokenVerifier[M, M_co]
-    _attachment_repository: BaseAttachmentRepository[A, A_co]
+class DownloadAttachmentAction(Generic[A, M]):
+    _verify_token: TokenVerifier[M]
+    _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M, M_co],
-        attachment_repository: BaseAttachmentRepository[A, A_co],
+        token_verifier: TokenVerifier[M],
+        attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
         self._verify_token = token_verifier
@@ -118,31 +116,29 @@ class DownloadAttachmentAction(Generic[A, A_co, M, M_co]):
             raise NotFoundException("File not found") from exception
 
 
-class ListAttachmentsAction(Generic[A, A_co, M, M_co]):
-    _verify_token: TokenVerifier[M, M_co]
-    _attachment_repository: BaseAttachmentRepository[A, A_co]
+class ListAttachmentsAction(Generic[A, M]):
+    _verify_token: TokenVerifier[M]
+    _attachment_repository: BaseAttachmentRepository[A]
 
-    def __init__(
-        self, token_verifier: TokenVerifier[M, M_co], attachment_repository: BaseAttachmentRepository[A, A_co]
-    ):
+    def __init__(self, token_verifier: TokenVerifier[M], attachment_repository: BaseAttachmentRepository[A]):
         self._verify_token = token_verifier
         self._attachment_repository = attachment_repository
 
-    async def __call__(self, melding_id: int, token: str) -> Collection[A_co]:
+    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
         await self._verify_token(melding_id, token)
 
         return await self._attachment_repository.find_by_melding(melding_id)
 
 
-class DeleteAttachmentAction(Generic[A, A_co, M, M_co]):
-    _verify_token: TokenVerifier[M, M_co]
-    _attachment_repository: BaseAttachmentRepository[A, A_co]
+class DeleteAttachmentAction(Generic[A, M]):
+    _verify_token: TokenVerifier[M]
+    _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M, M_co],
-        attachment_repository: BaseAttachmentRepository[A, A_co],
+        token_verifier: TokenVerifier[M],
+        attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
         self._verify_token = token_verifier

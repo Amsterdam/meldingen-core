@@ -15,10 +15,9 @@ from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 log = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=Melding)
-T_co = TypeVar("T_co", covariant=True, bound=Melding)
 
 
-class MeldingCreateAction(BaseCreateAction[T, T_co]):
+class MeldingCreateAction(BaseCreateAction[T]):
     """Action that stores a melding."""
 
     _classify: Classifier
@@ -28,7 +27,7 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
 
     def __init__(
         self,
-        repository: BaseRepository[T, T_co],
+        repository: BaseRepository[T],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
         token_generator: BaseTokenGenerator,
@@ -57,25 +56,25 @@ class MeldingCreateAction(BaseCreateAction[T, T_co]):
         await self._repository.save(obj)
 
 
-class MeldingListAction(BaseListAction[T, T_co]):
+class MeldingListAction(BaseListAction[T]):
     """Action that retrieves a list of meldingen."""
 
 
-class MeldingRetrieveAction(BaseRetrieveAction[T, T_co]):
+class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
+class MeldingUpdateAction(BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
-    _verify_token: TokenVerifier[T, T_co]
+    _verify_token: TokenVerifier[T]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
 
     def __init__(
         self,
-        repository: BaseRepository[T, T_co],
-        token_verifier: TokenVerifier[T, T_co],
+        repository: BaseRepository[T],
+        token_verifier: TokenVerifier[T],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
     ) -> None:
@@ -99,15 +98,15 @@ class MeldingUpdateAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
-class MeldingAddContactInfoAction(BaseCRUDAction[T, T_co]):
+class MeldingAddContactInfoAction(BaseCRUDAction[T]):
     """Action that adds contact information to a melding."""
 
-    _verify_token: TokenVerifier[T, T_co]
+    _verify_token: TokenVerifier[T]
 
     def __init__(
         self,
-        repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T, T_co],
+        repository: BaseMeldingRepository[T],
+        token_verifier: TokenVerifier[T],
     ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier
@@ -123,19 +122,19 @@ class MeldingAddContactInfoAction(BaseCRUDAction[T, T_co]):
         return melding
 
 
-class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
+class BaseStateTransitionAction(Generic[T], metaclass=ABCMeta):
     """
     This action covers transitions that do not require the melding's token to be verified.
     Typically these actions are performed by authenticated users.
     """
 
     _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T, T_co]
+    _repository: BaseMeldingRepository[T]
 
     def __init__(
         self,
         state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T, T_co],
+        repository: BaseMeldingRepository[T],
     ):
         self._state_machine = state_machine
         self._repository = repository
@@ -155,21 +154,21 @@ class BaseStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         return melding
 
 
-class BaseMeldingFormStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
+class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
     """
     This action covers transitions that require the melding's token to be verified.
     This is the case for unauthenticated state transitions where a user submits a melding.
     """
 
     _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T, T_co]
-    _verify_token: TokenVerifier[T, T_co]
+    _repository: BaseMeldingRepository[T]
+    _verify_token: TokenVerifier[T]
 
     def __init__(
         self,
         state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T, T_co],
-        token_verifier: TokenVerifier[T, T_co],
+        repository: BaseMeldingRepository[T],
+        token_verifier: TokenVerifier[T],
     ):
         self._state_machine = state_machine
         self._repository = repository
@@ -188,54 +187,53 @@ class BaseMeldingFormStateTransitionAction(Generic[T, T_co], metaclass=ABCMeta):
         return melding
 
 
-class MeldingAnswerQuestionsAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+class MeldingAnswerQuestionsAction(BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ANSWER_QUESTIONS
 
 
-class MeldingAddAttachmentsAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+class MeldingAddAttachmentsAction(BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_ATTACHMENTS
 
 
-class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT_LOCATION
 
 
-class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T, T_co]):
+class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_CONTACT_INFO
 
 
-class MeldingProcessAction(BaseStateTransitionAction[T, T_co]):
+class MeldingProcessAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.PROCESS
 
 
-class MeldingCompleteAction(BaseStateTransitionAction[T, T_co]):
+class MeldingCompleteAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.COMPLETE
 
 
 A = TypeVar("A", bound=Answer)
-A_co = TypeVar("A_co", bound=Answer, covariant=True)
 
 
-class MeldingListQuestionsAnswersAction(Generic[T, T_co, A, A_co]):
-    _verify_token: TokenVerifier[T, T_co]
-    _answer_repository: BaseAnswerRepository[A, A_co]
+class MeldingListQuestionsAnswersAction(Generic[T, A]):
+    _verify_token: TokenVerifier[T]
+    _answer_repository: BaseAnswerRepository[A]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[T, T_co],
-        answer_repository: BaseAnswerRepository[A, A_co],
+        token_verifier: TokenVerifier[T],
+        answer_repository: BaseAnswerRepository[A],
     ) -> None:
         self._verify_token = token_verifier
         self._answer_repository = answer_repository

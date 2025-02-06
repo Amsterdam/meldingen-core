@@ -33,10 +33,10 @@ class TestUploadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment_repository = Mock(BaseAttachmentRepository[Attachment, Attachment])
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
-        action: UploadAttachmentAction[Attachment, Attachment, Melding, Melding] = UploadAttachmentAction(
+        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             token_verifier,
@@ -58,7 +58,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = None
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -76,7 +76,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -102,7 +102,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -122,7 +122,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -145,7 +145,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -174,7 +174,7 @@ class TestDownloadAttachmentAction:
         filesystem_mock = Mock(Filesystem)
         filesystem_mock.get_file.return_value = file
 
-        action: DownloadAttachmentAction[Attachment, Attachment, Melding, Melding] = DownloadAttachmentAction(
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
@@ -196,9 +196,7 @@ class TestListAttachmentsAction:
         repository = Mock(BaseAttachmentRepository)
         repository.find_by_melding.return_value = repo_attachments
 
-        action: ListAttachmentsAction[Attachment, Attachment, Melding, Melding] = ListAttachmentsAction(
-            token_verifier, repository
-        )
+        action: ListAttachmentsAction[Attachment, Melding] = ListAttachmentsAction(token_verifier, repository)
         attachments = await action(melding_id, token)
 
         assert repo_attachments == attachments
@@ -212,7 +210,7 @@ class TestDeleteAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = None
 
-        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -230,7 +228,7 @@ class TestDeleteAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -256,7 +254,7 @@ class TestDeleteAttachmentAction:
         filesystem_mock = Mock(Filesystem)
         filesystem_mock.delete.side_effect = filesystem.NotFoundException
 
-        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
@@ -281,7 +279,7 @@ class TestDeleteAttachmentAction:
 
         filesystem_mock = Mock(Filesystem)
 
-        action: DeleteAttachmentAction[Attachment, Attachment, Melding, Melding] = DeleteAttachmentAction(
+        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
