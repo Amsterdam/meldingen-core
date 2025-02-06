@@ -34,6 +34,7 @@ class TestUploadAttachmentAction:
         token_verifier.return_value = melding
 
         attachment_repository = Mock(BaseAttachmentRepository[Attachment, Attachment])
+        attachment_repository.save = AsyncMock()
 
         action: UploadAttachmentAction[Attachment, Attachment, Melding, Melding] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
