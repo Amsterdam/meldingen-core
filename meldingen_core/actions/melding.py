@@ -1,13 +1,14 @@
 import logging
 from abc import ABCMeta, abstractmethod
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, override
 
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.models import Melding
-from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
+from meldingen_core.models import Answer, Melding
+from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 
@@ -221,3 +222,25 @@ class MeldingCompleteAction(BaseStateTransitionAction[T, T_co]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.COMPLETE
+
+
+A = TypeVar("A", bound=Answer)
+A_co = TypeVar("A_co", bound=Answer, covariant=True)
+
+
+class MeldingListQuestionsAnswersAction(Generic[T, T_co, A, A_co]):
+    _verify_token: TokenVerifier[T, T_co]
+    _answer_repository: BaseAnswerRepository[A, A_co]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[T, T_co],
+        answer_repository: BaseAnswerRepository[A, A_co],
+    ) -> None:
+        self._verify_token = token_verifier
+        self._answer_repository = answer_repository
+
+    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
+        await self._verify_token(melding_id, token)
+
+        return await self._answer_repository.find_by_melding(melding_id)
