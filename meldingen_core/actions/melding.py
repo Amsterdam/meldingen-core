@@ -242,3 +242,9 @@ class MeldingListQuestionsAnswersAction(Generic[T, A]):
         await self._verify_token(melding_id, token)
 
         return await self._answer_repository.find_by_melding(melding_id)
+
+
+class MeldingSubmitAction(BaseMeldingFormStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.SUBMIT

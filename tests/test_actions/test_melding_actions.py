@@ -16,6 +16,7 @@ from meldingen_core.actions.melding import (
     MeldingListQuestionsAnswersAction,
     MeldingProcessAction,
     MeldingRetrieveAction,
+    MeldingSubmitAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
@@ -316,3 +317,19 @@ async def test_list_answers() -> None:
 
     answers = await action(1, "token")
     assert answers == []
+
+
+@pytest.mark.anyio
+async def test_submit_melding() -> None:
+    repo_melding = Melding("text")
+    state_machine = Mock(BaseMeldingStateMachine)
+    repository = Mock(BaseMeldingRepository)
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = repo_melding
+
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository, token_verifier)
+
+    melding = await action(1, "token")
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
+    repository.save.assert_called_once_with(repo_melding)
