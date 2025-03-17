@@ -3,7 +3,7 @@ name = "meldingen-core"
 version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 authors = [
-    {name = "Youri Westerman",email = "y.westerman@amsterdam.nl"},
+    {name = "Youri Westerman", email = "y.westerman@amsterdam.nl"},
     {name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl"},
 ]
 readme = "README.md"
