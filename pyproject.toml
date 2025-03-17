@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 authors = [
     {name = "Youri Westerman",email = "y.westerman@amsterdam.nl"},
+    {name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl"},
 ]
 readme = "README.md"
 license = "EUPL-2.1"
@@ -19,7 +20,7 @@ black = "^25.1.0"
 isort = "^6.0.0"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.2"
-mkdocstrings = {version = "^0.28.0", extras = ["python"]}
+mkdocstrings = {version = "^0.29.0", extras = ["python"]}
 mypy = "^1.14.0"
 pre-commit = "^4.1.0"
 pytest = "^8.3.4"
