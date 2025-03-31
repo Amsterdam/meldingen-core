@@ -89,7 +89,7 @@ async def test_invalidate_token_invalid_state() -> None:
     repo_melding = Melding("text", token=token, state=MeldingStates.NEW)
 
     repository = Mock(BaseMeldingRepository)
-    invalidate_token = BaseTokenInvalidator(repository)
+    invalidate_token: BaseTokenInvalidator[Melding] = BaseTokenInvalidator(repository)
 
     with pytest.raises(InvalidStateException):
         await invalidate_token(repo_melding)
