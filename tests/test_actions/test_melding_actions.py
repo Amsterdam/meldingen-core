@@ -24,8 +24,8 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Answer, Classification, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 
 @pytest.mark.anyio
@@ -326,8 +326,11 @@ async def test_submit_melding() -> None:
     repository = Mock(BaseMeldingRepository)
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
+    token_invalidator = AsyncMock(BaseTokenInvalidator)
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository, token_verifier)
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(
+        repository, state_machine, token_verifier, token_invalidator
+    )
 
     melding = await action(1, "token")
     assert melding == repo_melding

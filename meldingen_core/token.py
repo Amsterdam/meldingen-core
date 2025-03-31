@@ -24,6 +24,9 @@ class InvalidTokenException(TokenException): ...
 class TokenExpiredException(TokenException): ...
 
 
+class InvalidStateException(TokenException): ...
+
+
 class TokenVerifier(Generic[T]):
     _repository: BaseMeldingRepository[T]
 
@@ -42,3 +45,23 @@ class TokenVerifier(Generic[T]):
             raise TokenExpiredException()
 
         return melding
+
+
+class BaseTokenInvalidator(Generic[T], metaclass=ABCMeta):
+    _repository: BaseMeldingRepository[T]
+
+    def __init__(self, repository: BaseMeldingRepository[T]):
+        self._repository = repository
+
+    async def __call__(self, melding: T) -> T:
+        if not melding.state in self.allowed_states:
+            raise InvalidStateException()
+
+        melding.token = None
+        await self._repository.save(melding)
+
+        return melding
+
+    @property
+    def allowed_states(self) -> list[str]:
+        return []
