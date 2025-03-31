@@ -24,7 +24,7 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Answer, Classification, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 
