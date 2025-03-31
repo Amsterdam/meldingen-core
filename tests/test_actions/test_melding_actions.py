@@ -325,6 +325,7 @@ async def test_submit_melding() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     token_verifier = AsyncMock(TokenVerifier)
+
     token_verifier.return_value = repo_melding
     token_invalidator = AsyncMock(BaseTokenInvalidator)
 
@@ -337,4 +338,5 @@ async def test_submit_melding() -> None:
 
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
     repository.save.assert_called_once_with(repo_melding)
+
     token_invalidator.assert_called_once_with(repo_melding)
