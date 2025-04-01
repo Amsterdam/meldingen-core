@@ -71,7 +71,6 @@ async def test_token_valid() -> None:
 async def test_invalidate_token() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
 
-        @override
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]
@@ -88,7 +87,6 @@ async def test_invalidate_token() -> None:
 async def test_invalidate_token_invalid_state() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
 
-        @override
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]
