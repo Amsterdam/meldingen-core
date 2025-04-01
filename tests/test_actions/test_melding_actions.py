@@ -337,6 +337,4 @@ async def test_submit_melding() -> None:
     assert melding == repo_melding
 
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
-    repository.save.assert_called_once_with(repo_melding)
-
     token_invalidator.assert_called_once_with(repo_melding)

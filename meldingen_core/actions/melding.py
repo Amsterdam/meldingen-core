@@ -269,7 +269,7 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     ) -> T:
         melding = await self._verify_token(melding_id, token)
         await self._state_machine.transition(melding, self.transition_name)
-        await self._repository.save(melding)
+        # await self._repository.save(melding)
         await self._invalidate_token(melding)
 
         return melding
