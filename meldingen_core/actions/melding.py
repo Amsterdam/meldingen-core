@@ -245,19 +245,16 @@ class MeldingListQuestionsAnswersAction(Generic[T, A]):
 
 
 class MeldingSubmitAction(BaseCRUDAction[T]):
-    _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
     _verify_token: TokenVerifier[T]
     _invalidate_token: BaseTokenInvalidator[T]
 
     def __init__(
         self,
-        repository: BaseMeldingRepository[T],
         state_machine: BaseMeldingStateMachine[T],
         token_verifier: TokenVerifier[T],
         token_invalidator: BaseTokenInvalidator[T],
     ) -> None:
-        self._repository = repository
         self._state_machine = state_machine
         self._verify_token = token_verifier
         self._invalidate_token = token_invalidator
@@ -269,7 +266,6 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     ) -> T:
         melding = await self._verify_token(melding_id, token)
         await self._state_machine.transition(melding, self.transition_name)
-        # await self._repository.save(melding)
         await self._invalidate_token(melding)
 
         return melding

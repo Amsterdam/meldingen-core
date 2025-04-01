@@ -323,15 +323,12 @@ async def test_list_answers() -> None:
 async def test_submit_melding() -> None:
     repo_melding = Melding("text")
     state_machine = Mock(BaseMeldingStateMachine)
-    repository = Mock(BaseMeldingRepository)
     token_verifier = AsyncMock(TokenVerifier)
 
     token_verifier.return_value = repo_melding
     token_invalidator = AsyncMock(BaseTokenInvalidator)
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(
-        repository, state_machine, token_verifier, token_invalidator
-    )
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, token_verifier, token_invalidator)
 
     melding = await action(1, "token")
     assert melding == repo_melding
