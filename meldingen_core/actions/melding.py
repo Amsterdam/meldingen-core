@@ -10,7 +10,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Answer, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 log = logging.getLogger(__name__)
 
@@ -244,7 +244,36 @@ class MeldingListQuestionsAnswersAction(Generic[T, A]):
         return await self._answer_repository.find_by_melding(melding_id)
 
 
-class MeldingSubmitAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingSubmitAction(BaseCRUDAction[T]):
+    _repository: BaseMeldingRepository[T]
+    _state_machine: BaseMeldingStateMachine[T]
+    _verify_token: TokenVerifier[T]
+    _invalidate_token: BaseTokenInvalidator[T]
+
+    def __init__(
+        self,
+        repository: BaseMeldingRepository[T],
+        state_machine: BaseMeldingStateMachine[T],
+        token_verifier: TokenVerifier[T],
+        token_invalidator: BaseTokenInvalidator[T],
+    ) -> None:
+        self._repository = repository
+        self._state_machine = state_machine
+        self._verify_token = token_verifier
+        self._invalidate_token = token_invalidator
+
+    async def __call__(
+        self,
+        melding_id: int,
+        token: str,
+    ) -> T:
+        melding = await self._verify_token(melding_id, token)
+        await self._state_machine.transition(melding, self.transition_name)
+        await self._invalidate_token(melding)
+        await self._repository.save(melding)
+
+        return melding
+
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT

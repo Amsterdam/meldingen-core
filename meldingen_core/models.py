@@ -20,6 +20,7 @@ class Melding:
     token_expires: datetime | None = None
     email: str | None = None
     phone: str | None = None
+    state: str | None = None
 
 
 @dataclass

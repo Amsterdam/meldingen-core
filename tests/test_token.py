@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import override
 from unittest.mock import Mock
 
 import pytest
@@ -6,7 +7,14 @@ import pytest
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.token import InvalidTokenException, TokenExpiredException, TokenVerifier
+from meldingen_core.statemachine import MeldingStates
+from meldingen_core.token import (
+    BaseTokenInvalidator,
+    InvalidStateException,
+    InvalidTokenException,
+    TokenExpiredException,
+    TokenVerifier,
+)
 
 
 @pytest.mark.anyio
@@ -57,3 +65,38 @@ async def test_token_valid() -> None:
 
     melding = await verify_token(123, token)
     assert melding == repo_melding
+
+
+@pytest.mark.anyio
+async def test_invalidate_token() -> None:
+    class TokenInvalidator(BaseTokenInvalidator[Melding]):
+
+        @override
+        @property
+        def allowed_states(self) -> list[str]:
+            return [MeldingStates.SUBMITTED]
+
+    token = "123456"
+    repo_melding = Melding("text", token=token, state=MeldingStates.SUBMITTED)
+
+    invalidate_token = TokenInvalidator()
+    melding = await invalidate_token(repo_melding)
+    assert melding.token is None
+
+
+@pytest.mark.anyio
+async def test_invalidate_token_invalid_state() -> None:
+    class TokenInvalidator(BaseTokenInvalidator[Melding]):
+
+        @override
+        @property
+        def allowed_states(self) -> list[str]:
+            return [MeldingStates.SUBMITTED]
+
+    token = "123456"
+    repo_melding = Melding("text", token=token, state=MeldingStates.NEW)
+
+    invalidate_token = TokenInvalidator()
+
+    with pytest.raises(InvalidStateException):
+        await invalidate_token(repo_melding)
