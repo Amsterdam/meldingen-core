@@ -48,20 +48,16 @@ class TokenVerifier(Generic[T]):
 
 
 class BaseTokenInvalidator(Generic[T], metaclass=ABCMeta):
-    _repository: BaseMeldingRepository[T]
-
-    def __init__(self, repository: BaseMeldingRepository[T]):
-        self._repository = repository
 
     async def __call__(self, melding: T) -> T:
         if not melding.state in self.allowed_states:
             raise InvalidStateException()
 
         melding.token = None
-        await self._repository.save(melding)
 
         return melding
 
     @property
+    @abstractmethod
     def allowed_states(self) -> list[str]:
         return []

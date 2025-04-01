@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import override
 from unittest.mock import Mock
 
 import pytest
@@ -69,6 +70,8 @@ async def test_token_valid() -> None:
 @pytest.mark.anyio
 async def test_invalidate_token() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
+
+        @override
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]
@@ -76,20 +79,24 @@ async def test_invalidate_token() -> None:
     token = "123456"
     repo_melding = Melding("text", token=token, state=MeldingStates.SUBMITTED)
 
-    repository = Mock(BaseMeldingRepository)
-    invalidate_token = TokenInvalidator(repository)
-    await invalidate_token(repo_melding)
-
-    repository.save.assert_called_once_with(repo_melding)
+    invalidate_token = TokenInvalidator()
+    melding = await invalidate_token(repo_melding)
+    assert melding.token is None
 
 
 @pytest.mark.anyio
 async def test_invalidate_token_invalid_state() -> None:
+    class TokenInvalidator(BaseTokenInvalidator[Melding]):
+
+        @override
+        @property
+        def allowed_states(self) -> list[str]:
+            return [MeldingStates.SUBMITTED]
+
     token = "123456"
     repo_melding = Melding("text", token=token, state=MeldingStates.NEW)
 
-    repository = Mock(BaseMeldingRepository)
-    invalidate_token: BaseTokenInvalidator[Melding] = BaseTokenInvalidator(repository)
+    invalidate_token = TokenInvalidator()
 
     with pytest.raises(InvalidStateException):
         await invalidate_token(repo_melding)
