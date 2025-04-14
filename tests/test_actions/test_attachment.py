@@ -71,7 +71,9 @@ class TestDownloadAttachmentAction:
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
-        attachment = Attachment("bla", Melding(text="some text"))
+        attachment = Attachment(
+            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
@@ -94,7 +96,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.optimized_path = "/path/to/file-optimized.ext"
         attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
@@ -116,7 +118,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -139,7 +141,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -162,7 +164,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -223,7 +225,9 @@ class TestDeleteAttachmentAction:
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
-        attachment = Attachment("bla", Melding(text="some text"))
+        attachment = Attachment(
+            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
@@ -245,7 +249,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -271,7 +275,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
