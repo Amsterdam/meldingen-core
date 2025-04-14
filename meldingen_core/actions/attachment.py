@@ -89,7 +89,7 @@ class DownloadAttachmentAction(Generic[A, M]):
 
     async def __call__(
         self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
-    ) -> AsyncIterator[bytes]:
+    ) -> tuple[AsyncIterator[bytes], str]:
         melding = await self._verify_token(melding_id, token)
 
         attachment = await self._attachment_repository.retrieve(attachment_id)
@@ -100,18 +100,25 @@ class DownloadAttachmentAction(Generic[A, M]):
             raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
 
         file_path = attachment.file_path
+        media_type = attachment.original_media_type
         if _type == AttachmentTypes.OPTIMIZED:
             if attachment.optimized_path is None:
                 raise NotFoundException("Optimized file not found")
+            if attachment.optimized_media_type is None:
+                raise NotFoundException("Optimized media type not found")
             file_path = attachment.optimized_path
+            media_type = attachment.optimized_media_type
         elif _type == AttachmentTypes.THUMBNAIL:
             if attachment.thumbnail_path is None:
                 raise NotFoundException("Thumbnail file not found")
+            if attachment.thumbnail_media_type is None:
+                raise NotFoundException("Thumbnail media type not found")
             file_path = attachment.thumbnail_path
+            media_type = attachment.thumbnail_media_type
 
         try:
             file = await self._filesystem.get_file(file_path)
-            return await file.get_iterator()
+            return await file.get_iterator(), media_type
         except filesystem.NotFoundException as exception:
             raise NotFoundException("File not found") from exception
 

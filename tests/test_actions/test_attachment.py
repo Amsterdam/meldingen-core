@@ -98,8 +98,11 @@ class TestDownloadAttachmentAction:
 
         attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
+        attachment.original_media_type = "image/png"
         attachment.optimized_path = "/path/to/file-optimized.ext"
+        attachment.optimized_media_type = "image/webp"
         attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+        attachment.thumbnail_media_type = "image/webp"
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
