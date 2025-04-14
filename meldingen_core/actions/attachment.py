@@ -57,7 +57,7 @@ class UploadAttachmentAction(Generic[A, M]):
         self._validate_media_type(media_type)
         self._validate_media_type_integrity(media_type, data_header)
 
-        attachment = self._create_attachment(original_filename, melding)
+        attachment = self._create_attachment(original_filename, melding, media_type)
 
         await self._ingest(attachment, data)
 
