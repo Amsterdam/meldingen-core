@@ -139,6 +139,30 @@ class TestDownloadAttachmentAction:
         assert str(exception_info.value) == "Optimized file not found"
 
     @pytest.mark.anyio
+    async def test_optimized_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.optimized_path = "/path/to/file-optimized.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken", AttachmentTypes.OPTIMIZED)
+
+        assert str(exception_info.value) == "Optimized media type not found"
+
+    @pytest.mark.anyio
     async def test_thumbnail_path_none(self) -> None:
         melding = Melding(text="text")
         token_verifier = AsyncMock(TokenVerifier)
@@ -160,6 +184,30 @@ class TestDownloadAttachmentAction:
             await action(123, 456, "supersecrettoken", AttachmentTypes.THUMBNAIL)
 
         assert str(exception_info.value) == "Thumbnail file not found"
+
+    @pytest.mark.anyio
+    async def test_thumbnail_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken", AttachmentTypes.THUMBNAIL)
+
+        assert str(exception_info.value) == "Thumbnail media type not found"
 
     @pytest.mark.anyio
     async def test_file_not_found(self) -> None:
