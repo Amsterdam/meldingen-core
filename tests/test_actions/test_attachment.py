@@ -71,7 +71,9 @@ class TestDownloadAttachmentAction:
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
-        attachment = Attachment("bla", Melding(text="some text"))
+        attachment = Attachment(
+            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
@@ -94,10 +96,13 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
+        attachment.original_media_type = "image/png"
         attachment.optimized_path = "/path/to/file-optimized.ext"
+        attachment.optimized_media_type = "image/webp"
         attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+        attachment.thumbnail_media_type = "image/webp"
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
@@ -116,7 +121,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -134,12 +139,36 @@ class TestDownloadAttachmentAction:
         assert str(exception_info.value) == "Optimized file not found"
 
     @pytest.mark.anyio
+    async def test_optimized_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.optimized_path = "/path/to/file-optimized.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken", AttachmentTypes.OPTIMIZED)
+
+        assert str(exception_info.value) == "Optimized media type not found"
+
+    @pytest.mark.anyio
     async def test_thumbnail_path_none(self) -> None:
         melding = Melding(text="text")
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -157,12 +186,36 @@ class TestDownloadAttachmentAction:
         assert str(exception_info.value) == "Thumbnail file not found"
 
     @pytest.mark.anyio
+    async def test_thumbnail_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+            token_verifier,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, "supersecrettoken", AttachmentTypes.THUMBNAIL)
+
+        assert str(exception_info.value) == "Thumbnail media type not found"
+
+    @pytest.mark.anyio
     async def test_file_not_found(self) -> None:
         melding = Melding(text="text")
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -223,7 +276,9 @@ class TestDeleteAttachmentAction:
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
-        attachment = Attachment("bla", Melding(text="some text"))
+        attachment = Attachment(
+            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
@@ -245,7 +300,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -271,7 +326,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment("bla", melding)
+        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)

@@ -7,12 +7,12 @@ from meldingen_core.models import Attachment
 
 class BaseImageOptimizer(metaclass=ABCMeta):  # pragma: no cover
     @abstractmethod
-    async def __call__(self, image_path: str) -> str: ...
+    async def __call__(self, image_path: str) -> tuple[str, str]: ...
 
 
 class BaseThumbnailGenerator(metaclass=ABCMeta):  # pragma: no cover
     @abstractmethod
-    async def __call__(self, image_path: str) -> str: ...
+    async def __call__(self, image_path: str) -> tuple[str, str]: ...
 
 
 T = TypeVar("T", bound=Attachment)

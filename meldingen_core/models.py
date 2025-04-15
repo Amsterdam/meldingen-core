@@ -55,6 +55,9 @@ class Answer:
 class Attachment:
     file_path: str = field(init=False)
     original_filename: str
+    original_media_type: str
     melding: Melding
     optimized_path: str | None = None
+    optimized_media_type: str | None = None
     thumbnail_path: str | None = None
+    thumbnail_media_type: str | None = None
