@@ -33,7 +33,16 @@ M = TypeVar("M", bound=Melding)
 
 
 class BaseMeldingRepository(BaseRepository[M], metaclass=ABCMeta):
-    """Repository for Melding."""
+    @abstractmethod
+    async def list_meldingen(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+        area=None,
+    ) -> Sequence[M]: ...
 
 
 class BaseUserRepository(BaseRepository[User], metaclass=ABCMeta):
