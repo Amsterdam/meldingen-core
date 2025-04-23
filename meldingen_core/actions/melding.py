@@ -75,7 +75,11 @@ class MeldingListAction(Generic[T]):
         area=None,
     ) -> Sequence[T]:
         return await self._repository.list_meldingen(
-            limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
+            limit=limit,
+            offset=offset,
+            sort_attribute_name=sort_attribute_name,
+            sort_direction=sort_direction,
+            area=area,
         )
 
 
