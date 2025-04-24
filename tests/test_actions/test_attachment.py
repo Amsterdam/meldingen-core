@@ -248,7 +248,7 @@ class TestListAttachmentsAction:
         repository = Mock(BaseAttachmentRepository)
         repository.find_by_melding.return_value = repo_attachments
 
-        action: ListAttachmentsAction[Attachment, Melding] = ListAttachmentsAction(repository)
+        action: ListAttachmentsAction[Attachment] = ListAttachmentsAction(repository)
         attachments = await action(melding_id)
 
         assert repo_attachments == attachments
