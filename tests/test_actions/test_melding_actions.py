@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from _pytest.logging import LogCaptureFixture
 
+from meldingen_core import SortingDirection
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
@@ -71,6 +72,16 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
 def test_can_instantiate_melding_list_action() -> None:
     action: MeldingListAction[Melding] = MeldingListAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingListAction)
+
+
+@pytest.mark.anyio
+async def test_melding_list_action() -> None:
+    repository = Mock(BaseMeldingRepository)
+    action: MeldingListAction[Melding] = MeldingListAction(repository)
+
+    await action(limit=10, offset=0, sort_attribute_name="attr", sort_direction=SortingDirection.ASC, area="AREA")
+
+    repository.list_meldingen.assert_awaited_once()
 
 
 def test_can_instantiate_melding_retrieve_action() -> None:
