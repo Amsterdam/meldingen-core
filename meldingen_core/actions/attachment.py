@@ -123,7 +123,7 @@ class DownloadAttachmentAction(Generic[A, M]):
             raise NotFoundException("File not found") from exception
 
 
-class ListAttachmentsAction(Generic[A, M]):
+class ListAttachmentsAction(Generic[A]):
     _attachment_repository: BaseAttachmentRepository[A]
 
     def __init__(self, attachment_repository: BaseAttachmentRepository[A]):
