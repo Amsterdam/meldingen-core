@@ -41,7 +41,7 @@ class BaseMeldingRepository(BaseRepository[M], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area=None,
+        area: str | None = None,
     ) -> Sequence[M]: ...
 
 
