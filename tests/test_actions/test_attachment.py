@@ -10,6 +10,7 @@ from meldingen_core.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderListAttachmentsAction,
     UploadAttachmentAction,
 )
 from meldingen_core.exceptions import NotFoundException
@@ -242,6 +243,19 @@ class TestDownloadAttachmentAction:
 class TestListAttachmentsAction:
     @pytest.mark.anyio
     async def test_can_list_attachments(self) -> None:
+        melding_id = 123
+        repo_attachments: list[Attachment] = []
+        repository = Mock(BaseAttachmentRepository)
+        repository.find_by_melding.return_value = repo_attachments
+
+        action: ListAttachmentsAction[Attachment] = ListAttachmentsAction(repository)
+        attachments = await action(melding_id)
+
+        assert repo_attachments == attachments
+        repository.find_by_melding.assert_awaited_once_with(melding_id)
+
+    @pytest.mark.anyio
+    async def test_melder_can_list_attachments(self) -> None:
         token = "supersecrettoken"
         melding_id = 123
         repo_attachments: list[Attachment] = []
@@ -249,7 +263,9 @@ class TestListAttachmentsAction:
         repository = Mock(BaseAttachmentRepository)
         repository.find_by_melding.return_value = repo_attachments
 
-        action: ListAttachmentsAction[Attachment, Melding] = ListAttachmentsAction(token_verifier, repository)
+        action: MelderListAttachmentsAction[Attachment, Melding] = MelderListAttachmentsAction(
+            token_verifier, repository
+        )
         attachments = await action(melding_id, token)
 
         assert repo_attachments == attachments

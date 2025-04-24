@@ -123,13 +123,23 @@ class DownloadAttachmentAction(Generic[A, M]):
             raise NotFoundException("File not found") from exception
 
 
-class ListAttachmentsAction(Generic[A, M]):
+class ListAttachmentsAction(Generic[A]):
+    _attachment_repository: BaseAttachmentRepository[A]
+
+    def __init__(self, attachment_repository: BaseAttachmentRepository[A]):
+        self._attachment_repository = attachment_repository
+
+    async def __call__(self, melding_id: int) -> Sequence[A]:
+        return await self._attachment_repository.find_by_melding(melding_id)
+
+
+class MelderListAttachmentsAction(Generic[A, M]):
     _verify_token: TokenVerifier[M]
     _attachment_repository: BaseAttachmentRepository[A]
 
     def __init__(self, token_verifier: TokenVerifier[M], attachment_repository: BaseAttachmentRepository[A]):
-        self._verify_token = token_verifier
         self._attachment_repository = attachment_repository
+        self._verify_token = token_verifier
 
     async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
         await self._verify_token(melding_id, token)
