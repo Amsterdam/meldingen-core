@@ -226,7 +226,7 @@ class MeldingCompleteAction(BaseStateTransitionAction[T]):
 A = TypeVar("A", bound=Answer)
 
 
-class MeldingListQuestionsAnswersAction(Generic[T, A]):
+class MelderMeldingListQuestionsAnswersAction(Generic[T, A]):
     _verify_token: TokenVerifier[T]
     _answer_repository: BaseAnswerRepository[A]
 
@@ -241,6 +241,19 @@ class MeldingListQuestionsAnswersAction(Generic[T, A]):
     async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
         await self._verify_token(melding_id, token)
 
+        return await self._answer_repository.find_by_melding(melding_id)
+
+
+class MeldingListQuestionsAnswersAction(Generic[A]):
+    _answer_repository: BaseAnswerRepository[A]
+
+    def __init__(
+        self,
+        answer_repository: BaseAnswerRepository[A],
+    ) -> None:
+        self._answer_repository = answer_repository
+
+    async def __call__(self, melding_id: int) -> Sequence[A]:
         return await self._answer_repository.find_by_melding(melding_id)
 
 

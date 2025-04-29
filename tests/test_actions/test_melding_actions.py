@@ -6,6 +6,7 @@ import pytest
 from _pytest.logging import LogCaptureFixture
 
 from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
     MeldingAnswerQuestionsAction,
@@ -311,11 +312,25 @@ async def test_list_answers() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = repo_melding
 
-    action: MeldingListQuestionsAnswersAction[Melding, Answer] = MeldingListQuestionsAnswersAction(
+    action: MelderMeldingListQuestionsAnswersAction[Melding, Answer] = MelderMeldingListQuestionsAnswersAction(
         token_verifier, repository
     )
 
     answers = await action(1, "token")
+    assert answers == []
+
+
+@pytest.mark.anyio
+async def test_melder_list_answers() -> None:
+    repository = Mock(BaseAnswerRepository)
+    repository.find_by_melding.return_value = []
+
+    repo_melding = Melding("melding text")
+    repository.retrieve.return_value = repo_melding
+
+    action: MeldingListQuestionsAnswersAction[Answer] = MeldingListQuestionsAnswersAction(repository)
+
+    answers = await action(1)
     assert answers == []
 
 
