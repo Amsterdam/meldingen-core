@@ -4,7 +4,8 @@ from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, override
 
-from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseListAction, BaseRetrieveAction
+from meldingen_core import SortingDirection
+from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Answer, Melding
@@ -56,8 +57,30 @@ class MeldingCreateAction(BaseCreateAction[T]):
         await self._repository.save(obj)
 
 
-class MeldingListAction(BaseListAction[T]):
+class MeldingListAction(Generic[T]):
     """Action that retrieves a list of meldingen."""
+
+    _repository: BaseMeldingRepository[T]
+
+    def __init__(self, repository: BaseMeldingRepository[T]) -> None:
+        self._repository = repository
+
+    async def __call__(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+        area: str | None = None,
+    ) -> Sequence[T]:
+        return await self._repository.list_meldingen(
+            limit=limit,
+            offset=offset,
+            sort_attribute_name=sort_attribute_name,
+            sort_direction=sort_direction,
+            area=area,
+        )
 
 
 class MeldingRetrieveAction(BaseRetrieveAction[T]):
