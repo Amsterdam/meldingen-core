@@ -72,33 +72,26 @@ class AttachmentTypes(StrEnum):
     THUMBNAIL = "thumbnail"
 
 
-class DownloadAttachmentAction(Generic[A, M]):
-    _verify_token: TokenVerifier[M]
+class BaseDownloadAttachmentAction(Generic[A]):
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._verify_token = token_verifier
         self._attachment_repository = attachment_repository
         self._filesystem = filesystem
 
-    async def __call__(
-        self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
-    ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await self._verify_token(melding_id, token)
-
+    async def _get_attachment(self, attachment_id: int) -> A:
         attachment = await self._attachment_repository.retrieve(attachment_id)
         if attachment is None:
             raise NotFoundException("Attachment not found")
 
-        if attachment.melding != melding:
-            raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
+        return attachment
 
+    async def _get_data(self, attachment: A, _type: AttachmentTypes) -> tuple[AsyncIterator[bytes], str]:
         file_path = attachment.file_path
         media_type = attachment.original_media_type
         if _type == AttachmentTypes.OPTIMIZED:
@@ -121,6 +114,30 @@ class DownloadAttachmentAction(Generic[A, M]):
             return await file.get_iterator(), media_type
         except filesystem.NotFoundException as exception:
             raise NotFoundException("File not found") from exception
+
+
+class DownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
+    _verify_token: TokenVerifier[M]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[M],
+        attachment_repository: BaseAttachmentRepository[A],
+        filesystem: Filesystem,
+    ):
+        self._verify_token = token_verifier
+        super().__init__(attachment_repository, filesystem)
+
+    async def __call__(
+        self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
+    ) -> tuple[AsyncIterator[bytes], str]:
+        melding = await self._verify_token(melding_id, token)
+
+        attachment = await self._get_attachment(attachment_id)
+        if attachment.melding != melding:
+            raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
+
+        return await self._get_data(attachment, _type)
 
 
 class ListAttachmentsAction(Generic[A]):
