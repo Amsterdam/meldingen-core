@@ -53,7 +53,7 @@ class TestUploadAttachmentAction:
         attachment_repository.save.assert_awaited_once_with(attachment)
 
 
-class TestDownloadAttachmentAction:
+class TestMelderDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_attachment_not_found(self) -> None:
         attachment_repository = Mock(BaseAttachmentRepository)
