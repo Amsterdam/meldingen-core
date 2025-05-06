@@ -116,7 +116,7 @@ class BaseDownloadAttachmentAction(Generic[A]):
             raise NotFoundException("File not found") from exception
 
 
-class DownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
+class MelderDownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
     _verify_token: TokenVerifier[M]
 
     def __init__(

@@ -8,8 +8,8 @@ from plugfs.filesystem import File, Filesystem
 from meldingen_core.actions.attachment import (
     AttachmentTypes,
     DeleteAttachmentAction,
-    DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     UploadAttachmentAction,
 )
@@ -59,7 +59,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = None
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -79,7 +79,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -108,7 +108,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -128,7 +128,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -152,7 +152,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -175,7 +175,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -199,7 +199,7 @@ class TestDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             Mock(Filesystem),
@@ -228,7 +228,7 @@ class TestDownloadAttachmentAction:
         filesystem_mock = Mock(Filesystem)
         filesystem_mock.get_file.return_value = file
 
-        action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
