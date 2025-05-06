@@ -140,6 +140,11 @@ class MelderDownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction
         return await self._get_data(attachment, _type)
 
 
+class DownloadAttachmentAction(BaseDownloadAttachmentAction[A]):
+    async def __call__(self, attachment_id: int, _type: AttachmentTypes) -> tuple[AsyncIterator[bytes], str]:
+        return await self._get_data(await self._get_attachment(attachment_id), _type)
+
+
 class ListAttachmentsAction(Generic[A]):
     _attachment_repository: BaseAttachmentRepository[A]
 
