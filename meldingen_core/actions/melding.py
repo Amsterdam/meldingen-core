@@ -8,6 +8,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.mail import BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -285,6 +286,7 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     _state_machine: BaseMeldingStateMachine[T]
     _verify_token: TokenVerifier[T]
     _invalidate_token: BaseTokenInvalidator[T]
+    _send_mail: BaseMeldingConfirmationMailer[T]
 
     def __init__(
         self,
@@ -292,11 +294,13 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
         state_machine: BaseMeldingStateMachine[T],
         token_verifier: TokenVerifier[T],
         token_invalidator: BaseTokenInvalidator[T],
+        confirmation_mailer: BaseMeldingConfirmationMailer[T],
     ) -> None:
         self._repository = repository
         self._state_machine = state_machine
         self._verify_token = token_verifier
         self._invalidate_token = token_invalidator
+        self._send_mail = confirmation_mailer
 
     async def __call__(
         self,
@@ -307,6 +311,7 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
         await self._state_machine.transition(melding, self.transition_name)
         await self._invalidate_token(melding)
         await self._repository.save(melding)
+        await self._send_mail(melding)
 
         return melding
 
