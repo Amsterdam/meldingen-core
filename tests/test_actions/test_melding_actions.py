@@ -24,6 +24,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.mail import BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Classification, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -355,8 +356,10 @@ async def test_submit_melding() -> None:
     token_verifier.return_value = repo_melding
     token_invalidator = AsyncMock(BaseTokenInvalidator)
 
+    confirmation_mailer = AsyncMock(BaseMeldingConfirmationMailer)
+
     action: MeldingSubmitAction[Melding] = MeldingSubmitAction(
-        repository, state_machine, token_verifier, token_invalidator
+        repository, state_machine, token_verifier, token_invalidator, confirmation_mailer
     )
 
     melding = await action(1, "token")
