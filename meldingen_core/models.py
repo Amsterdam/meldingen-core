@@ -18,6 +18,8 @@ class Melding:
     attachments: list["Attachment"] = field(default_factory=list)
     token: str | None = None
     token_expires: datetime | None = None
+    address: str | None = None
+    zip_code: str | None = None
     email: str | None = None
     phone: str | None = None
     state: str | None = None
