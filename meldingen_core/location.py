@@ -5,47 +5,44 @@ from typing import Generic, TypeVar
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
+# TODO
+# Implementatie verplaatsen naar meldingen
+# Retries toevoegen
+# Task aftrappen vanaf submit location
+# Tests aanpassen
+# Scenario tests aanpassen
 
 @dataclass
-class AddressSchema:
-    street: str | None = None
-    house_number: int | None = None
+class Address:
+    city: str
+    postal_code: str
+    street: str
+    house_number: int
     house_number_addition: str | None = None
-    postal_code: str | None = None
-    city: str | None = None
+
 
 
 M = TypeVar("M", bound=Melding)
-A = TypeVar("A", bound=AddressSchema)
-
-
-class InvalidAPIRequestException(Exception): ...
+A = TypeVar("A", bound=Address)
 
 
 class BaseAddressResolver(metaclass=ABCMeta):
+    """Adapter responsible for getting the address data from another source"""
 
     @abstractmethod
     async def __call__(self, lon: float, lat: float) -> A: ...
 
 
-class BaseAddressProviderTask(Generic[M], metaclass=ABCMeta):
+
+
+class BaseAddressEnricher(Generic[M], metaclass=ABCMeta):
+    """Takes a coordinate and adds the address data to the melding"""
     _resolve_address: BaseAddressResolver
     _repository: BaseMeldingRepository[M]
 
-    def __init__(self, address_resolver: BaseAddressResolver, repository: BaseMeldingRepository[M]):
-        self._resolve_address = address_resolver
+    def __init__(self, resolve_address: BaseAddressResolver, repository: BaseMeldingRepository):
+        self._resolve_address = resolve_address
         self._repository = repository
 
-    async def __call__(self, melding: M, lat: float, lon: float) -> None:
-        address: AddressSchema = await self._resolve_address(lat, lon)
-
-        if address is None:
-            return
-
-        melding.street = address.street
-        melding.house_number = address.house_number
-        melding.house_number_addition = address.house_number_addition
-        melding.postal_code = address.postal_code
-        melding.city = address.city
-
-        await self._repository.save(melding)
+    @abstractmethod
+    async def __call__(self, melding: M, lat: float, lon: float) -> None: ...
