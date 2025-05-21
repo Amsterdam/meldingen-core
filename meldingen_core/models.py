@@ -4,7 +4,7 @@ from datetime import datetime
 
 @dataclass
 class Classification:
-    """This is the base model a 'classification'."""
+    """This is the base model for a 'classification'."""
 
     name: str
 
@@ -18,6 +18,11 @@ class Melding:
     attachments: list["Attachment"] = field(default_factory=list)
     token: str | None = None
     token_expires: datetime | None = None
+    street: str | None = None
+    house_number: int | None = None
+    house_number_addition: str | None = None
+    postal_code: str | None = None
+    city: str | None = None
     email: str | None = None
     phone: str | None = None
     state: str | None = None
