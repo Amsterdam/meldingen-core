@@ -225,11 +225,11 @@ async def test_complete_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(
-        state_machine, repository, Mock(BaseMeldingCompleteMailer)
+    complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(
+        state_machine, repository, AsyncMock(BaseMeldingCompleteMailer)
     )
 
-    melding = await process(1)
+    melding = await complete(1, "test mail text")
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
