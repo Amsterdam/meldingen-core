@@ -5,13 +5,6 @@ from typing import Generic, TypeVar
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
-# TODO
-# Implementatie verplaatsen naar meldingen
-# Retries toevoegen
-# Task aftrappen vanaf submit location
-# Tests aanpassen
-# Scenario tests aanpassen
-
 
 @dataclass
 class Address:
