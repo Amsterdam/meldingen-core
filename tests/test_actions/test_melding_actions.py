@@ -24,7 +24,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.mail import BaseMeldingConfirmationMailer
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Classification, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -225,7 +225,9 @@ async def test_complete_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
-    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository)
+    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(
+        state_machine, repository, Mock(BaseMeldingCompleteMailer)
+    )
 
     melding = await process(1)
 
@@ -239,7 +241,9 @@ async def test_complete_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(Mock(BaseMeldingStateMachine), repository)
+    process: MeldingCompleteAction[Melding] = MeldingCompleteAction(
+        Mock(BaseMeldingStateMachine), repository, Mock(BaseMeldingCompleteMailer)
+    )
 
     with pytest.raises(NotFoundException):
         await process(1)
