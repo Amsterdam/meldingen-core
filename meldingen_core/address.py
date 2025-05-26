@@ -15,26 +15,25 @@ class Address:
     house_number_addition: str | None = None
 
 
-M = TypeVar("M", bound=Melding)
-A = TypeVar("A", bound=Address)
+T = TypeVar("T", bound=Melding)
 
 
 class BaseAddressResolver(metaclass=ABCMeta):
     """Adapter responsible for getting the address data from another source"""
 
     @abstractmethod
-    async def __call__(self, lon: float, lat: float) -> A: ...
+    async def __call__(self, lon: float, lat: float) -> Address: ...
 
 
-class BaseAddressEnricher(Generic[M], metaclass=ABCMeta):
+class BaseAddressEnricher(Generic[T], metaclass=ABCMeta):
     """Takes a coordinate and adds its address data to the melding"""
 
     _resolve_address: BaseAddressResolver
-    _repository: BaseMeldingRepository[M]
+    _repository: BaseMeldingRepository[T]
 
-    def __init__(self, resolve_address: BaseAddressResolver, repository: BaseMeldingRepository) -> None:
+    def __init__(self, resolve_address: BaseAddressResolver, repository: BaseMeldingRepository[T]) -> None:
         self._resolve_address = resolve_address
         self._repository = repository
 
     @abstractmethod
-    async def __call__(self, melding: M, lat: float, lon: float) -> None: ...
+    async def __call__(self, melding: T, lat: float, lon: float) -> None: ...
