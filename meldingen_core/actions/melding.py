@@ -8,7 +8,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.mail import BaseMeldingConfirmationMailer
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
@@ -241,10 +241,33 @@ class MeldingProcessAction(BaseStateTransitionAction[T]):
         return MeldingTransitions.PROCESS
 
 
-class MeldingCompleteAction(BaseStateTransitionAction[T]):
-    @property
-    def transition_name(self) -> str:
-        return MeldingTransitions.COMPLETE
+class MeldingCompleteAction(Generic[T]):
+    _state_machine: BaseMeldingStateMachine[T]
+    _repository: BaseMeldingRepository[T]
+    _mailer: BaseMeldingCompleteMailer[T]
+
+    def __init__(
+        self,
+        state_machine: BaseMeldingStateMachine[T],
+        repository: BaseMeldingRepository[T],
+        mailer: BaseMeldingCompleteMailer[T],
+    ):
+        self._state_machine = state_machine
+        self._repository = repository
+        self._mailer = mailer
+
+    async def __call__(self, melding_id: int, mail_text: str | None = None) -> T:
+        melding = await self._repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException()
+
+        await self._state_machine.transition(melding, MeldingTransitions.COMPLETE)
+        await self._repository.save(melding)
+
+        if mail_text is not None:
+            await self._mailer.__call__(melding, mail_text)
+
+        return melding
 
 
 A = TypeVar("A", bound=Answer)
