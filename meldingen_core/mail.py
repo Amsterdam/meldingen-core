@@ -9,3 +9,8 @@ T = TypeVar("T", bound=Melding)
 class BaseMeldingConfirmationMailer(Generic[T], metaclass=ABCMeta):
     @abstractmethod
     async def __call__(self, melding: T) -> None: ...
+
+
+class BaseMeldingCompleteMailer(Generic[T], metaclass=ABCMeta):
+    @abstractmethod
+    async def __call__(self, melding: T, mail_text: str) -> None: ...
