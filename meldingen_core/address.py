@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod  # pragma: no cover
-from dataclasses import dataclass
-from typing import Generic, TypeVar
+from dataclasses import dataclass  # pragma: no cover
+from typing import Generic, TypeVar  # pragma: no cover
 
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
@@ -15,8 +15,8 @@ class Address:
     house_number_addition: str | None = None
 
 
-T = TypeVar("T", bound=Melding)
-A = TypeVar("A")
+T = TypeVar("T", bound=Melding)  # pragma: no cover
+A = TypeVar("A", bound=Address)  # pragma: no cover
 
 
 class BaseAddressResolver(Generic[A], metaclass=ABCMeta):  # pragma: no cover
