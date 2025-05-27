@@ -19,11 +19,11 @@ T = TypeVar("T", bound=Melding)
 A = TypeVar("A", bound=Address)
 
 
-class BaseAddressResolver(metaclass=ABCMeta):  # pragma: no cover
+class BaseAddressResolver(Generic[A], metaclass=ABCMeta):  # pragma: no cover
     """Adapter responsible for getting the address data from another source"""
 
     @abstractmethod
-    async def __call__(self, lat: float, lon: float) -> Generic[A] | None: ...
+    async def __call__(self, lat: float, lon: float) -> A | None: ...
 
 
 class BaseAddressEnricher(Generic[T], metaclass=ABCMeta):  # pragma: no cover
