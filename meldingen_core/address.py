@@ -26,13 +26,13 @@ class BaseAddressResolver(Generic[A], metaclass=ABCMeta):  # pragma: no cover
     async def __call__(self, lat: float, lon: float) -> A | None: ...
 
 
-class BaseAddressEnricher(Generic[T], metaclass=ABCMeta):  # pragma: no cover
+class BaseAddressEnricher(Generic[T, A], metaclass=ABCMeta):  # pragma: no cover
     """Takes a coordinate and adds its address data to the melding"""
 
-    _resolve_address: BaseAddressResolver
+    _resolve_address: BaseAddressResolver[A]
     _repository: BaseMeldingRepository[T]
 
-    def __init__(self, resolve_address: BaseAddressResolver, repository: BaseMeldingRepository[T]) -> None:
+    def __init__(self, resolve_address: BaseAddressResolver[A], repository: BaseMeldingRepository[T]) -> None:
         self._resolve_address = resolve_address
         self._repository = repository
 
