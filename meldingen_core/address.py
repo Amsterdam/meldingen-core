@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod  # pragma: no cover
 from dataclasses import dataclass  # pragma: no cover
 from typing import Generic, TypeVar  # pragma: no cover
 
-from meldingen_core.models import Melding
-from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.models import Melding  # pragma: no cover
+from meldingen_core.repositories import BaseMeldingRepository  # pragma: no cover
 
 
 @dataclass  # pragma: no cover
