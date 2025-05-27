@@ -16,7 +16,7 @@ class Address:
 
 
 T = TypeVar("T", bound=Melding)
-A = TypeVar("A", bound=Address)
+A = TypeVar("A")
 
 
 class BaseAddressResolver(Generic[A], metaclass=ABCMeta):  # pragma: no cover
