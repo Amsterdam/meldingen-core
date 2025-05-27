@@ -22,7 +22,7 @@ class BaseAddressResolver(metaclass=ABCMeta):
     """Adapter responsible for getting the address data from another source"""
 
     @abstractmethod
-    async def __call__(self, lon: float, lat: float) -> Address | None: ...
+    async def __call__(self, lat: float, lon: float) -> Address | None: ...
 
 
 class BaseAddressEnricher(Generic[T], metaclass=ABCMeta):
