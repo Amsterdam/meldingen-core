@@ -40,8 +40,8 @@ class User:
 @dataclass
 class Form:
     title: str
-    classification: Classification
     questions: Sequence["Question"]
+    classification: Classification | None = None
 
 
 @dataclass
