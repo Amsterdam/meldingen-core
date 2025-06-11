@@ -47,7 +47,7 @@ class Form:
 @dataclass
 class Question:
     text: str
-    form: Form
+    form: Form | None = None
 
 
 @dataclass
