@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -15,7 +16,7 @@ class Melding:
 
     text: str
     classification: Classification | None = None
-    attachments: list["Attachment"] = field(default_factory=list)
+    attachments: Sequence["Attachment"] = field(default_factory=list)
     token: str | None = None
     token_expires: datetime | None = None
     street: str | None = None
