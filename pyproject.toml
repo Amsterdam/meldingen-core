@@ -24,7 +24,7 @@ mkdocstrings = {version = "^0.29.0", extras = ["python"]}
 mypy = "^1.16.0"
 pre-commit = "^4.1.0"
 pytest = "^8.4.0"
-pytest-cov = "^6.0.0"
+pytest-cov = "^6.2.1"
 pytest-mock = "^3.14.1"
 
 [build-system]
