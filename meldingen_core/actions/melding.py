@@ -11,7 +11,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions, MeldingStates
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 log = logging.getLogger(__name__)

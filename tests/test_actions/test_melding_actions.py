@@ -27,7 +27,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Classification, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions, MeldingStates
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 
@@ -80,7 +80,14 @@ async def test_melding_list_action() -> None:
     repository = Mock(BaseMeldingRepository)
     action: MeldingListAction[Melding] = MeldingListAction(repository)
 
-    await action(limit=10, offset=0, sort_attribute_name="attr", sort_direction=SortingDirection.ASC, area="AREA", state=MeldingStates.NEW)
+    await action(
+        limit=10,
+        offset=0,
+        sort_attribute_name="attr",
+        sort_direction=SortingDirection.ASC,
+        area="AREA",
+        state=MeldingStates.NEW,
+    )
 
     repository.list_meldingen.assert_awaited_once()
 
