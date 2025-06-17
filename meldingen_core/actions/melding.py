@@ -11,7 +11,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Melding
 from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions, MeldingStates
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 log = logging.getLogger(__name__)
@@ -74,6 +74,7 @@ class MeldingListAction(Generic[T]):
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         area: str | None = None,
+        state: MeldingStates | None = None,
     ) -> Sequence[T]:
         return await self._repository.list_meldingen(
             limit=limit,
@@ -81,6 +82,7 @@ class MeldingListAction(Generic[T]):
             sort_attribute_name=sort_attribute_name,
             sort_direction=sort_direction,
             area=area,
+            state=state,
         )
 
 
