@@ -22,8 +22,6 @@ class Classification:
 
 @dataclass
 class Melding:
-    """This is the base model for a 'melding'."""
-
     text: str
     classification: Classification | None = None
     attachments: Sequence["Attachment"] = field(default_factory=list)
@@ -37,6 +35,7 @@ class Melding:
     email: str | None = None
     phone: str | None = None
     state: str | None = None
+    assets: Sequence[Asset] = field(default_factory=list)
 
 
 @dataclass
