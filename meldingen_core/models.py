@@ -4,9 +4,12 @@ from datetime import datetime
 
 
 @dataclass
-class Classification:
-    """This is the base model for a 'classification'."""
+class AssetType:
+    name: str
 
+
+@dataclass
+class Classification:
     name: str
 
 
