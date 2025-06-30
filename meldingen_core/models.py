@@ -4,16 +4,24 @@ from datetime import datetime
 
 
 @dataclass
-class Classification:
-    """This is the base model for a 'classification'."""
-
+class AssetType:
     name: str
 
 
 @dataclass
-class Melding:
-    """This is the base model for a 'melding'."""
+class Asset:
+    external_id: str
+    type: AssetType
 
+
+@dataclass
+class Classification:
+    name: str
+    asset_type: AssetType | None = None
+
+
+@dataclass
+class Melding:
     text: str
     classification: Classification | None = None
     attachments: Sequence["Attachment"] = field(default_factory=list)
@@ -27,6 +35,7 @@ class Melding:
     email: str | None = None
     phone: str | None = None
     state: str | None = None
+    assets: Sequence[Asset] = field(default_factory=list)
 
 
 @dataclass
