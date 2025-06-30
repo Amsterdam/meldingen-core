@@ -17,6 +17,7 @@ class Asset:
 @dataclass
 class Classification:
     name: str
+    asset_type: AssetType | None = None
 
 
 @dataclass
