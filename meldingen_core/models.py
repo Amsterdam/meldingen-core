@@ -9,6 +9,12 @@ class AssetType:
 
 
 @dataclass
+class Asset:
+    external_id: str
+    type: AssetType
+
+
+@dataclass
 class Classification:
     name: str
 
