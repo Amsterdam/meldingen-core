@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
-from meldingen_core.models import Answer, Attachment, Classification, Form, Melding, Question, User
+from meldingen_core.models import Answer, AssetType, Attachment, Classification, Form, Melding, Question, User
 from meldingen_core.statemachine import MeldingStates
 
 T = TypeVar("T")
@@ -79,3 +79,9 @@ A = TypeVar("A", bound=Attachment)
 class BaseAttachmentRepository(BaseRepository[A], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_melding(self, melding_id: int) -> Sequence[A]: ...
+
+
+AT = TypeVar("AT", bound=AssetType)
+
+
+class BaseAssetTypeRepository(BaseRepository[AT], metaclass=ABCMeta): ...

@@ -6,6 +6,7 @@ from datetime import datetime
 @dataclass
 class AssetType:
     name: str
+    class_name: str
 
 
 @dataclass
