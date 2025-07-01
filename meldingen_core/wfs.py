@@ -1,8 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from typing import AsyncIterator
 
-from meldingen_core.models import AssetType
-
 
 class BaseWfsProvider(metaclass=ABCMeta):
     @abstractmethod
