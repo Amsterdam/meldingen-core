@@ -1,19 +1,19 @@
 from typing import TypeVar
 
-from meldingen_core.actions.base import BaseCRUDAction
 from meldingen_core.models import AssetType
-from meldingen_core.repositories import BaseRepository
+from meldingen_core.repositories import BaseAssetTypeRepository
 from meldingen_core.wfs import WfsProviderFactory
 from starlette.responses import StreamingResponse
 
 AT = TypeVar("AT", bound=AssetType)
 
-class AssetRetrieveAction(BaseCRUDAction[AT]):
+class AssetRetrieveAction:
     _wfs_provider_factory: WfsProviderFactory
+    _asset_type_repository: BaseAssetTypeRepository
 
-    def __init__(self, wfs_provider_factory: WfsProviderFactory, repository: BaseRepository[AT]) -> None:
+
+    def __init__(self, wfs_provider_factory: WfsProviderFactory) -> None:
         self._wfs_provider_factor = wfs_provider_factory
-        super().__init__(repository)
 
 
     async def __call__(
@@ -25,7 +25,7 @@ class AssetRetrieveAction(BaseCRUDAction[AT]):
         output_format: str = "application/json",
         filter: str | None = None,
     ) -> StreamingResponse:
-        asset_type = self._repository.retrieve(slug)
+        asset_type = await self._asset_type_repository.find_by_name(slug)
         provider = self._wfs_provider_factory(asset_type)
 
         iterator, media_type = await provider(type_names, count, srs_name, output_format, filter)
