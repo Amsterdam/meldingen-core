@@ -11,7 +11,7 @@ class InvalidWfsProvider:
 
 
 class ValidWfsProvider(BaseWfsProvider):
-    async def __call__(
+    async def __call__(  # type: ignore
         self,
         type_names: str,
         count: int = 1000,
