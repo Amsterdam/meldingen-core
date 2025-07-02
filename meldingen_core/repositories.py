@@ -84,4 +84,6 @@ class BaseAttachmentRepository(BaseRepository[A], metaclass=ABCMeta):
 AT = TypeVar("AT", bound=AssetType)
 
 
-class BaseAssetTypeRepository(BaseRepository[AT], metaclass=ABCMeta): ...
+class BaseAssetTypeRepository(BaseRepository[AT], metaclass=ABCMeta):
+    @abstractmethod
+    async def find_by_name(self, name: str) -> AT | None: ...
