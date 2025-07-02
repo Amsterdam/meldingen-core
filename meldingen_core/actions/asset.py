@@ -17,7 +17,7 @@ class AssetRetrieveAction:
         wfs_provider_factory: WfsProviderFactory,
         asset_type_repository: BaseAssetTypeRepository
     ) -> None:
-        self._wfs_provider_factor = wfs_provider_factory
+        self._wfs_provider_factory = wfs_provider_factory
         self._asset_type_repository = asset_type_repository
 
 
