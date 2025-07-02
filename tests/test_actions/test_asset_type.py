@@ -3,6 +3,7 @@ from unittest.mock import Mock
 from meldingen_core.actions.asset_type import (
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
+    AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
 )
@@ -18,6 +19,11 @@ def test_can_instantiate_create_action() -> None:
 def test_can_instantiate_retrieve_action() -> None:
     action: AssetTypeRetrieveAction[AssetType] = AssetTypeRetrieveAction(Mock(BaseAssetTypeRepository))
     assert isinstance(action, AssetTypeRetrieveAction)
+
+
+def test_can_instantiate_list_action() -> None:
+    action: AssetTypeListAction[AssetType] = AssetTypeListAction(Mock(BaseAssetTypeRepository))
+    assert isinstance(action, AssetTypeListAction)
 
 
 def test_can_instantiate_update_action() -> None:
