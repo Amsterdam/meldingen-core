@@ -1,12 +1,14 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
 class AssetType:
     name: str
     class_name: str
+    arguments: dict[str, Any]
 
 
 @dataclass
