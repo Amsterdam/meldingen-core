@@ -1,20 +1,19 @@
-from typing import TypeVar
-
 from starlette.responses import StreamingResponse
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseAssetTypeRepository
 from meldingen_core.wfs import WfsProviderFactory
 
-AT = TypeVar("AT", bound=AssetType)
-
 
 class AssetRetrieveAction:
     _wfs_provider_factory: WfsProviderFactory
-    _asset_type_repository: BaseAssetTypeRepository
+    _asset_type_repository: BaseAssetTypeRepository[AssetType]
 
     def __init__(
-        self, wfs_provider_factory: WfsProviderFactory, asset_type_repository: BaseAssetTypeRepository
+        self,
+        wfs_provider_factory: WfsProviderFactory,
+        asset_type_repository: BaseAssetTypeRepository[AssetType]
     ) -> None:
         self._wfs_provider_factory = wfs_provider_factory
         self._asset_type_repository = asset_type_repository
@@ -29,6 +28,10 @@ class AssetRetrieveAction:
         filter: str | None = None,
     ) -> StreamingResponse:
         asset_type = await self._asset_type_repository.find_by_name(slug)
+
+        if asset_type is None:
+            raise NotFoundException("AssetType not found")
+
         provider = self._wfs_provider_factory(asset_type)
 
         iterator, media_type = await provider(type_names, count, srs_name, output_format, filter)
