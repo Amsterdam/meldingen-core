@@ -1,9 +1,8 @@
 from unittest.mock import Mock
 
+from meldingen_core.actions.asset import AssetRetrieveAction
 from meldingen_core.repositories import BaseAssetTypeRepository
 from meldingen_core.wfs import WfsProviderFactory
-
-from meldingen.actions import AssetRetrieveAction
 
 
 def test_can_instantiate_retrieve_action() -> None:
