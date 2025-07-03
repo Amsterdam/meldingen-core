@@ -11,9 +11,7 @@ class AssetRetrieveAction:
     _asset_type_repository: BaseAssetTypeRepository[AssetType]
 
     def __init__(
-        self,
-        wfs_provider_factory: WfsProviderFactory,
-        asset_type_repository: BaseAssetTypeRepository[AssetType]
+        self, wfs_provider_factory: WfsProviderFactory, asset_type_repository: BaseAssetTypeRepository[AssetType]
     ) -> None:
         self._wfs_provider_factory = wfs_provider_factory
         self._asset_type_repository = asset_type_repository
