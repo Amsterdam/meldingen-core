@@ -25,11 +25,12 @@ class ClassificationCreateAction(Generic[T, AT], BaseCreateAction[T]):
 
     @override
     async def __call__(self, obj: T, asset_type_id: int | None = None) -> None:
-        asset_type = await self._asset_type_repository.retrieve(asset_type_id)
-        if asset_type is None:
-            raise NotFoundException(f"Failed to find asset type with id '{asset_type_id}'")
+        if asset_type_id is not None:
+            asset_type = await self._asset_type_repository.retrieve(asset_type_id)
+            if asset_type is None:
+                raise NotFoundException(f"Failed to find asset type with id '{asset_type_id}'")
 
-        obj.asset_type = asset_type
+            obj.asset_type = asset_type
 
         await super().__call__(obj)
 
