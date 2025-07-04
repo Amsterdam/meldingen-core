@@ -1,4 +1,4 @@
-from typing import AsyncIterator
+from typing import AsyncIterator, Literal
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
@@ -23,6 +23,9 @@ class WfsRetrieveAction:
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
         output_format: str = "application/json",
+        service: Literal["WFS"] = "WFS",
+        version: str = "2.0.0",
+        request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]:
         asset_type = await self._asset_type_repository.find_by_name(name)
@@ -32,4 +35,4 @@ class WfsRetrieveAction:
 
         provider = self._wfs_provider_factory(asset_type)
 
-        return await provider(type_names, count, srs_name, output_format, filter)
+        return await provider(type_names, count, srs_name, output_format, service, version, request, filter)

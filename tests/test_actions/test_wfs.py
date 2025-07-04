@@ -30,7 +30,16 @@ class TestWfsAction:
 
         repository.find_by_name.assert_awaited_once_with("test")
         factory.assert_called_once_with(asset_type_mock)
-        provider.assert_awaited_once_with("test", 1000, "urn:ogc:def:crs:EPSG::4326", "application/json", None)
+        provider.assert_awaited_once_with(
+            "test",
+            1000,
+            "urn:ogc:def:crs:EPSG::4326",
+            "application/json",
+            "WFS",
+            "2.0.0",
+            "GetFeature",
+            None,
+        )
 
     @pytest.mark.anyio
     async def test_asset_type_not_found(self) -> None:
