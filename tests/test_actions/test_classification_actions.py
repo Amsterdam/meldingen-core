@@ -54,9 +54,33 @@ def test_can_instantiate_list_action() -> None:
     assert isinstance(action, ClassificationListAction)
 
 
-def test_can_instantiate_update_action() -> None:
-    action: ClassificationUpdateAction[Classification] = ClassificationUpdateAction(Mock(BaseClassificationRepository))
-    assert isinstance(action, ClassificationUpdateAction)
+class TestClassificationUpdateAction:
+    def test_can_instantiate_update_action(self) -> None:
+        action: ClassificationUpdateAction[Classification, AssetType] = ClassificationUpdateAction(
+            Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
+        )
+        assert isinstance(action, ClassificationUpdateAction)
+
+    @pytest.mark.anyio
+    async def test_raises_exception_when_asset_type_not_found(self) -> None:
+        asset_type_repository = Mock(BaseAssetTypeRepository)
+        asset_type_repository.retrieve.return_value = None
+
+        action: ClassificationUpdateAction[Classification, AssetType] = ClassificationUpdateAction(
+            Mock(BaseClassificationRepository), asset_type_repository
+        )
+
+        with pytest.raises(NotFoundException):
+            await action(123, {"asset_type": 456})
+
+    @pytest.mark.anyio
+    async def test_can_update_classification_with_asset_type(self) -> None:
+        action: ClassificationUpdateAction[Classification, AssetType] = ClassificationUpdateAction(
+            Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
+        )
+
+        classification = await action(123, {"asset_type": 456})
+        assert classification is not None
 
 
 def test_can_instantiate_delete_action() -> None:
