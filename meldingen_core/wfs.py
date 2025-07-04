@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from importlib import import_module
-from typing import AsyncIterator
+from typing import AsyncIterator, Literal
 
 from meldingen_core.models import AssetType
 
@@ -13,9 +13,9 @@ class BaseWfsProvider(metaclass=ABCMeta):
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
         output_format: str = "application/json",
-        service: str = "WFS",
+        service: Literal["WFS"] = "WFS",
         version: str = "2.0.0",
-        request: str = "GetFeature",
+        request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]: ...
 
