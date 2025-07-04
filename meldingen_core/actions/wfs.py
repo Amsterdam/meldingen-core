@@ -18,14 +18,14 @@ class WfsRetrieveAction:
 
     async def __call__(
         self,
-        slug: str,
+        name: str,
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
         output_format: str = "application/json",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]:
-        asset_type = await self._asset_type_repository.find_by_name(slug)
+        asset_type = await self._asset_type_repository.find_by_name(name)
 
         if asset_type is None:
             raise NotFoundException("AssetType not found")
