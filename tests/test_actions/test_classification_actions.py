@@ -7,12 +7,14 @@ from meldingen_core.actions.classification import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
 )
-from meldingen_core.models import Classification
-from meldingen_core.repositories import BaseClassificationRepository
+from meldingen_core.models import AssetType, Classification
+from meldingen_core.repositories import BaseAssetTypeRepository, BaseClassificationRepository
 
 
 def test_can_instantiate_create_action() -> None:
-    action: ClassificationCreateAction[Classification] = ClassificationCreateAction(Mock(BaseClassificationRepository))
+    action: ClassificationCreateAction[Classification, AssetType] = ClassificationCreateAction(
+        Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
+    )
     assert isinstance(action, ClassificationCreateAction)
 
 
