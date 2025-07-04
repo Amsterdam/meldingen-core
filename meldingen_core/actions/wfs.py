@@ -1,4 +1,4 @@
-from starlette.responses import StreamingResponse
+from typing import AsyncIterator
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
@@ -6,7 +6,7 @@ from meldingen_core.repositories import BaseAssetTypeRepository
 from meldingen_core.wfs import WfsProviderFactory
 
 
-class AssetRetrieveAction:
+class WfsRetrieveAction:
     _wfs_provider_factory: WfsProviderFactory
     _asset_type_repository: BaseAssetTypeRepository[AssetType]
 
@@ -24,7 +24,7 @@ class AssetRetrieveAction:
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
         output_format: str = "application/json",
         filter: str | None = None,
-    ) -> StreamingResponse:
+    ) -> AsyncIterator[bytes]:
         asset_type = await self._asset_type_repository.find_by_name(slug)
 
         if asset_type is None:
@@ -32,6 +32,4 @@ class AssetRetrieveAction:
 
         provider = self._wfs_provider_factory(asset_type)
 
-        iterator, media_type = await provider(type_names, count, srs_name, output_format, filter)
-
-        return StreamingResponse(iterator, media_type=media_type)
+        return await provider(type_names, count, srs_name, output_format, filter)
