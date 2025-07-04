@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+import pytest
+
 from meldingen_core.actions.classification import (
     ClassificationCreateAction,
     ClassificationDeleteAction,
@@ -7,15 +9,37 @@ from meldingen_core.actions.classification import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
 )
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType, Classification
 from meldingen_core.repositories import BaseAssetTypeRepository, BaseClassificationRepository
 
 
-def test_can_instantiate_create_action() -> None:
-    action: ClassificationCreateAction[Classification, AssetType] = ClassificationCreateAction(
-        Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
-    )
-    assert isinstance(action, ClassificationCreateAction)
+class TestClassificationCreateAction:
+    def test_can_instantiate_create_action(self) -> None:
+        action: ClassificationCreateAction[Classification, AssetType] = ClassificationCreateAction(
+            Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
+        )
+        assert isinstance(action, ClassificationCreateAction)
+
+    @pytest.mark.anyio
+    async def test_raises_exception_when_asset_type_not_found(self) -> None:
+        asset_type_repository = Mock(BaseAssetTypeRepository)
+        asset_type_repository.retrieve.return_value = None
+
+        action: ClassificationCreateAction[Classification, AssetType] = ClassificationCreateAction(
+            Mock(BaseClassificationRepository), asset_type_repository
+        )
+
+        with pytest.raises(NotFoundException):
+            await action(Classification("name"), 123)
+
+    @pytest.mark.anyio
+    async def test_can_create_classification_with_asset_type(self) -> None:
+        action: ClassificationCreateAction[Classification, AssetType] = ClassificationCreateAction(
+            Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
+        )
+
+        await action(Classification("name"), 123)
 
 
 def test_can_instantiate_retrieve_action() -> None:
