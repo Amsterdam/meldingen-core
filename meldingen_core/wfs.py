@@ -13,6 +13,9 @@ class BaseWfsProvider(metaclass=ABCMeta):
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
         output_format: str = "application/json",
+        service: str = "WFS",
+        version: str = "2.0.0",
+        request: str = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]: ...
 
