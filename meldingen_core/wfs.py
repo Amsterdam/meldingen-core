@@ -52,6 +52,9 @@ class WfsProviderFactory:
         except TypeError as e:
             raise InvalidWfsProviderException(e) from e
 
+        if isinstance(provider, BaseWfsProviderFactory):
+            provider = provider()
+
         if not isinstance(provider, BaseWfsProvider):
             raise InvalidWfsProviderException(
                 f"Instantiated provider '{asset_type.class_name}' must be an instance of 'BaseWfsProvider'"
