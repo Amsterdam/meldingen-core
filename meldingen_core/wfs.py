@@ -20,6 +20,11 @@ class BaseWfsProvider(metaclass=ABCMeta):
     ) -> AsyncIterator[bytes]: ...
 
 
+class BaseWfsProviderFactory(metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self) -> BaseWfsProvider: ...
+
+
 class InvalidWfsProviderException(Exception): ...
 
 
