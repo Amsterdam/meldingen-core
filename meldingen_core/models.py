@@ -38,7 +38,7 @@ class Melding:
     email: str | None = None
     phone: str | None = None
     state: str | None = None
-    assets: Sequence[Asset] = field(default_factory=list)
+    assets: list[Asset] = field(default_factory=list)
 
 
 @dataclass
