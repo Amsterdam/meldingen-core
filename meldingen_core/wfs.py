@@ -20,6 +20,11 @@ class BaseWfsProvider(metaclass=ABCMeta):
     ) -> AsyncIterator[bytes]: ...
 
 
+class BaseWfsProviderFactory(metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self) -> BaseWfsProvider: ...
+
+
 class InvalidWfsProviderException(Exception): ...
 
 
@@ -46,6 +51,9 @@ class WfsProviderFactory:
             provider = klass(**asset_type.arguments)
         except TypeError as e:
             raise InvalidWfsProviderException(e) from e
+
+        if isinstance(provider, BaseWfsProviderFactory):
+            provider = provider()
 
         if not isinstance(provider, BaseWfsProvider):
             raise InvalidWfsProviderException(
