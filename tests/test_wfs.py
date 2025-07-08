@@ -3,7 +3,7 @@ from typing import AsyncIterator
 import pytest
 
 from meldingen_core.models import AssetType
-from meldingen_core.wfs import BaseWfsProvider, InvalidWfsProviderException, WfsProviderFactory
+from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException, WfsProviderFactory
 
 
 class InvalidWfsProvider:
@@ -19,6 +19,11 @@ class ValidWfsProvider(BaseWfsProvider):
         output_format: str = "application/json",
         filter: str | None = None,
     ) -> tuple[AsyncIterator[bytes], str]: ...
+
+
+class ValidWfsProviderFactory(BaseWfsProviderFactory):
+    def __call__(self) -> BaseWfsProvider:
+        return ValidWfsProvider()
 
 
 def test_wfs_provider_factory_raises_when_class_name_invalid() -> None:
@@ -70,6 +75,14 @@ def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
         str(exception_info.value)
         == "Instantiated provider 'tests.test_wfs.InvalidWfsProvider' must be an instance of 'BaseWfsProvider'"
     )
+
+
+def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
+    factory = WfsProviderFactory()
+
+    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}))
+
+    assert isinstance(provider, ValidWfsProvider)
 
 
 def test_wfs_provider_factory_can_produce_provider() -> None:
