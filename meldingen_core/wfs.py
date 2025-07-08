@@ -12,7 +12,7 @@ class BaseWfsProvider(metaclass=ABCMeta):
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-        output_format: str = "application/json",
+        output_format: Literal["application/json"] = "application/json",
         service: Literal["WFS"] = "WFS",
         version: str = "2.0.0",
         request: Literal["GetFeature"] = "GetFeature",
