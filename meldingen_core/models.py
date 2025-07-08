@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, MutableSequence
 
 
 @dataclass
@@ -38,7 +38,7 @@ class Melding:
     email: str | None = None
     phone: str | None = None
     state: str | None = None
-    assets: list[Asset] = field(default_factory=list)
+    assets: MutableSequence[Asset] = field(default_factory=list)
 
 
 @dataclass
