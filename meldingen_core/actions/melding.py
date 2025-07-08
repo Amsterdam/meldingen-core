@@ -8,9 +8,16 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.models import Answer, Melding
-from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository, BaseRepository
+from meldingen_core.models import Answer, Asset, AssetType, Melding
+from meldingen_core.repositories import (
+    BaseAnswerRepository,
+    BaseAssetRepository,
+    BaseAssetTypeRepository,
+    BaseMeldingRepository,
+    BaseRepository,
+)
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
@@ -343,3 +350,45 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT
+
+
+AS = TypeVar("AS", bound=Asset)
+AT = TypeVar("AT", bound=AssetType)
+
+
+class MeldingAddAssetAction(Generic[T, AS, AT]):
+    _verify_token: TokenVerifier[T]
+    _melding_repository: BaseMeldingRepository[T]
+    _asset_repository: BaseAssetRepository[AS]
+    _asset_type_repository: BaseAssetTypeRepository[AT]
+    _create_asset: BaseAssetFactory[AS]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[T],
+        melding_repository: BaseMeldingRepository[T],
+        asset_repository: BaseAssetRepository[AS],
+        asset_type_repository: BaseAssetTypeRepository[AT],
+        asset_factory: BaseAssetFactory[AS],
+    ):
+        self._verify_token = token_verifier
+        self._melding_repository = melding_repository
+        self._asset_repository = asset_repository
+        self._asset_type_repository = asset_type_repository
+        self._create_asset = asset_factory
+
+    async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
+        melding = await self._verify_token(melding_id, token)
+
+        asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
+        if asset is None:
+            asset_type = await self._asset_type_repository.retrieve(asset_type_id)
+            if asset_type is None:
+                raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
+
+            asset = self._create_asset(external_asset_id, asset_type)
+            melding.assets.append(asset)
+
+        await self._melding_repository.save(melding)
+
+        return melding
