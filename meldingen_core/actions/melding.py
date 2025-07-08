@@ -361,7 +361,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
-    _create_asset: BaseAssetFactory[AS]
+    _create_asset: BaseAssetFactory[AS, AT]
 
     def __init__(
         self,
@@ -369,7 +369,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
-        asset_factory: BaseAssetFactory[AS],
+        asset_factory: BaseAssetFactory[AS, AT],
     ):
         self._verify_token = token_verifier
         self._melding_repository = melding_repository
