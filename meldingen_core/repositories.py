@@ -92,4 +92,6 @@ class BaseAssetTypeRepository(BaseRepository[AT], metaclass=ABCMeta):
 AS = TypeVar("AS", bound=Asset)
 
 
-class BaseAssetRepository(BaseRepository[AS], metaclass=ABCMeta): ...
+class BaseAssetRepository(BaseRepository[AS], metaclass=ABCMeta):
+    @abstractmethod
+    async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> AS | None: ...
