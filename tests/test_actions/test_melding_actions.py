@@ -8,6 +8,7 @@ from _pytest.logging import LogCaptureFixture
 from meldingen_core import SortingDirection
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAssetAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
     MeldingAnswerQuestionsAction,
@@ -24,9 +25,15 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.models import Answer, Classification, Melding
-from meldingen_core.repositories import BaseAnswerRepository, BaseMeldingRepository
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.repositories import (
+    BaseAnswerRepository,
+    BaseAssetRepository,
+    BaseAssetTypeRepository,
+    BaseMeldingRepository,
+)
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
@@ -379,3 +386,54 @@ async def test_submit_melding() -> None:
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
     token_invalidator.assert_called_once_with(repo_melding)
     repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_add_asset_asset_type_not_found() -> None:
+    asset_type_repository = Mock(BaseAssetTypeRepository)
+    asset_type_repository.retrieve.return_value = None
+
+    asset_repository = Mock(BaseAssetRepository)
+    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+
+    action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        asset_repository,
+        asset_type_repository,
+        Mock(BaseAssetFactory),
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, "external_id", 456, "token")
+
+
+@pytest.mark.anyio
+async def test_add_asset_asset_does_not_yet_exist() -> None:
+    asset_repository = Mock(BaseAssetRepository)
+    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+
+    action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        asset_repository,
+        Mock(BaseAssetTypeRepository),
+        Mock(BaseAssetFactory),
+    )
+
+    melding = await action(123, "external_id", 456, "token")
+    assert melding is not None
+
+
+@pytest.mark.anyio
+async def test_add_asset_asset_exists() -> None:
+    action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        Mock(BaseAssetRepository),
+        Mock(BaseAssetTypeRepository),
+        Mock(BaseAssetFactory),
+    )
+
+    melding = await action(123, "external_id", 456, "token")
+    assert melding is not None
