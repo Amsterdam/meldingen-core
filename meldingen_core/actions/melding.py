@@ -11,6 +11,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Asset, AssetType, Melding
+from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -24,6 +25,8 @@ from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, Token
 log = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=Melding)
+AS = TypeVar("AS", bound=Asset)
+AT = TypeVar("AT", bound=AssetType)
 
 
 class MeldingCreateAction(BaseCreateAction[T]):
@@ -97,12 +100,13 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseCRUDAction[T]):
+class MeldingUpdateAction(BaseCRUDAction[T], Generic[AS, T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
+    _reclassifier: BaseReclassification[AS, T]
 
     def __init__(
         self,
@@ -110,11 +114,13 @@ class MeldingUpdateAction(BaseCRUDAction[T]):
         token_verifier: TokenVerifier[T],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
+        reclassifier: BaseReclassification[AS, T],
     ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier
         self._classify = classifier
         self._state_machine = state_machine
+        self._reclassifier = reclassifier
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._verify_token(pk, token)
@@ -123,6 +129,8 @@ class MeldingUpdateAction(BaseCRUDAction[T]):
             setattr(melding, key, value)
 
         classification = await self._classify(melding.text)
+        await self._reclassifier(melding, classification)
+
         melding.classification = classification
 
         await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
@@ -350,10 +358,6 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT
-
-
-AS = TypeVar("AS", bound=Asset)
-AT = TypeVar("AT", bound=AssetType)
 
 
 class MeldingAddAssetAction(Generic[T, AS, AT]):

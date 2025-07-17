@@ -28,6 +28,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -112,8 +113,10 @@ async def test_melding_update_action() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
-    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(
-        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine)
+    reclassifier = AsyncMock(BaseReclassification)
+
+    action: MeldingUpdateAction[Asset, Melding] = MeldingUpdateAction(
+        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
     text = "new text"
