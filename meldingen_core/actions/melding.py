@@ -106,7 +106,7 @@ class MeldingUpdateAction(BaseCRUDAction[T], Generic[AS, T]):
     _verify_token: TokenVerifier[T]
     _classify: Classifier
     _state_machine: BaseMeldingStateMachine[T]
-    _reclassifier: BaseReclassification[AS, T]
+    _reclassifier: BaseReclassification
 
     def __init__(
         self,
@@ -114,7 +114,7 @@ class MeldingUpdateAction(BaseCRUDAction[T], Generic[AS, T]):
         token_verifier: TokenVerifier[T],
         classifier: Classifier,
         state_machine: BaseMeldingStateMachine[T],
-        reclassifier: BaseReclassification[AS, T],
+        reclassifier: BaseReclassification,
     ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier
