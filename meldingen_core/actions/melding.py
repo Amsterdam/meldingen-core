@@ -100,7 +100,7 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseCRUDAction[T], Generic[AS, T]):
+class MeldingUpdateAction(BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
