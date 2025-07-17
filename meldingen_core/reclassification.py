@@ -17,5 +17,5 @@ class BaseReclassification(Generic[AS, M], metaclass=ABCMeta):
         self._melding_repository = melding_repository
 
     @abstractmethod
-    async def __call__(self, melding: Melding, old_classification: Classification | None) -> None:
+    async def __call__(self, melding: Melding, new_classification: Classification | None) -> None:
         """ Handle reclassification side effects here, like changing the assets or removing/changing the location. """
