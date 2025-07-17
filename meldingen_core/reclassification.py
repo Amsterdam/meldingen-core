@@ -18,4 +18,4 @@ class BaseReclassification(Generic[AS, M], metaclass=ABCMeta):
 
     @abstractmethod
     async def __call__(self, melding: Melding, new_classification: Classification | None) -> None:
-        """ Handle reclassification side effects here, like changing the assets or removing/changing the location. """
+        """Handle reclassification side effects here, like changing the assets or removing/changing the location."""
