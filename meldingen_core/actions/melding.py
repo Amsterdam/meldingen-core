@@ -30,7 +30,7 @@ AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
 
 
-class MeldingCreateAction(BaseCreateAction[T, C]):
+class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
     """Action that stores a melding."""
 
     _classify: Classifier[C]
