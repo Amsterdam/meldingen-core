@@ -129,8 +129,12 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
         for key, value in values.items():
             setattr(melding, key, value)
 
-        classification = await self._classify(melding.text)
-        await self._reclassifier(melding, classification)
+        try:
+            classification = await self._classify(melding.text)
+            await self._reclassifier(melding, classification)
+        except ClassificationNotFoundException:
+            log.error("Classifier failed to find classification!")
+            classification = None
 
         melding.classification = classification
 
