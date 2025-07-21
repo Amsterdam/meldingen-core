@@ -45,7 +45,7 @@ async def test_melding_create_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -63,7 +63,7 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -115,7 +115,7 @@ async def test_melding_update_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(
+    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
