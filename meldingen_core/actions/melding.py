@@ -131,11 +131,11 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
 
         try:
             classification = await self._classify(melding.text)
-            await self._reclassifier(melding, classification)
         except ClassificationNotFoundException:
             log.error("Classifier failed to find classification!")
             classification = None
 
+        await self._reclassifier(melding, classification)
         melding.classification = classification
 
         await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
