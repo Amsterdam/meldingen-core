@@ -127,6 +127,26 @@ async def test_melding_update_action() -> None:
 
 
 @pytest.mark.anyio
+async def test_melding_update_action_with_classification_not_found() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    token_verifier = AsyncMock(TokenVerifier)
+    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
+    reclassifier = AsyncMock(BaseReclassification)
+
+    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
+    )
+
+    text = "new text"
+    melding = await action(123, {"text": text}, token)
+
+    assert melding.text == text
+    assert melding.classification is None
+
+
+@pytest.mark.anyio
 async def test_melding_add_contact_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
