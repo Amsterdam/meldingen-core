@@ -10,7 +10,7 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.models import Answer, Asset, AssetType, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -24,15 +24,16 @@ from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, Token
 
 log = logging.getLogger(__name__)
 
+C = TypeVar("C", bound=Classification)
 T = TypeVar("T", bound=Melding)
 AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
 
 
-class MeldingCreateAction(BaseCreateAction[T]):
+class MeldingCreateAction(BaseCreateAction[T, C]):
     """Action that stores a melding."""
 
-    _classify: Classifier
+    _classify: Classifier[C]
     _state_machine: BaseMeldingStateMachine[T]
     _generate_token: BaseTokenGenerator
     _token_duration: timedelta
@@ -40,7 +41,7 @@ class MeldingCreateAction(BaseCreateAction[T]):
     def __init__(
         self,
         repository: BaseRepository[T],
-        classifier: Classifier,
+        classifier: Classifier[C],
         state_machine: BaseMeldingStateMachine[T],
         token_generator: BaseTokenGenerator,
         token_duration: timedelta,
@@ -100,21 +101,21 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseCRUDAction[T]):
+class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
-    _classify: Classifier
+    _classify: Classifier[C]
     _state_machine: BaseMeldingStateMachine[T]
-    _reclassifier: BaseReclassification
+    _reclassifier: BaseReclassification[T, C]
 
     def __init__(
         self,
         repository: BaseRepository[T],
         token_verifier: TokenVerifier[T],
-        classifier: Classifier,
+        classifier: Classifier[C],
         state_machine: BaseMeldingStateMachine[T],
-        reclassifier: BaseReclassification,
+        reclassifier: BaseReclassification[T, C],
     ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier
