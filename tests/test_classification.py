@@ -14,7 +14,7 @@ async def test_classifier() -> None:
     repository = Mock(BaseClassificationRepository)
     repository.find_by_name = AsyncMock(return_value=Classification(name="classification_name"))
 
-    classify = Classifier(adapter, repository)
+    classify: Classifier[Classification] = Classifier(adapter, repository)
 
     classification = await classify("text")
 
@@ -28,7 +28,7 @@ async def test_classifier_classification_not_found() -> None:
     adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
     repository = Mock(BaseClassificationRepository)
     repository.find_by_name = AsyncMock(side_effect=NotFoundException())
-    classify = Classifier(adapter, repository)
+    classify: Classifier[Classification] = Classifier(adapter, repository)
 
     with pytest.raises(ClassificationNotFoundException):
         await classify("text")

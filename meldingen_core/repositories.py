@@ -51,11 +51,14 @@ class BaseUserRepository(BaseRepository[User], metaclass=ABCMeta):
     """Repository for User."""
 
 
-class BaseClassificationRepository(BaseRepository[Classification], metaclass=ABCMeta):
+C = TypeVar("C", bound=Classification)
+
+
+class BaseClassificationRepository(BaseRepository[C], metaclass=ABCMeta):
     """Repository for Classification."""
 
     @abstractmethod
-    async def find_by_name(self, name: str) -> Classification:
+    async def find_by_name(self, name: str) -> C:
         """Find a classification by name or raise NotFoundException if not found."""
 
 

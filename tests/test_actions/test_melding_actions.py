@@ -45,7 +45,7 @@ async def test_melding_create_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -63,7 +63,7 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
-    action: MeldingCreateAction[Melding] = MeldingCreateAction(
+    action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
     )
     melding = Melding("text")
@@ -115,7 +115,7 @@ async def test_melding_update_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(
+    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
@@ -124,6 +124,26 @@ async def test_melding_update_action() -> None:
 
     assert melding.text == text
     assert melding.classification == classification
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_with_classification_not_found() -> None:
+    token = "123456"
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    token_verifier = AsyncMock(TokenVerifier)
+    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
+    reclassifier = AsyncMock(BaseReclassification)
+
+    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
+    )
+
+    text = "new text"
+    melding = await action(123, {"text": text}, token)
+
+    assert melding.text == text
+    assert melding.classification is None
 
 
 @pytest.mark.anyio
