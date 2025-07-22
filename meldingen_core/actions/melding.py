@@ -101,13 +101,13 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
+class MeldingUpdateAction(Generic[T, C, AS], BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
     _classify: Classifier[C]
     _state_machine: BaseMeldingStateMachine[T]
-    _reclassifier: BaseReclassification[T, C]
+    _reclassifier: BaseReclassification[T, C, AS]
 
     def __init__(
         self,
@@ -115,7 +115,7 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
         token_verifier: TokenVerifier[T],
         classifier: Classifier[C],
         state_machine: BaseMeldingStateMachine[T],
-        reclassifier: BaseReclassification[T, C],
+        reclassifier: BaseReclassification[T, C, AS],
     ) -> None:
         super().__init__(repository)
         self._verify_token = token_verifier

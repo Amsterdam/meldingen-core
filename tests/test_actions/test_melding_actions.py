@@ -115,7 +115,7 @@ async def test_melding_update_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+    action: MeldingUpdateAction[Melding, Classification, Asset] = MeldingUpdateAction(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
@@ -135,7 +135,7 @@ async def test_melding_update_action_with_classification_not_found() -> None:
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+    action: MeldingUpdateAction[Melding, Classification, Asset] = MeldingUpdateAction(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
