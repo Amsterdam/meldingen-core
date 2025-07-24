@@ -125,7 +125,7 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._verify_token(pk, token)
-        old_classification = melding.classification
+        old_classification: C = melding.classification
 
         for key, value in values.items():
             setattr(melding, key, value)
