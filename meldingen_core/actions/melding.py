@@ -2,7 +2,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, override, cast
 
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
@@ -125,7 +125,7 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._verify_token(pk, token)
-        old_classification: C = melding.classification
+        old_classification: C = cast(C, melding.classification)
 
         for key, value in values.items():
             setattr(melding, key, value)
