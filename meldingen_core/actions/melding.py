@@ -125,6 +125,7 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
 
     async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
         melding = await self._verify_token(pk, token)
+        old_classification = melding.classification
 
         for key, value in values.items():
             setattr(melding, key, value)
@@ -135,7 +136,7 @@ class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
             log.error("Classifier failed to find classification!")
             classification = None
 
-        await self._reclassifier(melding, classification)
+        await self._reclassifier(melding, old_classification, classification)
         melding.classification = classification
 
         await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
