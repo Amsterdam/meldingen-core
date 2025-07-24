@@ -2,7 +2,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, override, cast
+from typing import Any, Generic, TypeVar, cast, override
 
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
