@@ -19,7 +19,7 @@ anyio = "^4.6.2"
 black = "^25.1.0"
 isort = "^6.0.0"
 mkdocs-literate-nav = "^0.6.1"
-mkdocs-material = "^9.6.2"
+mkdocs-material = "^9.6.16"
 mkdocstrings = {version = "^0.30.0", extras = ["python"]}
 mypy = "^1.16.1"
 pre-commit = "^4.1.0"
