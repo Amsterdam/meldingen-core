@@ -7,16 +7,31 @@ from meldingen_core.models import Melding
 T = TypeVar("T", bound=Melding)
 
 
-class MeldingStates(StrEnum):
+class MeldingFormStates(StrEnum):
     NEW = "new"
     CLASSIFIED = "classified"
     QUESTIONS_ANSWERED = "questions_answered"
     ATTACHMENTS_ADDED = "attachments_added"
     LOCATION_SUBMITTED = "location_submitted"
     CONTACT_INFO_ADDED = "contact_info_added"
+
+
+class MeldingBackofficeStates(StrEnum):
     SUBMITTED = "submitted"
     PROCESSING = "processing"
     COMPLETED = "completed"
+
+
+class MeldingStates(StrEnum):
+    NEW = MeldingFormStates.NEW
+    CLASSIFIED = MeldingFormStates.CLASSIFIED
+    QUESTIONS_ANSWERED = MeldingFormStates.QUESTIONS_ANSWERED
+    ATTACHMENTS_ADDED = MeldingFormStates.ATTACHMENTS_ADDED
+    LOCATION_SUBMITTED = MeldingFormStates.LOCATION_SUBMITTED
+    CONTACT_INFO_ADDED = MeldingFormStates.CONTACT_INFO_ADDED
+    SUBMITTED = MeldingBackofficeStates.SUBMITTED
+    PROCESSING = MeldingBackofficeStates.PROCESSING
+    COMPLETED = MeldingBackofficeStates.COMPLETED
 
 
 class MeldingTransitions(StrEnum):
