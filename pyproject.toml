@@ -22,7 +22,7 @@ mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.16"
 mkdocstrings = {version = "^0.30.0", extras = ["python"]}
 mypy = "^1.17.1"
-pre-commit = "^4.1.0"
+pre-commit = "^4.3.0"
 pytest = "^8.4.1"
 pytest-cov = "^6.2.1"
 pytest-mock = "^3.14.1"
