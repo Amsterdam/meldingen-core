@@ -3,8 +3,8 @@ from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
+from meldingen_core.filters import MeldingListFilters
 from meldingen_core.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, User
-from meldingen_core.statemachine import MeldingStates
 
 T = TypeVar("T")
 
@@ -42,8 +42,7 @@ class BaseMeldingRepository(BaseRepository[M], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area: str | None = None,
-        state: MeldingStates | None = None,
+        filters: MeldingListFilters | None = None,
     ) -> Sequence[M]: ...
 
 

@@ -9,6 +9,7 @@ from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRe
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
+from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
@@ -19,7 +20,7 @@ from meldingen_core.repositories import (
     BaseMeldingRepository,
     BaseRepository,
 )
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 log = logging.getLogger(__name__)
@@ -84,16 +85,14 @@ class MeldingListAction(Generic[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area: str | None = None,
-        state: MeldingStates | None = None,
+        filters: MeldingListFilters | None = None,
     ) -> Sequence[T]:
         return await self._repository.list_meldingen(
             limit=limit,
             offset=offset,
             sort_attribute_name=sort_attribute_name,
             sort_direction=sort_direction,
-            area=area,
-            state=state,
+            filters=filters,
         )
 
 
