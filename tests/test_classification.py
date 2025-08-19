@@ -24,6 +24,17 @@ async def test_classifier() -> None:
 
 
 @pytest.mark.anyio
+async def test_classifier_not_found() -> None:
+    adapter = AsyncMock(BaseClassifierAdapter, return_value=None)
+    repository = Mock(BaseClassificationRepository)
+
+    classify: Classifier[Classification] = Classifier(adapter, repository)
+
+    with pytest.raises(ClassificationNotFoundException):
+        await classify("text")
+
+
+@pytest.mark.anyio
 async def test_classifier_classification_not_found() -> None:
     adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
     repository = Mock(BaseClassificationRepository)

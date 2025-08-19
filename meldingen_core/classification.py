@@ -13,7 +13,7 @@ class ClassificationNotFoundException(NotFoundException): ...
 
 class BaseClassifierAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def __call__(self, text: str) -> str:
+    async def __call__(self, text: str) -> str | None:
         """Accepts a text as input and returns the classification name."""
 
 
@@ -27,6 +27,8 @@ class Classifier(Generic[C]):
 
     async def __call__(self, text: str) -> C:
         name = await self._adapter(text)
+        if name is None:
+            raise ClassificationNotFoundException(text)
 
         try:
             return await self._repository.find_by_name(name)
