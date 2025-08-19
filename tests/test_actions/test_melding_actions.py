@@ -26,6 +26,7 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
+from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
@@ -87,15 +88,9 @@ def test_can_instantiate_melding_list_action() -> None:
 async def test_melding_list_action() -> None:
     repository = Mock(BaseMeldingRepository)
     action: MeldingListAction[Melding] = MeldingListAction(repository)
+    filters: MeldingListFilters = MeldingListFilters(area="AREA", states=[MeldingStates.NEW, MeldingStates.SUBMITTED])
 
-    await action(
-        limit=10,
-        offset=0,
-        sort_attribute_name="attr",
-        sort_direction=SortingDirection.ASC,
-        area="AREA",
-        state=MeldingStates.NEW,
-    )
+    await action(limit=10, offset=0, sort_attribute_name="attr", sort_direction=SortingDirection.ASC, filters=filters)
 
     repository.list_meldingen.assert_awaited_once()
 
