@@ -16,7 +16,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
 
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
@@ -47,7 +47,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
 
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
@@ -78,7 +78,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
 
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
