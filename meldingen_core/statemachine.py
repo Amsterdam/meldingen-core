@@ -16,7 +16,7 @@ class MeldingFormStates(StrEnum):
     CONTACT_INFO_ADDED = "contact_info_added"
 
 
-def get_all_backoffice_states():
+def get_all_backoffice_states() -> list[MeldingBackofficeStates]:
     return [e for e in MeldingBackofficeStates]
 
 
