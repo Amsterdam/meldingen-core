@@ -1,4 +1,4 @@
-from meldingen_core.statemachine import get_all_backoffice_states, MeldingBackofficeStates
+from meldingen_core.statemachine import MeldingBackofficeStates, get_all_backoffice_states
 
 
 def test_get_backoffice_states() -> None:
@@ -8,5 +8,5 @@ def test_get_backoffice_states() -> None:
     assert states == [
         MeldingBackofficeStates.SUBMITTED,
         MeldingBackofficeStates.PROCESSING,
-        MeldingBackofficeStates.COMPLETED
+        MeldingBackofficeStates.COMPLETED,
     ]
