@@ -16,6 +16,10 @@ class MeldingFormStates(StrEnum):
     CONTACT_INFO_ADDED = "contact_info_added"
 
 
+def get_all_backoffice_states():
+    return [e for e in MeldingBackofficeStates]
+
+
 class MeldingBackofficeStates(StrEnum):
     SUBMITTED = "submitted"
     PROCESSING = "processing"
