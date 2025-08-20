@@ -7,7 +7,11 @@ from meldingen_core.models import Melding
 T = TypeVar("T", bound=Melding)
 
 
-class MeldingFormStates(StrEnum):
+class BaseMeldingState(StrEnum):
+    pass
+
+
+class MeldingFormStates(BaseMeldingState):
     NEW = "new"
     CLASSIFIED = "classified"
     QUESTIONS_ANSWERED = "questions_answered"
@@ -16,13 +20,13 @@ class MeldingFormStates(StrEnum):
     CONTACT_INFO_ADDED = "contact_info_added"
 
 
-class MeldingBackofficeStates(StrEnum):
+class MeldingBackofficeStates(BaseMeldingState):
     SUBMITTED = "submitted"
     PROCESSING = "processing"
     COMPLETED = "completed"
 
 
-class MeldingStates(StrEnum):
+class MeldingStates(BaseMeldingState):
     NEW = MeldingFormStates.NEW
     CLASSIFIED = MeldingFormStates.CLASSIFIED
     QUESTIONS_ANSWERED = MeldingFormStates.QUESTIONS_ANSWERED
@@ -50,5 +54,5 @@ class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
     async def transition(self, melding: T, transition_name: str) -> None: ...
 
 
-def get_all_backoffice_states() -> list[MeldingBackofficeStates]:
+def get_all_backoffice_states() -> list[BaseMeldingState]:
     return [e for e in MeldingBackofficeStates]

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import List
 
-from meldingen_core.statemachine import MeldingStates
+from meldingen_core.statemachine import BaseMeldingState
 
 
 @dataclass
 class MeldingListFilters:
     area: str | None = None
-    states: List[MeldingStates] | None = None
+    states: List[BaseMeldingState] | None = None
