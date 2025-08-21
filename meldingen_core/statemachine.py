@@ -54,5 +54,5 @@ class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
     async def transition(self, melding: T, transition_name: str) -> None: ...
 
 
-def get_all_backoffice_states() -> list[BaseMeldingState]:
+def get_all_backoffice_states() -> list[MeldingBackofficeStates]:
     return [e for e in MeldingBackofficeStates]
