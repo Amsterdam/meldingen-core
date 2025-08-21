@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import StrEnum
-from typing import Generic, TypeVar
+from typing import Generic, Sequence, TypeVar
 
 from meldingen_core.models import Melding
 
@@ -54,5 +54,5 @@ class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
     async def transition(self, melding: T, transition_name: str) -> None: ...
 
 
-def get_all_backoffice_states() -> list[MeldingBackofficeStates]:
+def get_all_backoffice_states() -> Sequence[MeldingBackofficeStates]:
     return [e for e in MeldingBackofficeStates]
