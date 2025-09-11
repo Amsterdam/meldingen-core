@@ -458,9 +458,6 @@ async def test_add_asset_asset_exists() -> None:
     assert melding is not None
 
 
-# add tests below for the MeldingDeleteAsset Action
-
-
 @pytest.mark.anyio
 async def test_delete_asset_asset_type_not_found() -> None:
     asset_type_repository = Mock(BaseAssetTypeRepository)
