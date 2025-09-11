@@ -419,7 +419,7 @@ class MeldingDeleteAssetAction(Generic[T, AS, AT]):
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
 
-    async def __call__(self, melding_id: int, asset_id: int, token: str) -> T:
+    async def __call__(self, melding_id: int, asset_id: int, token: str) -> None:
         melding = await self._verify_token(melding_id, token)
         asset = await self._asset_repository.retrieve(asset_id)
 
