@@ -430,7 +430,3 @@ class MeldingDeleteAssetAction(Generic[T, AS, AT]):
             raise NotFoundException(f"Melding with id {melding_id} does not have asset with id {asset_id} associated")
 
         await self._asset_repository.delete(asset_id)
-
-        melding.assets.remove(asset)
-
-        return melding
