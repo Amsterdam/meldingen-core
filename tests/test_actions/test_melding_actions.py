@@ -464,7 +464,7 @@ async def test_delete_asset_asset_type_not_found() -> None:
     asset_type_repository.retrieve.return_value = None
 
     asset_repository = Mock(BaseAssetRepository)
-    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+    asset_repository.retrieve.return_value = None
 
     action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
         AsyncMock(TokenVerifier),
@@ -480,7 +480,7 @@ async def test_delete_asset_asset_type_not_found() -> None:
 @pytest.mark.anyio
 async def test_delete_asset_asset_does_not_exist() -> None:
     asset_repository = Mock(BaseAssetRepository)
-    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+    asset_repository.retrieve.return_value = None
 
     action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
         AsyncMock(TokenVerifier),
@@ -497,7 +497,7 @@ async def test_delete_asset_asset_does_not_exist() -> None:
 async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
     asset = Asset(external_id="external_id", type=AssetType(name="type", class_name="class_name", arguments={}))
     asset_repository = Mock(BaseAssetRepository)
-    asset_repository.find_by_external_id_and_asset_type_id.return_value = asset
+    asset_repository.retrieve.return_value = asset
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve.return_value = Melding(
