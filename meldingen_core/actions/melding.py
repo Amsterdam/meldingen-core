@@ -406,19 +406,16 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
 
 class MeldingDeleteAssetAction(Generic[T, AS, AT]):
     _verify_token: TokenVerifier[T]
-    _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
 
     def __init__(
         self,
         token_verifier: TokenVerifier[T],
-        melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
     ):
         self._verify_token = token_verifier
-        self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
 
@@ -429,11 +426,11 @@ class MeldingDeleteAssetAction(Generic[T, AS, AT]):
         if asset is None:
             raise NotFoundException(f"Failed to find asset with id {asset_id}")
 
-        if asset not in melding.assets:
+        if asset.melding is not melding:
             raise NotFoundException(f"Melding with id {melding_id} does not have asset with id {asset_id} associated")
 
-        melding.assets.remove(asset)
+        await self._asset_repository.delete(asset_id)
 
-        await self._melding_repository.save(melding)
+        melding.assets.remove(asset)
 
         return melding
