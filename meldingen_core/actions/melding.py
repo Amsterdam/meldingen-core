@@ -422,16 +422,17 @@ class MeldingDeleteAssetAction(Generic[T, AS, AT]):
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
 
-    async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
+    async def __call__(self, melding_id: int, asset_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
+        asset = await self._asset_repository.retrieve(asset_id)
 
-        asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
         if asset is None:
-            raise NotFoundException(
-                f"Failed to find asset with external id {external_asset_id} and asset type id {asset_type_id}"
-            )
+            raise NotFoundException(f"Failed to find asset with id {asset_id}")
 
-        melding.assets = [a for a in melding.assets if not a.external_id == external_asset_id]
+        if asset not in melding.assets:
+            raise NotFoundException(f"Melding with id {melding_id} does not have asset with id {asset_id} associated")
+
+        melding.assets.remove(asset)
 
         await self._melding_repository.save(melding)
 
