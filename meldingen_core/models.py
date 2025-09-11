@@ -12,12 +12,6 @@ class AssetType:
 
 
 @dataclass
-class Asset:
-    external_id: str
-    type: AssetType
-
-
-@dataclass
 class Classification:
     name: str
     asset_type: AssetType | None = None
@@ -38,7 +32,14 @@ class Melding:
     email: str | None = None
     phone: str | None = None
     state: str | None = None
-    assets: MutableSequence[Asset] = field(default_factory=list)
+    assets: MutableSequence["Asset"] = field(default_factory=list)
+
+
+@dataclass
+class Asset:
+    external_id: str
+    type: AssetType
+    melding: Melding
 
 
 @dataclass
