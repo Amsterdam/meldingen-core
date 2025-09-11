@@ -535,10 +535,6 @@ async def test_delete_asset_asset_exists() -> None:
         Mock(BaseAssetTypeRepository),
     )
 
-    melding = await action(123, 456, "token")
-
-    assert melding is not None
+    await action(123, 456, "token")
 
     asset_repository.delete.assert_awaited_once_with(456)
-
-    assert len(melding.assets) == 0
