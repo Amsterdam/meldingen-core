@@ -15,6 +15,7 @@ from meldingen_core.actions.melding import (
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
+    MeldingDeleteAssetAction,
     MeldingListAction,
     MeldingListQuestionsAnswersAction,
     MeldingProcessAction,
@@ -455,3 +456,60 @@ async def test_add_asset_asset_exists() -> None:
 
     melding = await action(123, "external_id", 456, "token")
     assert melding is not None
+
+
+# add tests below for the MeldingDeleteAsset Action
+
+
+@pytest.mark.anyio
+async def test_delete_asset_asset_type_not_found() -> None:
+    asset_type_repository = Mock(BaseAssetTypeRepository)
+    asset_type_repository.retrieve.return_value = None
+
+    asset_repository = Mock(BaseAssetRepository)
+    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+
+    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        asset_repository,
+        asset_type_repository,
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, "external_id", 456, "token")
+
+
+@pytest.mark.anyio
+async def test_delete_asset_asset_does_not_exist() -> None:
+    asset_repository = Mock(BaseAssetRepository)
+    asset_repository.find_by_external_id_and_asset_type_id.return_value = None
+
+    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        asset_repository,
+        Mock(BaseAssetTypeRepository),
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, "external_id", 456, "token")
+
+
+@pytest.mark.anyio
+async def test_delete_asset_asset_exists() -> None:
+    asset = Asset(external_id="external_id", type=AssetType(name="type", class_name="class_name", arguments={}))
+    asset_repository = Mock(BaseAssetRepository)
+    melding_repository = Mock(BaseMeldingRepository)
+    asset_repository.find_by_external_id_and_asset_type_id.return_value = asset
+
+    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+        AsyncMock(TokenVerifier),
+        melding_repository,
+        asset_repository,
+        Mock(BaseAssetTypeRepository),
+    )
+
+    melding = await action(123, "external_id", 456, "token")
+    assert melding is not None
+    melding_repository.save.assert_awaited_once_with(melding)

@@ -402,3 +402,37 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         await self._melding_repository.save(melding)
 
         return melding
+
+
+class MeldingDeleteAssetAction(Generic[T, AS, AT]):
+    _verify_token: TokenVerifier[T]
+    _melding_repository: BaseMeldingRepository[T]
+    _asset_repository: BaseAssetRepository[AS]
+    _asset_type_repository: BaseAssetTypeRepository[AT]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[T],
+        melding_repository: BaseMeldingRepository[T],
+        asset_repository: BaseAssetRepository[AS],
+        asset_type_repository: BaseAssetTypeRepository[AT],
+    ):
+        self._verify_token = token_verifier
+        self._melding_repository = melding_repository
+        self._asset_repository = asset_repository
+        self._asset_type_repository = asset_type_repository
+
+    async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
+        melding = await self._verify_token(melding_id, token)
+
+        asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
+        if asset is None:
+            raise NotFoundException(
+                f"Failed to find asset with external id {external_asset_id} and asset type id {asset_type_id}"
+            )
+
+        melding.assets = [a for a in melding.assets if not a.external_id == external_asset_id]
+
+        await self._melding_repository.save(melding)
+
+        return melding
