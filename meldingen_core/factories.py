@@ -16,6 +16,6 @@ AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
 
 
-class BaseAssetFactory(Generic[AS, AT], metaclass=ABCMeta):
+class BaseAssetFactory(Generic[AS, AT, M], metaclass=ABCMeta):
     @abstractmethod
-    def __call__(self, external_id: str, asset_type: AT) -> AS: ...
+    def __call__(self, external_id: str, asset_type: AT, melding: M) -> AS: ...
