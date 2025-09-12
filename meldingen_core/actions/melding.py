@@ -370,7 +370,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
-    _create_asset: BaseAssetFactory[AS, AT]
+    _create_asset: BaseAssetFactory[AS, AT, T]
 
     def __init__(
         self,
@@ -378,7 +378,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
-        asset_factory: BaseAssetFactory[AS, AT],
+        asset_factory: BaseAssetFactory[AS, AT, T],
     ):
         self._verify_token = token_verifier
         self._melding_repository = melding_repository
@@ -395,7 +395,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
             if asset_type is None:
                 raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
 
-            asset = self._create_asset(external_asset_id, asset_type)
+            asset = self._create_asset(external_asset_id, asset_type, melding)
 
         melding.assets.append(asset)
 
