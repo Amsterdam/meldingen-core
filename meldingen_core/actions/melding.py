@@ -396,10 +396,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
                 raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
 
             asset = self._create_asset(external_asset_id, asset_type, melding)
-
-        melding.assets.append(asset)
-
-        await self._melding_repository.save(melding)
+            await self._asset_repository.save(asset)
 
         return melding
 
