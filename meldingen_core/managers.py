@@ -1,9 +1,10 @@
-from typing import Generic, TypeVar, Callable, Awaitable
+from typing import Awaitable, Callable, Generic, TypeVar
 
 from meldingen_core.repositories import BaseRepository
 
 P = TypeVar("P")  # Parent model type
 R = TypeVar("R")  # Related model type
+
 
 # Abstraction to manage relationships between models when there is no ORM implemented
 class RelationshipManager(Generic[P, R]):
@@ -12,7 +13,7 @@ class RelationshipManager(Generic[P, R]):
 
     def __init__(
         self,
-        repository: BaseRepository[R],
+        repository: BaseRepository[P],
         get_related: Callable[[P], Awaitable[list[R]]],
     ) -> None:
         self._repository = repository
@@ -29,5 +30,3 @@ class RelationshipManager(Generic[P, R]):
 
     async def get_related(self, parent: P) -> list[R]:
         return await self._get_related(parent)
-
-

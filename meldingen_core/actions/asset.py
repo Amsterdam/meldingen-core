@@ -27,11 +27,14 @@ class ListAssetsAction(Generic[A, M]):
     _melding_repository: BaseMeldingRepository[M]
     _relationship_manager: RelationshipManager[M, A]
 
-    def __init__(self, melding_repository: BaseMeldingRepository[A], relationship_manager: RelationshipManager[M, A]) -> None:
+    def __init__(
+        self, melding_repository: BaseMeldingRepository[M], relationship_manager: RelationshipManager[M, A]
+    ) -> None:
         self._melding_repository = melding_repository
         self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
         melding = await self._melding_repository.retrieve(melding_id)
+        assert melding is not None
 
         return await self._relationship_manager.get_related(melding)
