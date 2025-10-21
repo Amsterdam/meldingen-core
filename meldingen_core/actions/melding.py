@@ -389,6 +389,8 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
+        # TODO checken met Joey
+        # Wat als asset al bestaat maar aan andere melding is gekoppeld?
         asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
         if asset is None:
             asset_type = await self._asset_type_repository.retrieve(asset_type_id)
@@ -397,6 +399,10 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
 
             asset = self._create_asset(external_asset_id, asset_type, melding)
             await self._asset_repository.save(asset)
+
+        if asset not in melding.assets:
+            melding.assets.append(asset)
+            await self._melding_repository.save(melding)
 
         return melding
 
