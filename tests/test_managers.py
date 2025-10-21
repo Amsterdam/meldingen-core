@@ -1,16 +1,20 @@
-import pytest
 from unittest.mock import AsyncMock, Mock
 
+import pytest
+
 from meldingen_core.managers import RelationshipManager
+
 
 class DummyParent:
     pass
 
+
 class DummyRelated:
     pass
 
+
 @pytest.mark.asyncio
-async def adds_relationship_when_not_existing():
+async def adds_relationship_when_not_existing() -> None:
     repository = Mock()
     repository.save = AsyncMock()
     get_related = AsyncMock(return_value=[])
@@ -22,10 +26,11 @@ async def adds_relationship_when_not_existing():
     await manager.add_relationship(parent, related)
 
     get_related.assert_called_once_with(parent)
-    repository.save.assert_called_once_with(parent)
+    repository.save.assert_awaited_once_with(parent)
+
 
 @pytest.mark.asyncio
-async def does_not_add_relationship_when_already_exists():
+async def does_not_add_relationship_when_already_exists() -> None:
     repository = Mock()
     repository.save = AsyncMock()
     related_item = DummyRelated()
@@ -37,10 +42,11 @@ async def does_not_add_relationship_when_already_exists():
     await manager.add_relationship(parent, related_item)
 
     get_related.assert_called_once_with(parent)
-    repository.save.assert_not_called()
+    repository.save.assert_not_awaited()
+
 
 @pytest.mark.asyncio
-async def retrieves_related_items():
+async def retrieves_related_items() -> None:
     related_items = [DummyRelated(), DummyRelated()]
     get_related = AsyncMock(return_value=related_items)
     repository = Mock()
