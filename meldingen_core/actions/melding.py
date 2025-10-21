@@ -11,6 +11,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
+from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
@@ -371,6 +372,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
     _create_asset: BaseAssetFactory[AS, AT, T]
+    _relationship_manager: RelationshipManager[T, AS]
 
     def __init__(
         self,
@@ -379,18 +381,18 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
+        relationship_manager: RelationshipManager[T, AS],
     ):
         self._verify_token = token_verifier
         self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
+        self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
-        # TODO checken met Joey
-        # Wat als asset al bestaat maar aan andere melding is gekoppeld?
         asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
         if asset is None:
             asset_type = await self._asset_type_repository.retrieve(asset_type_id)
@@ -400,9 +402,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
             asset = self._create_asset(external_asset_id, asset_type, melding)
             await self._asset_repository.save(asset)
 
-        if asset not in melding.assets:
-            melding.assets.append(asset)
-            await self._melding_repository.save(melding)
+        await self._relationship_manager.add_relationship(melding, asset)
 
         return melding
 
