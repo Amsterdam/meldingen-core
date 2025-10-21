@@ -9,24 +9,21 @@ R = TypeVar("R")  # Related model type
 class RelationshipManager(Generic[P, R]):
     _repository: BaseRepository[P]
     _get_related: Callable[[P], Awaitable[list[R]]]
-    _add_related: Callable[[P, R], None]
 
     def __init__(
         self,
         repository: BaseRepository[R],
         get_related: Callable[[P], Awaitable[list[R]]],
-        add_related: Callable[[P, R], None],
     ) -> None:
         self._repository = repository
         self._get_related = get_related
-        self._add_related = add_related
 
     async def add_relationship(self, parent: P, related: R) -> None:
         related_items = await self._get_related(parent)
 
         # Check if the related item already exists
         if related not in related_items:
-            self._add_related(parent, related)
+            related_items.append(related)
 
         await self._repository.save(parent)
 
