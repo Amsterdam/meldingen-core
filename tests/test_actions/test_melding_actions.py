@@ -29,6 +29,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
+from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
@@ -421,6 +422,7 @@ async def test_add_asset_asset_type_not_found() -> None:
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
+        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
@@ -438,6 +440,7 @@ async def test_add_asset_asset_does_not_yet_exist() -> None:
         asset_repository,
         Mock(BaseAssetTypeRepository),
         Mock(BaseAssetFactory),
+        AsyncMock(RelationshipManager),
     )
 
     melding = await action(123, "external_id", 456, "token")
@@ -452,6 +455,7 @@ async def test_add_asset_asset_exists() -> None:
         Mock(BaseAssetRepository),
         Mock(BaseAssetTypeRepository),
         Mock(BaseAssetFactory),
+        AsyncMock(RelationshipManager),
     )
 
     melding = await action(123, "external_id", 456, "token")
