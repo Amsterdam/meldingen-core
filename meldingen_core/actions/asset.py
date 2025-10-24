@@ -2,7 +2,7 @@ from typing import Generic, Sequence, TypeVar
 
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Asset, Melding
-from meldingen_core.repositories import BaseAssetRepository, BaseMeldingRepository
+from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
 
 A = TypeVar("A", bound=Asset)
