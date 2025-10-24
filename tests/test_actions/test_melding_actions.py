@@ -29,7 +29,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.managers import RelationshipManager
+from meldingen_core.managers import RelationshipExistsException, RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
@@ -460,6 +460,24 @@ async def test_add_asset_asset_exists() -> None:
 
     melding = await action(123, "external_id", 456, "token")
     assert melding is not None
+
+
+@pytest.mark.anyio
+async def test_add_asset_already_linked() -> None:
+    relationship_manager = AsyncMock(RelationshipManager)
+    relationship_manager.add_relationship.side_effect = RelationshipExistsException("Relationship already exists")
+
+    action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        Mock(BaseAssetRepository),
+        Mock(BaseAssetTypeRepository),
+        Mock(BaseAssetFactory),
+        relationship_manager,
+    )
+
+    with pytest.raises(RelationshipExistsException):
+        await action(123, "external_id", 456, "token")
 
 
 @pytest.mark.anyio
