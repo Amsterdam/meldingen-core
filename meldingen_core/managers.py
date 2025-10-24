@@ -6,6 +6,12 @@ P = TypeVar("P")  # Parent model type
 R = TypeVar("R")  # Related model type
 
 
+class RelationshipExistsException(Exception):
+    """Raised when relationship already exists between parent and related model."""
+
+    pass
+
+
 # Abstraction to manage relationships between models when there is no ORM implemented
 class RelationshipManager(Generic[P, R]):
     _repository: BaseRepository[P]
@@ -23,9 +29,10 @@ class RelationshipManager(Generic[P, R]):
         related_items = await self._get_related(parent)
 
         # Check if the related item already exists
-        if related not in related_items:
-            related_items.append(related)
+        if related in related_items:
+            raise RelationshipExistsException("The relationship already exists.")
 
+        related_items.append(related)
         await self._repository.save(parent)
 
         return parent

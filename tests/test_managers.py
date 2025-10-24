@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from meldingen_core.managers import RelationshipManager
+from meldingen_core.managers import RelationshipExistsException, RelationshipManager
 from meldingen_core.repositories import BaseRepository
 
 
@@ -44,11 +44,13 @@ class TestRelationshipManager:
         assert related in parent.related
         assert parent.related.count(related) == 1
 
-        # Should not add again
-        await manager.add_relationship(parent, related)
-        assert related in parent.related
-        assert parent.related.count(related) == 1
-
         # Should retrieve related items
         result = await manager.get_related(parent)
         assert result == parent.related
+
+        # Should not add again
+        with pytest.raises(RelationshipExistsException):
+            await manager.add_relationship(parent, related)
+
+            assert related in parent.related
+            assert parent.related.count(related) == 1
