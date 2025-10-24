@@ -19,7 +19,7 @@ class RelationshipManager(Generic[P, R]):
         self._repository = repository
         self._get_related = get_related
 
-    async def add_relationship(self, parent: P, related: R) -> None:
+    async def add_relationship(self, parent: P, related: R) -> P:
         related_items = await self._get_related(parent)
 
         # Check if the related item already exists
@@ -27,6 +27,8 @@ class RelationshipManager(Generic[P, R]):
             related_items.append(related)
 
         await self._repository.save(parent)
+
+        return parent
 
     async def get_related(self, parent: P) -> list[R]:
         return await self._get_related(parent)
