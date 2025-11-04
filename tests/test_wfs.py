@@ -30,7 +30,7 @@ def test_wfs_provider_factory_raises_when_class_name_invalid() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "invalid_value", {}))
+        factory(AssetType("asset_type_name", "invalid_value", {}, 3))
 
     assert str(exception_info.value) == "class_name 'invalid_value' does not contain full path to class"
 
@@ -39,7 +39,7 @@ def test_wfs_provider_factory_raises_when_module_name_invalid() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "invalid_module_name.Test", {}))
+        factory(AssetType("asset_type_name", "invalid_module_name.Test", {}, 3))
 
     assert str(exception_info.value) == "Failed to find module 'invalid_module_name'"
 
@@ -48,7 +48,7 @@ def test_wfs_provider_factory_raises_when_class_does_not_exist() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.Test", {}))
+        factory(AssetType("asset_type_name", "tests.test_wfs.Test", {}, 3))
 
     assert str(exception_info.value) == "Failed to find class 'Test' in module 'tests.test_wfs'"
 
@@ -57,7 +57,7 @@ def test_wfs_provider_factory_raises_when_class_can_not_be_instantiated() -> Non
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {}))
+        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {}, 3))
 
     assert (
         str(exception_info.value)
@@ -69,7 +69,7 @@ def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {"arg1": 1, "arg2": "2"}))
+        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {"arg1": 1, "arg2": "2"}, 3))
 
     assert (
         str(exception_info.value)
@@ -80,7 +80,7 @@ def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
 def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
     factory = WfsProviderFactory()
 
-    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}))
+    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}, 3))
 
     assert isinstance(provider, ValidWfsProvider)
 
@@ -88,6 +88,6 @@ def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
 def test_wfs_provider_factory_can_produce_provider() -> None:
     factory = WfsProviderFactory()
 
-    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProvider", {}))
+    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProvider", {}, 3))
 
     assert isinstance(provider, BaseWfsProvider)
