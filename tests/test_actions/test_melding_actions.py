@@ -496,6 +496,7 @@ async def test_list_assets() -> None:
     melding_repository.retrieve.assert_awaited_once_with(melding_id)
     relationship_manager.get_related.assert_awaited_once_with(melding)
 
+
 @pytest.mark.anyio
 async def test_list_assets_melding_not_found() -> None:
     melding_id = 123
@@ -508,6 +509,7 @@ async def test_list_assets_melding_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await action(melding_id)
+
 
 @pytest.mark.anyio
 async def test_melder_can_list_assets() -> None:
