@@ -10,6 +10,7 @@ class AssetType:
     class_name: str
     arguments: dict[str, Any]
     max_assets: int
+    icon_path: str
 
 
 @dataclass
