@@ -579,7 +579,7 @@ async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
     )
     asset = Asset(
         external_id="external_id",
-        type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3),
+        type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3, icon_path='/path/icon.svg'),
         melding=melding,
     )
     asset_repository = Mock(BaseAssetRepository)
@@ -605,7 +605,7 @@ async def test_delete_asset_asset_exists() -> None:
     )
     asset = Asset(
         external_id="external_id",
-        type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3),
+        type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3, icon_path='/path/icon.svg'),
         melding=melding,
     )
     melding.assets = [asset]
