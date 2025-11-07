@@ -6,6 +6,7 @@ import pytest
 from _pytest.logging import LogCaptureFixture
 
 from meldingen_core import SortingDirection
+from meldingen_core.actions.asset import ListAssetsAction, MelderListAssetsAction
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
     MeldingAddAssetAction,
@@ -478,6 +479,62 @@ async def test_add_asset_already_linked() -> None:
 
     with pytest.raises(RelationshipExistsException):
         await action(123, "external_id", 456, "token")
+
+
+@pytest.mark.anyio
+async def test_list_assets() -> None:
+    melding_id = 123
+
+    melding: Melding = Melding(text="Test melding")
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = melding
+    relationship_manager = AsyncMock(RelationshipManager)
+
+    action: ListAssetsAction[Asset, Melding] = ListAssetsAction(melding_repository, relationship_manager)
+    await action(melding_id)
+
+    melding_repository.retrieve.assert_awaited_once_with(melding_id)
+    relationship_manager.get_related.assert_awaited_once_with(melding)
+
+@pytest.mark.anyio
+async def test_list_assets_melding_not_found() -> None:
+    melding_id = 123
+
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = None
+    relationship_manager = AsyncMock(RelationshipManager)
+
+    action: ListAssetsAction[Asset, Melding] = ListAssetsAction(melding_repository, relationship_manager)
+
+    with pytest.raises(NotFoundException):
+        await action(melding_id)
+
+@pytest.mark.anyio
+async def test_melder_can_list_assets() -> None:
+    token = "supersecrettoken"
+    melding_id = 123
+    melding: Melding = Melding(text="Test melding")
+    token_verifier = AsyncMock(TokenVerifier, return_value=melding)
+    relationship_manager = AsyncMock(RelationshipManager)
+
+    action: MelderListAssetsAction[Asset, Melding] = MelderListAssetsAction(token_verifier, relationship_manager)
+    await action(melding_id, token)
+
+    token_verifier.assert_awaited_once()
+    relationship_manager.get_related.assert_awaited_once_with(melding)
+
+
+@pytest.mark.anyio
+async def test_melder_can_list_assets_invalid_token() -> None:
+    token = "invalid"
+    melding_id = 123
+
+    token_verifier = AsyncMock(TokenVerifier, side_effect=NotFoundException)
+
+    relationship_manager = AsyncMock(RelationshipManager)
+    action: MelderListAssetsAction[Asset, Melding] = MelderListAssetsAction(token_verifier, relationship_manager)
+    with pytest.raises(NotFoundException):
+        await action(melding_id, token)
 
 
 @pytest.mark.anyio
