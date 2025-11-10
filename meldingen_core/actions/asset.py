@@ -1,5 +1,6 @@
 from typing import Generic, Sequence, TypeVar
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Asset, Melding
 from meldingen_core.repositories import BaseMeldingRepository
@@ -35,6 +36,8 @@ class ListAssetsAction(Generic[A, M]):
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
         melding = await self._melding_repository.retrieve(melding_id)
-        assert melding is not None
+
+        if melding is None:
+            raise NotFoundException("Melding not found")
 
         return await self._relationship_manager.get_related(melding)
