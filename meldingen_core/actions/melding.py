@@ -407,20 +407,20 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         return melding
 
 
-class MeldingDeleteAssetAction(Generic[T, AS, AT]):
+class MeldingDeleteAssetAction(Generic[T, AS]):
     _verify_token: TokenVerifier[T]
     _asset_repository: BaseAssetRepository[AS]
-    _asset_type_repository: BaseAssetTypeRepository[AT]
+    _relationship_manager: RelationshipManager[T, AS]
 
     def __init__(
         self,
         token_verifier: TokenVerifier[T],
         asset_repository: BaseAssetRepository[AS],
-        asset_type_repository: BaseAssetTypeRepository[AT],
+        relationship_manager: RelationshipManager[T, AS],
     ):
         self._verify_token = token_verifier
         self._asset_repository = asset_repository
-        self._asset_type_repository = asset_type_repository
+        self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int, asset_id: int, token: str) -> None:
         melding = await self._verify_token(melding_id, token)
@@ -429,9 +429,10 @@ class MeldingDeleteAssetAction(Generic[T, AS, AT]):
         if asset is None:
             raise NotFoundException(f"Failed to find asset with id {asset_id}")
 
-        if asset.melding is not melding:
+        melding_assets = await self._relationship_manager.get_related(melding)
+        if asset not in melding_assets:
             raise NotFoundException(f"Melding with id {melding_id} does not have asset with id {asset_id} associated")
 
-        melding.assets.remove(asset)
+        melding_assets.remove(asset)
 
         await self._asset_repository.delete(asset_id)

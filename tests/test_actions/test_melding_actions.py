@@ -540,32 +540,14 @@ async def test_melder_can_list_assets_invalid_token() -> None:
 
 
 @pytest.mark.anyio
-async def test_delete_asset_asset_type_not_found() -> None:
-    asset_type_repository = Mock(BaseAssetTypeRepository)
-    asset_type_repository.retrieve.return_value = None
-
-    asset_repository = Mock(BaseAssetRepository)
-    asset_repository.retrieve.return_value = None
-
-    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
-        AsyncMock(TokenVerifier),
-        asset_repository,
-        asset_type_repository,
-    )
-
-    with pytest.raises(NotFoundException):
-        await action(123, 456, "token")
-
-
-@pytest.mark.anyio
 async def test_delete_asset_asset_does_not_exist() -> None:
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = None
 
-    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+    action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
         AsyncMock(TokenVerifier),
         asset_repository,
-        Mock(BaseAssetTypeRepository),
+        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
@@ -588,10 +570,10 @@ async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = Melding("different melding")
 
-    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+    action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
         token_verifier,
         asset_repository,
-        Mock(BaseAssetTypeRepository),
+        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
@@ -614,10 +596,13 @@ async def test_delete_asset_asset_exists() -> None:
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = melding
 
-    action: MeldingDeleteAssetAction[Melding, Asset, AssetType] = MeldingDeleteAssetAction(
+    relationship_manager = AsyncMock(RelationshipManager)
+    relationship_manager.get_related.return_value = [asset]
+
+    action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
         token_verifier,
         asset_repository,
-        Mock(BaseAssetTypeRepository),
+        relationship_manager,
     )
 
     await action(123, 456, "token")
