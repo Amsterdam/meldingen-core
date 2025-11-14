@@ -16,7 +16,7 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 anyio = "^4.11.0"
-black = "^25.9.0"
+black = "^25.11.0"
 isort = "^7.0.0"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.21"
