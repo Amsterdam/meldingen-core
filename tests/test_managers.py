@@ -10,14 +10,14 @@ class DummyRelated:
     pass
 
 
-class DummyParent:
+class DummyModel:
     related: list[DummyRelated]
 
     def __init__(self) -> None:
         self.related = []
 
 
-async def dummy_get_related(parent: DummyParent) -> list[DummyRelated]:
+async def dummy_get_related(parent: DummyModel) -> list[DummyRelated]:
     return parent.related
 
 
@@ -26,7 +26,7 @@ class TestRelationshipManager:
     def test_can_instantiate_relationship_manager(self) -> None:
         repository = Mock()
         get_related = AsyncMock()
-        manager = RelationshipManager(repository, get_related)
+        manager: RelationshipManager[DummyModel, DummyRelated] = RelationshipManager(repository, get_related)
 
         assert isinstance(manager, RelationshipManager)
         assert manager._get_related == get_related
@@ -34,9 +34,9 @@ class TestRelationshipManager:
 
     @pytest.mark.anyio
     async def test_add_and_get_relationship(self) -> None:
-        repository = MagicMock(BaseRepository)
-        manager = RelationshipManager(repository, dummy_get_related)
-        parent = DummyParent()
+        repository: BaseRepository[DummyModel] = MagicMock(BaseRepository)
+        manager: RelationshipManager[DummyModel, DummyRelated] = RelationshipManager(repository, dummy_get_related)
+        parent = DummyModel()
         related = DummyRelated()
 
         # Should add relationship
