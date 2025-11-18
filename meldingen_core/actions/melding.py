@@ -7,7 +7,7 @@ from typing import Any, Generic, TypeVar, cast, override
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.exceptions import LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
@@ -393,12 +393,19 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
+        asset_type = await self._asset_type_repository.retrieve(asset_type_id)
+        if asset_type is None:
+            raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
+
+        current_assets = await self._relationship_manager.get_related(melding)
+
+        if len(current_assets) >= asset_type.max_assets:
+            raise LimitReachedException(
+                f"Melding with id {melding_id} already has the maximum number of assets for asset type {asset_type.name} associated"
+            )
+
         asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
         if asset is None:
-            asset_type = await self._asset_type_repository.retrieve(asset_type_id)
-            if asset_type is None:
-                raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
-
             asset = self._create_asset(external_asset_id, asset_type, melding)
             await self._asset_repository.save(asset)
 
