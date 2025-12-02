@@ -7,7 +7,7 @@ from typing import Any, Generic, TypeVar, cast, override
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
-from meldingen_core.exceptions import LimitReachedException, NotFoundException
+from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
@@ -372,7 +372,8 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
     _create_asset: BaseAssetFactory[AS, AT, T]
-    _relationship_manager: RelationshipManager[T, AS]
+    _melding_asset_relationship_manager: RelationshipManager[T, AS]
+    _melding_asset_type_relationship_manager: RelationshipManager[T, AT]
 
     def __init__(
         self,
@@ -381,23 +382,33 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
-        relationship_manager: RelationshipManager[T, AS],
+        melding_asset_relationship_manager: RelationshipManager[T, AS],
+        melding_asset_type_relationship_manager: RelationshipManager[T, AT],
     ):
         self._verify_token = token_verifier
         self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
-        self._relationship_manager = relationship_manager
+        self._melding_asset_relationship_manager = melding_asset_relationship_manager
+        self._melding_asset_type_relationship_manager = melding_asset_type_relationship_manager
 
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
+
+        melding_asset_type = await self._melding_asset_type_relationship_manager.get_related(melding)
+
+        if melding_asset_type is None:
+            raise NotFoundException(f"Failed to find asset type for melding")
 
         asset_type = await self._asset_type_repository.retrieve(asset_type_id)
         if asset_type is None:
             raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
 
-        current_assets = await self._relationship_manager.get_related(melding)
+        if asset_type is not melding_asset_type:
+            raise InvalidInputException("The melding has a different asset type associated than the one being added")
+
+        current_assets = await self._melding_asset_relationship_manager.get_related(melding)
 
         if len(current_assets) >= asset_type.max_assets:
             raise LimitReachedException(
@@ -409,7 +420,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
             asset = self._create_asset(external_asset_id, asset_type, melding)
             await self._asset_repository.save(asset)
 
-        await self._relationship_manager.add_relationship(melding, asset)
+        await self._melding_asset_relationship_manager.add_relationship(melding, asset)
 
         return melding
 
