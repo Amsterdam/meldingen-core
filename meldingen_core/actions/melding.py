@@ -373,7 +373,6 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     _asset_type_repository: BaseAssetTypeRepository[AT]
     _create_asset: BaseAssetFactory[AS, AT, T]
     _melding_asset_relationship_manager: RelationshipManager[T, AS]
-    _melding_asset_type_relationship_manager: RelationshipManager[T, AT]
 
     def __init__(
         self,
