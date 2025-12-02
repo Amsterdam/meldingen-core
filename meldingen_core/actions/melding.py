@@ -383,7 +383,6 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
         melding_asset_relationship_manager: RelationshipManager[T, AS],
-        melding_asset_type_relationship_manager: RelationshipManager[T, AT],
     ):
         self._verify_token = token_verifier
         self._melding_repository = melding_repository
@@ -391,12 +390,11 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
-        self._melding_asset_type_relationship_manager = melding_asset_type_relationship_manager
 
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
-        melding_asset_type = await self._melding_asset_type_relationship_manager.get_related(melding)
+        melding_asset_type = await self._asset_type_repository.find_by_melding(melding)
 
         if melding_asset_type is None:
             raise NotFoundException(f"Failed to find asset type for melding")

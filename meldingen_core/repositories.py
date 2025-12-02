@@ -90,6 +90,9 @@ class BaseAssetTypeRepository(BaseRepository[AT], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_name(self, name: str) -> AT | None: ...
 
+    @abstractmethod
+    async def find_by_melding(self, melding: Melding) -> AT | None: ...
+
 
 AS = TypeVar("AS", bound=Asset)
 
