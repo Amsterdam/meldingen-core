@@ -489,6 +489,33 @@ async def test_add_asset_asset_exists() -> None:
 
 
 @pytest.mark.anyio
+async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
+    asset_type = AssetType(name="type", class_name="class_name", arguments={}, max_assets=10)
+
+    asset_type_repository = Mock(BaseAssetTypeRepository)
+    asset_type_repository.retrieve.return_value = asset_type
+
+    relationship_manager = AsyncMock(RelationshipManager)
+    relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
+
+    asset_type_relationship_manager = AsyncMock(RelationshipManager)
+    asset_type_relationship_manager.get_related.return_value = None
+
+    action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
+        AsyncMock(TokenVerifier),
+        Mock(BaseMeldingRepository),
+        Mock(BaseAssetRepository),
+        asset_type_repository,
+        Mock(BaseAssetFactory),
+        relationship_manager,
+        asset_type_relationship_manager,
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, "external_id", 456, "token")
+
+
+@pytest.mark.anyio
 async def test_add_asset_asset_type_does_not_exist() -> None:
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = None
