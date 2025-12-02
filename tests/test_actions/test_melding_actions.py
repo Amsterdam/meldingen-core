@@ -424,7 +424,6 @@ async def test_add_asset_asset_type_not_found() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         AsyncMock(RelationshipManager),
-        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
@@ -437,15 +436,13 @@ async def test_add_asset_asset_does_not_yet_exist() -> None:
 
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = asset_type
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.find_by_external_id_and_asset_type_id.return_value = None
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = asset_type
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -454,7 +451,6 @@ async def test_add_asset_asset_does_not_yet_exist() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     melding = await action(123, "external_id", 456, "token")
@@ -467,12 +463,10 @@ async def test_add_asset_asset_exists() -> None:
 
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = asset_type
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = asset_type
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -481,7 +475,6 @@ async def test_add_asset_asset_exists() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     melding = await action(123, "external_id", 456, "token")
@@ -494,12 +487,10 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
 
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = None
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = None
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -508,7 +499,6 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     with pytest.raises(NotFoundException):
@@ -519,14 +509,12 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
 async def test_add_asset_asset_type_does_not_exist() -> None:
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = None
+    asset_type_repository.find_by_melding.return_value = AssetType(
+        name="different_asset_type", class_name="different_class_name", arguments={}, max_assets=1
+    )
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = AssetType(
-        name="different_asset_type", class_name="different_class_name", arguments={}, max_assets=1
-    )
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -535,7 +523,6 @@ async def test_add_asset_asset_type_does_not_exist() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     with pytest.raises(NotFoundException):
@@ -545,17 +532,15 @@ async def test_add_asset_asset_type_does_not_exist() -> None:
 @pytest.mark.anyio
 async def test_add_asset_wrong_asset_type() -> None:
     asset_type = AssetType(name="type", class_name="class_name", arguments={}, max_assets=10)
-
     asset_type_repository = Mock(BaseAssetTypeRepository)
+
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = AssetType(
+        name="different_asset_type", class_name="different_class_name", arguments={}, max_assets=1
+    )
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = AssetType(
-        name="different_asset_type", class_name="different_class_name", arguments={}, max_assets=1
-    )
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -564,7 +549,6 @@ async def test_add_asset_wrong_asset_type() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     with pytest.raises(InvalidInputException):
@@ -577,13 +561,11 @@ async def test_add_asset_already_linked() -> None:
 
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = asset_type
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.add_relationship.side_effect = RelationshipExistsException("Relationship already exists")
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = asset_type
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -592,7 +574,6 @@ async def test_add_asset_already_linked() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     with pytest.raises(RelationshipExistsException):
@@ -605,15 +586,13 @@ async def test_add_asset_limit_exceeded() -> None:
 
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = asset_type
+    asset_type_repository.find_by_melding.return_value = asset_type
 
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.find_by_external_id_and_asset_type_id.return_value = None
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
-
-    asset_type_relationship_manager = AsyncMock(RelationshipManager)
-    asset_type_relationship_manager.get_related.return_value = asset_type
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
         AsyncMock(TokenVerifier),
@@ -622,7 +601,6 @@ async def test_add_asset_limit_exceeded() -> None:
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
-        asset_type_relationship_manager,
     )
 
     with pytest.raises(LimitReachedException):
