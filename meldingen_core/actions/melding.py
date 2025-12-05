@@ -393,7 +393,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
     async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
-        melding_asset_type = await self._asset_type_repository.find_by_melding(melding)
+        melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
 
         if melding_asset_type is None:
             raise NotFoundException(f"Failed to find asset type for melding")
