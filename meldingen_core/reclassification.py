@@ -9,5 +9,5 @@ C = TypeVar("C", bound=Classification)
 
 class BaseReclassification(Generic[M, C], metaclass=ABCMeta):
     @abstractmethod
-    async def __call__(self, melding: M, old_classification: C | None, new_classification: C | None) -> M:
+    async def __call__(self, melding: M, old_classification: C | None, new_classification: C | None) -> None:
         """Handle reclassification side effects here, like changing the assets or removing/changing the location."""
