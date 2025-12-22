@@ -126,3 +126,18 @@ def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
     )
 
     assert isinstance(provider, ValidWfsProvider)
+
+
+def test_wfs_provider_factory_can_produce_provider_from_factory_with_too_many_arguments() -> None:
+    factory = WfsProviderFactory()
+
+    provider = factory(
+        AssetType(
+            "asset_type_name",
+            "tests.test_wfs.ValidWfsProviderFactory",
+            {"base_url": "www.thisisabaseurl.com", "extra_argument": "this extra argument is ignored"},
+            3,
+        )
+    )
+
+    assert isinstance(provider, ValidWfsProvider)
