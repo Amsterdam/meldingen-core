@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from importlib import import_module
 from typing import AsyncIterator, Literal
 
-from meldingen_core.models import AssetType
+from meldingen_core.models import AssetType, AssetTypeArguments
 
 
 class BaseWfsProvider(metaclass=ABCMeta):
@@ -21,8 +21,13 @@ class BaseWfsProvider(metaclass=ABCMeta):
 
 
 class BaseWfsProviderFactory(metaclass=ABCMeta):
+    _arguments: AssetTypeArguments
+
     @abstractmethod
     def __call__(self) -> BaseWfsProvider: ...
+
+    def __init__(self, arguments: AssetTypeArguments) -> None:
+        self._arguments = arguments
 
 
 class InvalidWfsProviderException(Exception): ...
