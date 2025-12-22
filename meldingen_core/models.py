@@ -1,16 +1,16 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, MutableSequence
+from typing import Any, MutableSequence, TypeAlias
 
+AssetTypeArguments: TypeAlias = dict[str, Any]
 
 @dataclass
 class AssetType:
     name: str
     class_name: str
-    arguments: dict[str, Any]
+    arguments: AssetTypeArguments
     max_assets: int
-
 
 @dataclass
 class Classification:
