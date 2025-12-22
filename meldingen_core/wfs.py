@@ -48,7 +48,7 @@ class WfsProviderFactory:
             raise InvalidWfsProviderException(f"Failed to find class '{class_name}' in module '{module_name}'") from e
 
         try:
-            provider = klass(**asset_type.arguments)
+            provider = klass(asset_type.arguments)
         except TypeError as e:
             raise InvalidWfsProviderException(e) from e
 
