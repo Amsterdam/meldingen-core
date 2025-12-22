@@ -52,10 +52,7 @@ class WfsProviderFactory:
         except AttributeError as e:
             raise InvalidWfsProviderException(f"Failed to find class '{class_name}' in module '{module_name}'") from e
 
-        try:
-            provider_factory = klass(asset_type.arguments)
-        except TypeError as e:
-            raise InvalidWfsProviderException(e) from e
+        provider_factory = klass(asset_type.arguments)
 
         if not isinstance(provider_factory, BaseWfsProviderFactory):
             raise InvalidWfsProviderException("Invalid provider factory")
