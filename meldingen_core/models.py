@@ -5,12 +5,14 @@ from typing import Any, MutableSequence, TypeAlias
 
 AssetTypeArguments: TypeAlias = dict[str, Any]
 
+
 @dataclass
 class AssetType:
     name: str
     class_name: str
     arguments: AssetTypeArguments
     max_assets: int
+
 
 @dataclass
 class Classification:
