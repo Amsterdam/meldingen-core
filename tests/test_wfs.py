@@ -1,29 +1,52 @@
-from typing import AsyncIterator
+from typing import AsyncIterator, Literal
 
 import pytest
 
-from meldingen_core.models import AssetType
+from meldingen_core.models import AssetType, AssetTypeArguments
 from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException, WfsProviderFactory
 
 
 class InvalidWfsProvider:
-    def __init__(self, arg1: int, arg2: str) -> None: ...
+    def __init__(self, base_url: str) -> None: ...
 
 
 class ValidWfsProvider(BaseWfsProvider):
-    async def __call__(  # type: ignore
+    def __init__(self, base_url: str) -> None: ...
+
+    async def __call__(
         self,
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-        output_format: str = "application/json",
+        output_format: Literal["application/json"] = "application/json",
+        service: Literal["WFS"] = "WFS",
+        version: str = "2.0.0",
+        request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> tuple[AsyncIterator[bytes], str]: ...
 
 
 class ValidWfsProviderFactory(BaseWfsProviderFactory):
-    def __call__(self) -> BaseWfsProvider:
-        return ValidWfsProvider()
+    def __call__(self) -> ValidWfsProvider:
+        if "base_url" not in self._arguments:
+            raise ValueError("Missing 'base_url' in arguments")
+
+        return ValidWfsProvider(self._arguments.get("base_url"))
+
+
+class InvalidWfsProviderFactory(BaseWfsProviderFactory):
+    def __call__(self) -> InvalidWfsProvider:
+        if "base_url" not in self._arguments:
+            raise ValueError("Missing 'base_url' in arguments")
+
+        return InvalidWfsProvider(self._arguments.get("base_url"))
+
+
+class EmptyProviderFactory:
+    _arguments: AssetTypeArguments
+
+    def __init__(self, arguments: AssetTypeArguments) -> None:
+        self._arguments = arguments
 
 
 def test_wfs_provider_factory_raises_when_class_name_invalid() -> None:
@@ -53,41 +76,60 @@ def test_wfs_provider_factory_raises_when_class_does_not_exist() -> None:
     assert str(exception_info.value) == "Failed to find class 'Test' in module 'tests.test_wfs'"
 
 
-def test_wfs_provider_factory_raises_when_class_can_not_be_instantiated() -> None:
+def test_wfs_provider_factory_raises_when_arguments_are_invalid() -> None:
     factory = WfsProviderFactory()
 
-    with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {}, 3))
+    with pytest.raises(ValueError) as exception_info:
+        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {}, 3))
 
-    assert (
-        str(exception_info.value)
-        == "InvalidWfsProvider.__init__() missing 2 required positional arguments: 'arg1' and 'arg2'"
-    )
+    assert str(exception_info.value) == "Missing 'base_url' in arguments"
+
+
+def test_wfs_provider_factory_raises_when_arguments_are_invalid_type() -> None:
+    factory = WfsProviderFactory()
+
+    with pytest.raises(TypeError) as exception_info:
+        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", 1, 3))
+
+    assert str(exception_info.value) == "argument of type 'int' is not iterable"
 
 
 def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProvider", {"arg1": 1, "arg2": "2"}, 3))
+        factory(
+            AssetType(
+                "asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+            )
+        )
+
+    assert str(exception_info.value) == "Invalid provider factory"
+
+
+def test_wfs_provider_factory_raises_when_class_does_not_produce_base() -> None:
+    factory = WfsProviderFactory()
+
+    with pytest.raises(InvalidWfsProviderException) as exception_info:
+        factory(
+            AssetType(
+                "asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+            )
+        )
 
     assert (
         str(exception_info.value)
-        == "Instantiated provider 'tests.test_wfs.InvalidWfsProvider' must be an instance of 'BaseWfsProvider'"
+        == "Instantiated provider factory 'tests.test_wfs.InvalidWfsProviderFactory' must produce an instance of 'BaseWfsProvider'"
     )
 
 
 def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
     factory = WfsProviderFactory()
 
-    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}, 3))
+    provider = factory(
+        AssetType(
+            "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+        )
+    )
 
     assert isinstance(provider, ValidWfsProvider)
-
-
-def test_wfs_provider_factory_can_produce_provider() -> None:
-    factory = WfsProviderFactory()
-
-    provider = factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProvider", {}, 3))
-
-    assert isinstance(provider, BaseWfsProvider)
