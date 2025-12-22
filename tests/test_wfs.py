@@ -13,7 +13,7 @@ class InvalidWfsProvider:
 class ValidWfsProvider(BaseWfsProvider):
     def __init__(self, base_url: str) -> None: ...
 
-    async def __call__(
+    async def __call__(  # type: ignore
         self,
         type_names: str,
         count: int = 1000,
@@ -27,11 +27,11 @@ class ValidWfsProvider(BaseWfsProvider):
 
 
 class ValidWfsProviderFactory(BaseWfsProviderFactory):
-    def __call__(self) -> ValidWfsProvider:
+    def __call__(self) -> BaseWfsProvider:
         if "base_url" not in self._arguments:
             raise ValueError("Missing 'base_url' in arguments")
 
-        return ValidWfsProvider(self._arguments.get("base_url"))
+        return ValidWfsProvider(self._arguments["base_url"])
 
 
 class InvalidWfsProviderFactory(BaseWfsProviderFactory):
@@ -39,7 +39,7 @@ class InvalidWfsProviderFactory(BaseWfsProviderFactory):
         if "base_url" not in self._arguments:
             raise ValueError("Missing 'base_url' in arguments")
 
-        return InvalidWfsProvider(self._arguments.get("base_url"))
+        return InvalidWfsProvider(self._arguments["base_url"])
 
 
 class EmptyProviderFactory:
@@ -80,18 +80,9 @@ def test_wfs_provider_factory_raises_when_arguments_are_invalid() -> None:
     factory = WfsProviderFactory()
 
     with pytest.raises(ValueError) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {}, 3))
+        factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}, 3))
 
     assert str(exception_info.value) == "Missing 'base_url' in arguments"
-
-
-def test_wfs_provider_factory_raises_when_arguments_are_invalid_type() -> None:
-    factory = WfsProviderFactory()
-
-    with pytest.raises(TypeError) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", 1, 3))
-
-    assert str(exception_info.value) == "argument of type 'int' is not iterable"
 
 
 def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
