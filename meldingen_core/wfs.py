@@ -53,16 +53,18 @@ class WfsProviderFactory:
             raise InvalidWfsProviderException(f"Failed to find class '{class_name}' in module '{module_name}'") from e
 
         try:
-            provider = klass(asset_type.arguments)
+            provider_factory = klass(asset_type.arguments)
         except TypeError as e:
             raise InvalidWfsProviderException(e) from e
 
-        if isinstance(provider, BaseWfsProviderFactory):
-            provider = provider()
+        if not isinstance(provider_factory, BaseWfsProviderFactory):
+            raise InvalidWfsProviderException("Invalid provider factory")
+
+        provider = provider_factory()
 
         if not isinstance(provider, BaseWfsProvider):
             raise InvalidWfsProviderException(
-                f"Instantiated provider '{asset_type.class_name}' must be an instance of 'BaseWfsProvider'"
+                f"Instantiated provider factory '{asset_type.class_name}' must produce an instance of 'BaseWfsProvider'"
             )
 
         return provider
