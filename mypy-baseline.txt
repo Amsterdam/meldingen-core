@@ -1,1 +1,0 @@
-tests/test_wfs.py:0: error: Return type "InvalidWfsProvider" of "__call__" incompatible with return type "BaseWfsProvider" in supertype "meldingen_core.wfs.BaseWfsProviderFactory"  [override]

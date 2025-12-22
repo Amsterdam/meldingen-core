@@ -1,4 +1,4 @@
-from typing import AsyncIterator, Literal
+from typing import AsyncIterator, Literal, cast
 
 import pytest
 
@@ -35,11 +35,13 @@ class ValidWfsProviderFactory(BaseWfsProviderFactory):
 
 
 class InvalidWfsProviderFactory(BaseWfsProviderFactory):
-    def __call__(self) -> InvalidWfsProvider:
+    def __call__(self) -> BaseWfsProvider:
         if "base_url" not in self._arguments:
             raise ValueError("Missing 'base_url' in arguments")
 
-        return InvalidWfsProvider(self._arguments["base_url"])
+        # We want to test what happens when the returned class does not extend BaseWfsProvider, but mypy complains
+        # So we cast it first to suppress the error
+        return cast(BaseWfsProvider, InvalidWfsProvider(self._arguments["base_url"]))
 
 
 class EmptyProviderFactory:
