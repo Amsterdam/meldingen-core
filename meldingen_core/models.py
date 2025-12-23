@@ -68,7 +68,6 @@ class Question:
 
 @dataclass
 class Answer:
-    text: str
     question: Question
     melding: Melding
 
