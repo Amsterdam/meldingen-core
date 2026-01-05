@@ -22,8 +22,13 @@ class MeldingFormStates(BaseMeldingState):
 
 class MeldingBackofficeStates(BaseMeldingState):
     SUBMITTED = "submitted"
+    AWAITING_PROCESSING = "awaiting_processing"
     PROCESSING = "processing"
+    PLANNED = "planned"
     COMPLETED = "completed"
+    CANCELED = "canceled"
+    REOPENED = "reopened"
+    REOPEN_REQUESTED = "reopen_requested"
 
 
 class MeldingStates(BaseMeldingState):
@@ -34,8 +39,13 @@ class MeldingStates(BaseMeldingState):
     LOCATION_SUBMITTED = MeldingFormStates.LOCATION_SUBMITTED
     CONTACT_INFO_ADDED = MeldingFormStates.CONTACT_INFO_ADDED
     SUBMITTED = MeldingBackofficeStates.SUBMITTED
+    AWAITING_PROCESSING = MeldingBackofficeStates.AWAITING_PROCESSING
     PROCESSING = MeldingBackofficeStates.PROCESSING
+    PLANNED = MeldingBackofficeStates.PLANNED
     COMPLETED = MeldingBackofficeStates.COMPLETED
+    CANCELED = MeldingBackofficeStates.CANCELED
+    REOPENED = MeldingBackofficeStates.REOPENED
+    REOPEN_REQUESTED = MeldingBackofficeStates.REOPEN_REQUESTED
 
 
 class MeldingTransitions(StrEnum):
@@ -45,6 +55,12 @@ class MeldingTransitions(StrEnum):
     SUBMIT_LOCATION = "submit_location"
     ADD_CONTACT_INFO = "add_contact_info"
     SUBMIT = "submit"
+    REQUEST_PROCESSING = "request_processing"
+    START_PROCESSING = "start_processing"
+    PLAN = "plan"
+    CANCEL = "cancel"
+    REQUEST_REOPEN = "request_reopen"
+    REOPEN = "reopen"
     PROCESS = "process"
     COMPLETE = "complete"
 
