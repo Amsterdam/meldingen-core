@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from enum import StrEnum, Enum
+from enum import Enum, StrEnum
 from typing import Generic, Sequence, TypeVar
 
 from meldingen_core.models import Melding
