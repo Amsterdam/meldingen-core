@@ -13,13 +13,18 @@ from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
     MeldingAnswerQuestionsAction,
+    MeldingCancelAction,
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingDeleteAssetAction,
     MeldingListAction,
     MeldingListQuestionsAnswersAction,
+    MeldingPlanAction,
     MeldingProcessAction,
+    MeldingReopenAction,
+    MeldingRequestProcessingAction,
+    MeldingRequestReopenAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitLocationAction,
@@ -215,6 +220,138 @@ async def test_process_action_not_found() -> None:
     repository.retrieve.return_value = None
 
     process: MeldingProcessAction[Melding] = MeldingProcessAction(Mock(BaseMeldingStateMachine), repository)
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.anyio
+async def test_plan_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process: MeldingPlanAction[Melding] = MeldingPlanAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.PLAN)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_plan_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process: MeldingPlanAction[Melding] = MeldingPlanAction(Mock(BaseMeldingStateMachine), repository)
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.anyio
+async def test_request_processing_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process: MeldingRequestProcessingAction[Melding] = MeldingRequestProcessingAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.REQUEST_PROCESSING)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_request_processing_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process: MeldingRequestProcessingAction[Melding] = MeldingRequestProcessingAction(
+        Mock(BaseMeldingStateMachine), repository
+    )
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.anyio
+async def test_request_reopen_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process: MeldingRequestReopenAction[Melding] = MeldingRequestReopenAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.REQUEST_REOPEN)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_request_reopen_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process: MeldingRequestReopenAction[Melding] = MeldingRequestReopenAction(Mock(BaseMeldingStateMachine), repository)
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.anyio
+async def test_reopen_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process: MeldingReopenAction[Melding] = MeldingReopenAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.REOPEN)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_reopen_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process: MeldingReopenAction[Melding] = MeldingReopenAction(Mock(BaseMeldingStateMachine), repository)
+
+    with pytest.raises(NotFoundException):
+        await process(1)
+
+
+@pytest.mark.anyio
+async def test_cancel_action() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+    process: MeldingCancelAction[Melding] = MeldingCancelAction(state_machine, repository)
+
+    melding = await process(1)
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.CANCEL)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_cancel_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    process: MeldingCancelAction[Melding] = MeldingCancelAction(Mock(BaseMeldingStateMachine), repository)
 
     with pytest.raises(NotFoundException):
         await process(1)
