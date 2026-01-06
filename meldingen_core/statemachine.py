@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from enum import StrEnum
+from enum import StrEnum, Enum
 from typing import Generic, Sequence, TypeVar
 
 from meldingen_core.models import Melding
@@ -7,7 +7,7 @@ from meldingen_core.models import Melding
 T = TypeVar("T", bound=Melding)
 
 
-class BaseMeldingState(StrEnum):
+class BaseMeldingState(str, Enum):
     pass
 
 
@@ -56,7 +56,6 @@ class MeldingTransitions(StrEnum):
     ADD_CONTACT_INFO = "add_contact_info"
     SUBMIT = "submit"
     REQUEST_PROCESSING = "request_processing"
-    START_PROCESSING = "start_processing"
     PLAN = "plan"
     CANCEL = "cancel"
     REQUEST_REOPEN = "request_reopen"

@@ -258,10 +258,40 @@ class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T]):
         return MeldingTransitions.ADD_CONTACT_INFO
 
 
+class MeldingRequestProcessingAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.REQUEST_PROCESSING
+
+
 class MeldingProcessAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.PROCESS
+
+
+class MeldingPlanAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.PLAN
+
+
+class MeldingRequestReopenAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.REQUEST_REOPEN
+
+
+class MeldingReopenAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.REOPEN
+
+
+class MeldingCancelAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.CANCEL
 
 
 class MeldingCompleteAction(Generic[T]):
