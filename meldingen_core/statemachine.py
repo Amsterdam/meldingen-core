@@ -7,7 +7,7 @@ from meldingen_core.models import Melding
 T = TypeVar("T", bound=Melding)
 
 
-class BaseMeldingState(str, Enum):
+class BaseMeldingState(StrEnum):
     pass
 
 
