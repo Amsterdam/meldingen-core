@@ -3,33 +3,37 @@ name = "meldingen-core"
 version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 authors = [
-    {name = "Youri Westerman", email = "y.westerman@amsterdam.nl"},
-    {name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl"},
+    { name = "Youri Westerman", email = "y.westerman@amsterdam.nl" },
+    { name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl" },
 ]
+requires-python = ">=3.13"
 readme = "README.md"
 license = "EUPL-2.1"
-requires-python = "^3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = ["plugfs @ git+https://github.com/Amsterdam/plugfs.git"]
 
-dependencies = [
-    "plugfs @ git+https://github.com/Amsterdam/plugfs.git"
+[dependency-groups]
+dev = [
+    "anyio>=4.12.0,<5",
+    "black>=25.11.0,<26",
+    "isort>=7.0.0,<8",
+    "mkdocs-literate-nav>=0.6.1,<0.7",
+    "mkdocs-material>=9.7.0,<10",
+    "mkdocstrings[python]>=0.30.1,<0.31",
+    "mypy>=1.18.2,<2",
+    "pre-commit>=4.5.0,<5",
+    "pytest>=9.0.1,<10",
+    "pytest-cov>=7.0.0,<8",
+    "pytest-mock>=3.15.1,<4",
 ]
 
-[tool.poetry.group.dev.dependencies]
-anyio = "^4.12.0"
-black = "^25.11.0"
-isort = "^7.0.0"
-mkdocs-literate-nav = "^0.6.1"
-mkdocs-material = "^9.7.0"
-mkdocstrings = {version = "^0.30.1", extras = ["python"]}
-mypy = "^1.18.2"
-pre-commit = "^4.5.0"
-pytest = "^9.0.1"
-pytest-cov = "^7.0.0"
-pytest-mock = "^3.15.1"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
 
 [tool.black]
 line-length = 120
