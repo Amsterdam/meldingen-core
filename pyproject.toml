@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 readme = "README.md"
-license = "EUPL-2.1"
+license = "EUPL-1.2"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
@@ -61,3 +61,7 @@ exclude_lines = ["@abstractmethod", "pragma: no cover"]
 
 [tool.mypy]
 strict = true
+
+[tool.uv.build-backend]
+module-root = "."
+module-name = "meldingen_core"
