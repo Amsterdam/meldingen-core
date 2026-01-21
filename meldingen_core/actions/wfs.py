@@ -20,7 +20,7 @@ class WfsRetrieveAction(Generic[AT]):
 
     async def __call__(
         self,
-        name: str,
+        asset_type_id: int,
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
@@ -30,7 +30,7 @@ class WfsRetrieveAction(Generic[AT]):
         request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]:
-        asset_type = await self._asset_type_repository.find_by_name(name)
+        asset_type = await self._asset_type_repository.retrieve(asset_type_id)
 
         if asset_type is None:
             raise NotFoundException("AssetType not found")
