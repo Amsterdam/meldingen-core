@@ -234,7 +234,34 @@ class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
         return melding
 
 
-class MeldingAnswerQuestionsAction(BaseMeldingFormStateTransitionAction[T]):
+class BaseVerifiedMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
+    """
+    This action covers transitions where the melding has already been verified
+    (e.g. token verification happened in a FastAPI dependency).
+    """
+
+    _state_machine: BaseMeldingStateMachine[T]
+    _repository: BaseMeldingRepository[T]
+
+    def __init__(
+        self,
+        state_machine: BaseMeldingStateMachine[T],
+        repository: BaseMeldingRepository[T],
+    ):
+        self._state_machine = state_machine
+        self._repository = repository
+
+    @property
+    @abstractmethod
+    def transition_name(self) -> str: ...
+
+    async def __call__(self, melding: T) -> T:
+        await self._state_machine.transition(melding, self.transition_name)
+        await self._repository.save(melding)
+        return melding
+
+
+class MeldingAnswerQuestionsAction(BaseVerifiedMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ANSWER_QUESTIONS
