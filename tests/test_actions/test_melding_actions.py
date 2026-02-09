@@ -183,16 +183,31 @@ async def test_melding_answer_questions_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
 
     answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(
         state_machine, repository
     )
 
-    melding = await answer_questions(repo_melding)
+    melding = await answer_questions(123)
 
     assert melding == repo_melding
+    repository.retrieve.assert_awaited_once_with(123)
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_melding_answer_questions_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(
+        Mock(BaseMeldingStateMachine), repository
+    )
+
+    with pytest.raises(NotFoundException):
+        await answer_questions(123)
 
 
 @pytest.mark.anyio
