@@ -184,19 +184,15 @@ async def test_melding_answer_questions_action() -> None:
     repo_melding = Melding("melding text")
     repository = Mock(BaseMeldingRepository)
 
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = repo_melding
-
     answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(
-        state_machine, repository, token_verifier
+        state_machine, repository
     )
 
-    melding = await answer_questions(123, "token")
+    melding = await answer_questions(repo_melding)
 
     assert melding == repo_melding
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
-    token_verifier.assert_awaited_once()
 
 
 @pytest.mark.anyio
