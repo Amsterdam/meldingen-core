@@ -185,9 +185,7 @@ async def test_melding_answer_questions_action() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
 
-    answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(
-        state_machine, repository
-    )
+    answer_questions: MeldingAnswerQuestionsAction[Melding] = MeldingAnswerQuestionsAction(state_machine, repository)
 
     melding = await answer_questions(123)
 
