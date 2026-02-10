@@ -22,7 +22,7 @@ class MeldingFormStates(BaseMeldingState):
 
 class MeldingBackofficeStates(BaseMeldingState):
     SUBMITTED = "submitted"
-    AWAITING_PROCESSING = "awaiting_processing"
+    PROCESSING_REQUESTED = "processing_requested"
     PROCESSING = "processing"
     PLANNED = "planned"
     COMPLETED = "completed"
@@ -39,7 +39,7 @@ class MeldingStates(BaseMeldingState):
     LOCATION_SUBMITTED = MeldingFormStates.LOCATION_SUBMITTED
     CONTACT_INFO_ADDED = MeldingFormStates.CONTACT_INFO_ADDED
     SUBMITTED = MeldingBackofficeStates.SUBMITTED
-    AWAITING_PROCESSING = MeldingBackofficeStates.AWAITING_PROCESSING
+    PROCESSING_REQUESTED = MeldingBackofficeStates.PROCESSING_REQUESTED
     PROCESSING = MeldingBackofficeStates.PROCESSING
     PLANNED = MeldingBackofficeStates.PLANNED
     COMPLETED = MeldingBackofficeStates.COMPLETED
