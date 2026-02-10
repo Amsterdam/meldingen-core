@@ -7,7 +7,7 @@ def test_get_backoffice_states() -> None:
     assert len(states) == 8
     assert states == [
         MeldingBackofficeStates.SUBMITTED,
-        MeldingBackofficeStates.AWAITING_PROCESSING,
+        MeldingBackofficeStates.PROCESSING_REQUESTED,
         MeldingBackofficeStates.PROCESSING,
         MeldingBackofficeStates.PLANNED,
         MeldingBackofficeStates.COMPLETED,
