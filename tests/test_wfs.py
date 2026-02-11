@@ -180,7 +180,9 @@ async def test_wfs_provider_factory_validate_raises_when_class_does_not_extend_b
     factory = WfsProviderFactory()
     with pytest.raises(InvalidWfsProviderException) as exception_info:
         await factory.validate(
-            AssetType("asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3)
+            AssetType(
+                "asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+            )
         )
     assert str(exception_info.value) == "Invalid provider factory"
 
@@ -196,5 +198,7 @@ async def test_wfs_provider_factory_validate_raises_when_factory_validate_fails(
 async def test_wfs_provider_factory_validate_succeeds() -> None:
     factory = WfsProviderFactory()
     await factory.validate(
-        AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3)
+        AssetType(
+            "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+        )
     )
