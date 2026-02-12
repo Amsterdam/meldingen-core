@@ -446,6 +446,9 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
     ) -> T:
         melding = await self._repository.retrieve(melding_id)
 
+        if melding is None:
+            raise NotFoundException(f"Failed to find melding")
+
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
 

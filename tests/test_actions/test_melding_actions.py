@@ -574,6 +574,19 @@ async def test_submit_melding() -> None:
 
 
 @pytest.mark.anyio
+async def test_submit_melding_melding_not_found() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repository = Mock(BaseMeldingRepository)
+
+    repository.retrieve.return_value = None
+
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(repository, state_machine)
+
+    with pytest.raises(NotFoundException):
+        await action(2)
+
+
+@pytest.mark.anyio
 async def test_add_asset_asset_type_not_found() -> None:
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = None
