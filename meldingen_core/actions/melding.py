@@ -234,39 +234,7 @@ class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
         return melding
 
 
-class BaseVerifiedMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
-    """
-    This action covers transitions where the melding's token has already been verified
-    (e.g. token verification happened in a FastAPI dependency).
-    It retrieves the melding by id and performs the state transition.
-    """
-
-    _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T]
-
-    def __init__(
-        self,
-        state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T],
-    ):
-        self._state_machine = state_machine
-        self._repository = repository
-
-    @property
-    @abstractmethod
-    def transition_name(self) -> str: ...
-
-    async def __call__(self, melding_id: int) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
-        await self._state_machine.transition(melding, self.transition_name)
-        await self._repository.save(melding)
-        return melding
-
-
-class MeldingAnswerQuestionsAction(BaseVerifiedMeldingFormStateTransitionAction[T]):
+class MeldingAnswerQuestionsAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ANSWER_QUESTIONS
@@ -288,6 +256,12 @@ class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_CONTACT_INFO
+
+
+class MeldingSubmitAction(BaseStateTransitionAction[T]):
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.SUBMIT
 
 
 class MeldingRequestProcessingAction(BaseStateTransitionAction[T]):
@@ -420,37 +394,6 @@ class MeldingSubmitActionMelder(BaseCRUDAction[T]):
         await self._invalidate_token(melding)
         await self._repository.save(melding)
         await self._send_mail(melding)
-
-        return melding
-
-    @property
-    def transition_name(self) -> str:
-        return MeldingTransitions.SUBMIT
-
-
-class MeldingSubmitAction(BaseCRUDAction[T]):
-    _repository: BaseMeldingRepository[T]
-    _state_machine: BaseMeldingStateMachine[T]
-
-    def __init__(
-        self,
-        repository: BaseMeldingRepository[T],
-        state_machine: BaseMeldingStateMachine[T],
-    ) -> None:
-        self._repository = repository
-        self._state_machine = state_machine
-
-    async def __call__(
-        self,
-        melding_id: int,
-    ) -> T:
-        melding = await self._repository.retrieve(melding_id)
-
-        if melding is None:
-            raise NotFoundException(f"Failed to find melding")
-
-        await self._state_machine.transition(melding, self.transition_name)
-        await self._repository.save(melding)
 
         return melding
 

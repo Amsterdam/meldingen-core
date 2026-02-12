@@ -564,7 +564,7 @@ async def test_submit_melding() -> None:
 
     repository.retrieve.return_value = repo_melding
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(repository, state_machine)
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository)
 
     melding = await action(1)
     assert melding == repo_melding
@@ -580,7 +580,7 @@ async def test_submit_melding_melding_not_found() -> None:
 
     repository.retrieve.return_value = None
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(repository, state_machine)
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository)
 
     with pytest.raises(NotFoundException):
         await action(2)
