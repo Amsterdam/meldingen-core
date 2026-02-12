@@ -428,6 +428,34 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
         return MeldingTransitions.SUBMIT
 
 
+class MeldingSubmitActionMelder(BaseCRUDAction[T]):
+    _repository: BaseMeldingRepository[T]
+    _state_machine: BaseMeldingStateMachine[T]
+
+    def __init__(
+        self,
+        repository: BaseMeldingRepository[T],
+        state_machine: BaseMeldingStateMachine[T],
+    ) -> None:
+        self._repository = repository
+        self._state_machine = state_machine
+
+    async def __call__(
+        self,
+        melding_id: int,
+    ) -> T:
+        melding = await self._repository.retrieve(melding_id)
+
+        await self._state_machine.transition(melding, self.transition_name)
+        await self._repository.save(melding)
+
+        return melding
+
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.SUBMIT
+
+
 class MeldingAddAssetAction(Generic[T, AS, AT]):
     _verify_token: TokenVerifier[T]
     _melding_repository: BaseMeldingRepository[T]
