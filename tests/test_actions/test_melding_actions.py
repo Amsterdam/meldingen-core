@@ -27,6 +27,7 @@ from meldingen_core.actions.melding import (
     MeldingRequestReopenAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
+    MeldingSubmitActionMelder,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
@@ -532,7 +533,7 @@ async def test_melder_list_answers() -> None:
 
 
 @pytest.mark.anyio
-async def test_submit_melding() -> None:
+async def test_submit_melding_melder() -> None:
     repo_melding = Melding("text")
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
@@ -543,7 +544,7 @@ async def test_submit_melding() -> None:
 
     confirmation_mailer = AsyncMock(BaseMeldingConfirmationMailer)
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(
+    action: MeldingSubmitActionMelder[Melding] = MeldingSubmitActionMelder(
         repository, state_machine, token_verifier, token_invalidator, confirmation_mailer
     )
 
@@ -553,6 +554,36 @@ async def test_submit_melding() -> None:
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
     token_invalidator.assert_called_once_with(repo_melding)
     repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_submit_melding() -> None:
+    repo_melding = Melding("text")
+    state_machine = Mock(BaseMeldingStateMachine)
+    repository = Mock(BaseMeldingRepository)
+
+    repository.retrieve.return_value = repo_melding
+
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository)
+
+    melding = await action(1)
+    assert melding == repo_melding
+
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
+    repository.save.assert_called_once_with(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_submit_melding_melding_not_found() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repository = Mock(BaseMeldingRepository)
+
+    repository.retrieve.return_value = None
+
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(state_machine, repository)
+
+    with pytest.raises(NotFoundException):
+        await action(2)
 
 
 @pytest.mark.anyio
