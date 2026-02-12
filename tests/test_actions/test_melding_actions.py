@@ -533,7 +533,7 @@ async def test_melder_list_answers() -> None:
 
 
 @pytest.mark.anyio
-async def test_submit_melding() -> None:
+async def test_submit_melding_melder() -> None:
     repo_melding = Melding("text")
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
@@ -544,7 +544,7 @@ async def test_submit_melding() -> None:
 
     confirmation_mailer = AsyncMock(BaseMeldingConfirmationMailer)
 
-    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(
+    action: MeldingSubmitActionMelder[Melding] = MeldingSubmitActionMelder(
         repository, state_machine, token_verifier, token_invalidator, confirmation_mailer
     )
 
@@ -557,14 +557,14 @@ async def test_submit_melding() -> None:
 
 
 @pytest.mark.anyio
-async def test_submit_melding_melder() -> None:
+async def test_submit_melding() -> None:
     repo_melding = Melding("text")
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
 
     repository.retrieve.return_value = repo_melding
 
-    action: MeldingSubmitActionMelder[Melding] = MeldingSubmitActionMelder(repository, state_machine)
+    action: MeldingSubmitAction[Melding] = MeldingSubmitAction(repository, state_machine)
 
     melding = await action(1)
     assert melding == repo_melding

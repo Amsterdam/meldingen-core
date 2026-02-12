@@ -389,7 +389,7 @@ class MeldingListQuestionsAnswersAction(Generic[A]):
         return await self._answer_repository.find_by_melding(melding_id)
 
 
-class MeldingSubmitAction(BaseCRUDAction[T]):
+class MeldingSubmitActionMelder(BaseCRUDAction[T]):
     _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
     _verify_token: TokenVerifier[T]
@@ -428,7 +428,7 @@ class MeldingSubmitAction(BaseCRUDAction[T]):
         return MeldingTransitions.SUBMIT
 
 
-class MeldingSubmitActionMelder(BaseCRUDAction[T]):
+class MeldingSubmitAction(BaseCRUDAction[T]):
     _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
 
