@@ -47,7 +47,9 @@ class AssetTypeUpdateAction(BaseCRUDAction[AT]):
         for key, value in values.items():
             setattr(obj, key, value)
 
-        await self._wfs_provider_validator(obj)
+        if "class_name" in values or "arguments" in values:
+            await self._wfs_provider_validator(obj)
+
         await self._repository.save(obj)
         return obj
 

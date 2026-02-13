@@ -59,7 +59,37 @@ async def test_create_action_calls_validator_then_saves() -> None:
 
 
 @pytest.mark.anyio
-async def test_update_action_calls_validator_then_saves() -> None:
+async def test_update_action_calls_validator_when_class_name_changes() -> None:
+    asset_type = Mock(AssetType)
+    repository = Mock(BaseAssetTypeRepository)
+    repository.retrieve = AsyncMock(return_value=asset_type)
+    repository.save = AsyncMock()
+    validator = AsyncMock(BaseWfsProviderValidator)
+    action: AssetTypeUpdateAction[AssetType] = AssetTypeUpdateAction(repository, validator)
+
+    await action(1, {"class_name": "new.ClassName"})
+
+    validator.assert_awaited_once_with(asset_type)
+    repository.save.assert_awaited_once_with(asset_type)
+
+
+@pytest.mark.anyio
+async def test_update_action_calls_validator_when_arguments_change() -> None:
+    asset_type = Mock(AssetType)
+    repository = Mock(BaseAssetTypeRepository)
+    repository.retrieve = AsyncMock(return_value=asset_type)
+    repository.save = AsyncMock()
+    validator = AsyncMock(BaseWfsProviderValidator)
+    action: AssetTypeUpdateAction[AssetType] = AssetTypeUpdateAction(repository, validator)
+
+    await action(1, {"arguments": {"base_url": "http://example.com"}})
+
+    validator.assert_awaited_once_with(asset_type)
+    repository.save.assert_awaited_once_with(asset_type)
+
+
+@pytest.mark.anyio
+async def test_update_action_skips_validation_when_no_wfs_fields_change() -> None:
     asset_type = Mock(AssetType)
     repository = Mock(BaseAssetTypeRepository)
     repository.retrieve = AsyncMock(return_value=asset_type)
@@ -69,7 +99,7 @@ async def test_update_action_calls_validator_then_saves() -> None:
 
     await action(1, {"name": "new_name"})
 
-    validator.assert_awaited_once_with(asset_type)
+    validator.assert_not_awaited()
     repository.save.assert_awaited_once_with(asset_type)
 
 

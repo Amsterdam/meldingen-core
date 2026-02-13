@@ -37,7 +37,7 @@ class InvalidWfsProviderException(Exception): ...
 
 
 class WfsProviderFactory:
-    def _load_factory(self, asset_type: AssetType) -> BaseWfsProviderFactory:
+    def __call__(self, asset_type: AssetType) -> BaseWfsProvider:
         try:
             module_name, class_name = asset_type.class_name.rsplit(".", 1)
         except ValueError as e:
@@ -60,11 +60,6 @@ class WfsProviderFactory:
         if not isinstance(provider_factory, BaseWfsProviderFactory):
             raise InvalidWfsProviderException("Invalid provider factory")
 
-        return provider_factory
-
-    def __call__(self, asset_type: AssetType) -> BaseWfsProvider:
-        provider_factory = self._load_factory(asset_type)
-
         provider = provider_factory()
 
         if not isinstance(provider, BaseWfsProvider):
@@ -73,10 +68,6 @@ class WfsProviderFactory:
             )
 
         return provider
-
-    async def validate(self, asset_type: AssetType) -> None:
-        provider_factory = self._load_factory(asset_type)
-        await provider_factory.validate()
 
 
 class BaseWfsProviderValidator(metaclass=ABCMeta):
