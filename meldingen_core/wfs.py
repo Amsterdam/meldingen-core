@@ -77,3 +77,8 @@ class WfsProviderFactory:
     async def validate(self, asset_type: AssetType) -> None:
         provider_factory = self._load_factory(asset_type)
         await provider_factory.validate()
+
+
+class BaseWfsProviderValidator(metaclass=ABCMeta):
+    @abstractmethod
+    async def __call__(self, asset_type: AssetType) -> None: ...

@@ -3,7 +3,12 @@ from typing import AsyncIterator, Literal, cast
 import pytest
 
 from meldingen_core.models import AssetType, AssetTypeArguments
-from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException, WfsProviderFactory
+from meldingen_core.wfs import (
+    BaseWfsProvider,
+    BaseWfsProviderFactory,
+    InvalidWfsProviderException,
+    WfsProviderFactory,
+)
 
 
 class InvalidWfsProvider:
