@@ -38,10 +38,6 @@ class ValidWfsProviderFactory(BaseWfsProviderFactory):
 
         return ValidWfsProvider(self._arguments["base_url"])
 
-    async def validate(self) -> None:
-        if "base_url" not in self._arguments:
-            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
-
 
 class InvalidWfsProviderFactory(BaseWfsProviderFactory):
     def __call__(self) -> BaseWfsProvider:
@@ -51,10 +47,6 @@ class InvalidWfsProviderFactory(BaseWfsProviderFactory):
         # We want to test what happens when the returned class does not extend BaseWfsProvider, but mypy complains
         # So we cast it first to suppress the error
         return cast(BaseWfsProvider, InvalidWfsProvider(self._arguments["base_url"]))
-
-    async def validate(self) -> None:
-        if "base_url" not in self._arguments:
-            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
 
 
 class EmptyProviderFactory:

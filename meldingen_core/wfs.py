@@ -26,9 +26,6 @@ class BaseWfsProviderFactory(metaclass=ABCMeta):
     @abstractmethod
     def __call__(self) -> BaseWfsProvider: ...
 
-    @abstractmethod
-    async def validate(self) -> None: ...
-
     def __init__(self, arguments: AssetTypeArguments) -> None:
         self._arguments = arguments
 
