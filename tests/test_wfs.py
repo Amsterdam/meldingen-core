@@ -189,9 +189,7 @@ async def test_validator_raises_when_class_does_not_produce_base() -> None:
 
     with pytest.raises(InvalidWfsProviderException):
         await validator(
-            AssetType(
-                "asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.example.com"}, 3
-            )
+            AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.example.com"}, 3)
         )
 
 
