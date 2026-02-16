@@ -6,6 +6,7 @@ from meldingen_core.models import AssetType, AssetTypeArguments
 from meldingen_core.wfs import (
     BaseWfsProvider,
     BaseWfsProviderFactory,
+    BaseWfsProviderValidator,
     InvalidWfsProviderException,
     WfsProviderFactory,
 )
@@ -146,3 +147,58 @@ def test_wfs_provider_factory_can_produce_provider_from_factory_with_too_many_ar
     )
 
     assert isinstance(provider, ValidWfsProvider)
+
+
+@pytest.mark.anyio
+async def test_validator_raises_when_class_name_invalid() -> None:
+    validator = BaseWfsProviderValidator()
+
+    with pytest.raises(InvalidWfsProviderException):
+        await validator(AssetType("asset_type_name", "invalid_value", {}, 3))
+
+
+@pytest.mark.anyio
+async def test_validator_raises_when_module_name_invalid() -> None:
+    validator = BaseWfsProviderValidator()
+
+    with pytest.raises(InvalidWfsProviderException):
+        await validator(AssetType("asset_type_name", "invalid_module_name.Test", {}, 3))
+
+
+@pytest.mark.anyio
+async def test_validator_raises_when_class_does_not_exist() -> None:
+    validator = BaseWfsProviderValidator()
+
+    with pytest.raises(InvalidWfsProviderException):
+        await validator(AssetType("asset_type_name", "tests.test_wfs.Test", {}, 3))
+
+
+@pytest.mark.anyio
+async def test_validator_raises_when_class_does_not_extend_base() -> None:
+    validator = BaseWfsProviderValidator()
+
+    with pytest.raises(InvalidWfsProviderException):
+        await validator(
+            AssetType("asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.example.com"}, 3)
+        )
+
+
+@pytest.mark.anyio
+async def test_validator_raises_when_class_does_not_produce_base() -> None:
+    validator = BaseWfsProviderValidator()
+
+    with pytest.raises(InvalidWfsProviderException):
+        await validator(
+            AssetType(
+                "asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.example.com"}, 3
+            )
+        )
+
+
+@pytest.mark.anyio
+async def test_validator_passes_for_valid_provider() -> None:
+    validator = BaseWfsProviderValidator()
+
+    await validator(
+        AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.example.com"}, 3)
+    )

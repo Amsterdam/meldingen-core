@@ -67,6 +67,6 @@ class WfsProviderFactory:
         return provider
 
 
-class BaseWfsProviderValidator(metaclass=ABCMeta):
-    @abstractmethod
-    async def __call__(self, asset_type: AssetType) -> None: ...
+class BaseWfsProviderValidator:
+    async def __call__(self, asset_type: AssetType) -> None:
+        WfsProviderFactory()(asset_type)
