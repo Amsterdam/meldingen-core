@@ -9,13 +9,13 @@ AT = TypeVar("AT", bound=AssetType)
 
 
 class WfsRetrieveAction(Generic[AT]):
-    _wfs_provider_factory: AssetTypeToWfsProviderConverter
+    _converter: AssetTypeToWfsProviderConverter
     _asset_type_repository: BaseAssetTypeRepository[AT]
 
     def __init__(
-        self, wfs_provider_factory: AssetTypeToWfsProviderConverter, asset_type_repository: BaseAssetTypeRepository[AT]
+        self, converter: AssetTypeToWfsProviderConverter, asset_type_repository: BaseAssetTypeRepository[AT]
     ) -> None:
-        self._wfs_provider_factory = wfs_provider_factory
+        self._converter = converter
         self._asset_type_repository = asset_type_repository
 
     async def __call__(
@@ -35,6 +35,6 @@ class WfsRetrieveAction(Generic[AT]):
         if asset_type is None:
             raise NotFoundException("AssetType not found")
 
-        provider = self._wfs_provider_factory(asset_type)
+        provider = self._converter(asset_type)
 
         return await provider(type_names, count, srs_name, output_format, service, version, request, filter)
