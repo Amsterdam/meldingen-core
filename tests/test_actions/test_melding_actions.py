@@ -442,7 +442,7 @@ async def test_complete_action_no_melding_email() -> None:
     complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository, mailer)
 
     melding = await complete(1, "test mail text")
-
+    assert melding.email is None
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
     repository.save.assert_called_once_with(repo_melding)
