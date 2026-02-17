@@ -432,6 +432,24 @@ async def test_complete_action_not_found() -> None:
 
 
 @pytest.mark.anyio
+async def test_complete_action_no_melding_email() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text", email=None)
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+
+    mailer = AsyncMock(BaseMeldingCompleteMailer)
+    complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository, mailer)
+
+    melding = await complete(1, "test mail text")
+
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
+    repository.save.assert_called_once_with(repo_melding)
+    mailer.assert_not_awaited()
+
+
+@pytest.mark.anyio
 async def test_submit_location_action() -> None:
     repository = Mock(BaseMeldingRepository)
     repo_melding = Melding("melding text")
