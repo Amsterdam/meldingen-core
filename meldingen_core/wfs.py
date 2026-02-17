@@ -33,7 +33,9 @@ class BaseWfsProviderFactory(metaclass=ABCMeta):
 class InvalidWfsProviderException(Exception): ...
 
 
-class WfsProviderFactory:
+# This class takes an asset type, and tries to instantiate a WFS provider based on the class name and arguments specified in the asset type.
+# It performs several checks to ensure that the class can be imported, instantiated, and that it produces a valid WFS provider.
+class AssetTypeToWfsProviderConverter:
     def __call__(self, asset_type: AssetType) -> BaseWfsProvider:
         try:
             module_name, class_name = asset_type.class_name.rsplit(".", 1)
@@ -65,3 +67,10 @@ class WfsProviderFactory:
             )
 
         return provider
+
+
+# This class is used to validate that an asset type can be converted to a WFS provider.
+# It does this by trying to convert the asset type to a WFS provider using the AssetTypeToWfsProviderConverter.
+class BaseWfsProviderValidator:
+    async def __call__(self, asset_type: AssetType) -> None:
+        AssetTypeToWfsProviderConverter()(asset_type)

@@ -6,13 +6,13 @@ from meldingen_core.actions.wfs import WfsRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseAssetTypeRepository
-from meldingen_core.wfs import BaseWfsProvider, WfsProviderFactory
+from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProvider
 
 
 class TestWfsAction:
     def test_can_instantiate_retrieve_action(self) -> None:
         action: WfsRetrieveAction[AssetType] = WfsRetrieveAction(
-            Mock(WfsProviderFactory), Mock(BaseAssetTypeRepository)
+            Mock(AssetTypeToWfsProviderConverter), Mock(BaseAssetTypeRepository)
         )
         assert isinstance(action, WfsRetrieveAction)
 
@@ -23,7 +23,7 @@ class TestWfsAction:
         repository.retrieve.return_value = asset_type_mock
 
         provider = AsyncMock(BaseWfsProvider)
-        factory = Mock(WfsProviderFactory)
+        factory = Mock(AssetTypeToWfsProviderConverter)
         factory.return_value = provider
 
         action: WfsRetrieveAction[AssetType] = WfsRetrieveAction(factory, repository)
@@ -45,7 +45,7 @@ class TestWfsAction:
 
     @pytest.mark.anyio
     async def test_asset_type_not_found(self) -> None:
-        factory = Mock(WfsProviderFactory)
+        factory = Mock(AssetTypeToWfsProviderConverter)
         repository = Mock(BaseAssetTypeRepository)
 
         repository.retrieve = AsyncMock(return_value=None)
