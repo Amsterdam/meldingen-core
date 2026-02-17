@@ -3,17 +3,17 @@ from typing import AsyncIterator, Generic, Literal, TypeVar
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseAssetTypeRepository
-from meldingen_core.wfs import WfsProviderFactory
+from meldingen_core.wfs import AssetTypeToWfsProviderConverter
 
 AT = TypeVar("AT", bound=AssetType)
 
 
 class WfsRetrieveAction(Generic[AT]):
-    _wfs_provider_factory: WfsProviderFactory
+    _wfs_provider_factory: AssetTypeToWfsProviderConverter
     _asset_type_repository: BaseAssetTypeRepository[AT]
 
     def __init__(
-        self, wfs_provider_factory: WfsProviderFactory, asset_type_repository: BaseAssetTypeRepository[AT]
+        self, wfs_provider_factory: AssetTypeToWfsProviderConverter, asset_type_repository: BaseAssetTypeRepository[AT]
     ) -> None:
         self._wfs_provider_factory = wfs_provider_factory
         self._asset_type_repository = asset_type_repository
