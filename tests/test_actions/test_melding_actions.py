@@ -409,9 +409,7 @@ async def test_complete_action() -> None:
     repository.retrieve.return_value = repo_melding
     mailer = AsyncMock(BaseMeldingCompleteMailer)
 
-    complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(
-        state_machine, repository, mailer
-    )
+    complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository, mailer)
 
     melding = await complete(1, "test mail text")
 
