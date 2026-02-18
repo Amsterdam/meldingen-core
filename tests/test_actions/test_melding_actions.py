@@ -404,11 +404,13 @@ async def test_add_attachments_action_not_found() -> None:
 @pytest.mark.anyio
 async def test_complete_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
-    repo_melding = Melding("melding text")
+    repo_melding = Melding("melding text", email="user@example.com")
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
+    mailer = AsyncMock(BaseMeldingCompleteMailer)
+
     complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(
-        state_machine, repository, AsyncMock(BaseMeldingCompleteMailer)
+        state_machine, repository, mailer
     )
 
     melding = await complete(1, "test mail text")
@@ -416,6 +418,8 @@ async def test_complete_action() -> None:
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
     repository.save.assert_called_once_with(repo_melding)
+
+    mailer.assert_awaited_once()
 
 
 @pytest.mark.anyio
@@ -442,7 +446,23 @@ async def test_complete_action_no_melding_email() -> None:
     complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository, mailer)
 
     melding = await complete(1, "test mail text")
-    assert melding.email is None
+    assert melding == repo_melding
+    state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
+    repository.save.assert_called_once_with(repo_melding)
+    mailer.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_complete_action_no_mail_text() -> None:
+    state_machine = Mock(BaseMeldingStateMachine)
+    repo_melding = Melding("melding text", email="user@example.com")
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
+
+    mailer = AsyncMock(BaseMeldingCompleteMailer)
+    complete: MeldingCompleteAction[Melding] = MeldingCompleteAction(state_machine, repository, mailer)
+    melding = await complete(1, None)
+
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.COMPLETE)
     repository.save.assert_called_once_with(repo_melding)
