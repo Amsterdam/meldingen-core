@@ -323,7 +323,7 @@ class MeldingCompleteAction(Generic[T]):
         await self._state_machine.transition(melding, MeldingTransitions.COMPLETE)
         await self._repository.save(melding)
 
-        if mail_text is not None:
+        if mail_text is not None and melding.email is not None:
             await self._mailer.__call__(melding, mail_text)
 
         return melding
