@@ -36,6 +36,7 @@ class Melding:
     phone: str | None = None
     state: str | None = None
     assets: MutableSequence["Asset"] = field(default_factory=list)
+    urgency: int = 0  # -1 = less urgent, 0 = default, 1 = more urgent
 
 
 @dataclass
