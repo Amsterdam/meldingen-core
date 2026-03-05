@@ -63,7 +63,7 @@ This skill provides guidelines for developers to determine whether code should b
 
 ## Examples
 - **meldingen-core:**
-  - `class Melding(BaseModel): ...` (no framework dependencies)
+  - `@dataclass class Melding: ...` (no framework dependencies)
   - `class ClassificationManager: ...` (stateless logic)
   - `class Location(Protocol): ...` (abstract location type)
 - **meldingen:**
