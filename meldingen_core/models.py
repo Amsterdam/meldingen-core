@@ -1,13 +1,3 @@
-from enum import IntEnum
-
-
-# Allowed urgency values for Melding
-class UrgencyLevel(IntEnum):
-    LESS_URGENT = -1
-    DEFAULT = 0
-    MORE_URGENT = 1
-
-
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -46,7 +36,7 @@ class Melding:
     phone: str | None = None
     state: str | None = None
     assets: MutableSequence["Asset"] = field(default_factory=list)
-    urgency: UrgencyLevel = UrgencyLevel.DEFAULT  # -1 = less urgent, 0 = default, 1 = more urgent
+    urgency: int | None = None  # Expected values: -1 (less urgent), 0 (default), 1 (more urgent)
 
 
 @dataclass
