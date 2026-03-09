@@ -1,9 +1,13 @@
 from enum import IntEnum
+
+
 # Allowed urgency values for Melding
 class UrgencyLevel(IntEnum):
     LESS_URGENT = -1
     DEFAULT = 0
     MORE_URGENT = 1
+
+
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
