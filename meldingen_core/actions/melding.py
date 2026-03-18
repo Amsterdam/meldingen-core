@@ -105,7 +105,7 @@ class MeldingUpdateAction(BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
 
 
-class MeldingUpdateActionMelder(Generic[T, C], BaseUpdateAction[T]):
+class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
