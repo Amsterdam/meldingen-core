@@ -30,6 +30,7 @@ from meldingen_core.actions.melding import (
     MeldingSubmitActionMelder,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
+    MeldingUpdateActionMelder,
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
@@ -111,6 +112,31 @@ def test_can_instantiate_melding_retrieve_action() -> None:
 
 @pytest.mark.anyio
 async def test_melding_update_action() -> None:
+    repository = Mock(BaseMeldingRepository)
+    melding = Melding("text", urgency=0)
+    repository.retrieve.return_value = melding
+
+    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(repository)
+
+    result = await action(123, {"urgency": 1})
+
+    assert result.urgency == 1
+    repository.save.assert_called_once_with(melding)
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = None
+
+    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(repository)
+
+    with pytest.raises(NotFoundException):
+        await action(123, {"urgency": 1})
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_melder() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
@@ -119,7 +145,7 @@ async def test_melding_update_action() -> None:
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+    action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
@@ -131,7 +157,7 @@ async def test_melding_update_action() -> None:
 
 
 @pytest.mark.anyio
-async def test_melding_update_action_with_classification_not_found() -> None:
+async def test_melding_update_action_melder_with_classification_not_found() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
@@ -139,7 +165,7 @@ async def test_melding_update_action_with_classification_not_found() -> None:
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     reclassifier = AsyncMock(BaseReclassification)
 
-    action: MeldingUpdateAction[Melding, Classification] = MeldingUpdateAction(
+    action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
         repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
