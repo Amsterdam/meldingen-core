@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, cast, override
 
 from meldingen_core import SortingDirection
-from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction
+from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
@@ -101,7 +101,11 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(Generic[T, C], BaseCRUDAction[T]):
+class MeldingUpdateAction(BaseUpdateAction[T]):
+    """Action that updates specific fields on a melding."""
+
+
+class MeldingUpdateActionMelder(Generic[T, C], BaseUpdateAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
