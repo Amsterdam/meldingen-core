@@ -33,9 +33,14 @@ class BaseListAction(BaseCRUDAction[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
+        name_contains: str | None = None,
     ) -> Sequence[T]:
         return await self._repository.list(
-            limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
+            limit=limit,
+            offset=offset,
+            sort_attribute_name=sort_attribute_name,
+            sort_direction=sort_direction,
+            name_contains=name_contains,
         )
 
 

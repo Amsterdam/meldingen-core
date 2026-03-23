@@ -21,6 +21,7 @@ class BaseRepository(Generic[T], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
+        name_contains: str | None = None,
     ) -> Sequence[T]: ...
 
     @abstractmethod
