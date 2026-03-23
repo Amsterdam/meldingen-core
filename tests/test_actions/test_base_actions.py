@@ -61,7 +61,9 @@ async def test_base_list_action_limit(
 
     await base_list_action(limit=limit)
 
-    spy.assert_called_once_with(limit=limit, offset=None, sort_attribute_name=None, sort_direction=None, name_contains=None)
+    spy.assert_called_once_with(
+        limit=limit, offset=None, sort_attribute_name=None, sort_direction=None, name_contains=None
+    )
 
 
 @pytest.mark.parametrize("offset", [1, 5, 10, 20])
@@ -75,7 +77,9 @@ async def test_base_list_action_offset(
 
     await base_list_action(offset=offset)
 
-    spy.assert_called_once_with(limit=None, offset=offset, sort_attribute_name=None, sort_direction=None, name_contains=None)
+    spy.assert_called_once_with(
+        limit=None, offset=offset, sort_attribute_name=None, sort_direction=None, name_contains=None
+    )
 
 
 @pytest.mark.anyio
@@ -87,7 +91,9 @@ async def test_base_list_action_sort_attribute_name(
 
     await base_list_action(sort_attribute_name="name")
 
-    spy.assert_called_once_with(limit=None, offset=None, sort_attribute_name="name", sort_direction=None, name_contains=None)
+    spy.assert_called_once_with(
+        limit=None, offset=None, sort_attribute_name="name", sort_direction=None, name_contains=None
+    )
 
 
 @pytest.mark.parametrize("direction", [SortingDirection.ASC, SortingDirection.DESC])
@@ -101,7 +107,9 @@ async def test_base_list_action_sort_direction(
 
     await base_list_action(sort_direction=direction)
 
-    spy.assert_called_once_with(limit=None, offset=None, sort_attribute_name=None, sort_direction=direction, name_contains=None)
+    spy.assert_called_once_with(
+        limit=None, offset=None, sort_attribute_name=None, sort_direction=direction, name_contains=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -119,7 +127,9 @@ async def test_base_list_action_limit_offset(
 
     await base_list_action(limit=limit, offset=offset)
 
-    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=None, sort_direction=None, name_contains=None)
+    spy.assert_called_once_with(
+        limit=limit, offset=offset, sort_attribute_name=None, sort_direction=None, name_contains=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -138,7 +148,9 @@ async def test_base_list_action_limit_offset_sort_attribute_name(
 
     await base_list_action(limit=limit, offset=offset, sort_attribute_name=name)
 
-    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=None, name_contains=None)
+    spy.assert_called_once_with(
+        limit=limit, offset=offset, sort_attribute_name=name, sort_direction=None, name_contains=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -163,7 +175,9 @@ async def test_base_list_action_limit_offset_sort_attribute_name_sort_direction(
 
     await base_list_action(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=direction)
 
-    spy.assert_called_once_with(limit=limit, offset=offset, sort_attribute_name=name, sort_direction=direction, name_contains=None)
+    spy.assert_called_once_with(
+        limit=limit, offset=offset, sort_attribute_name=name, sort_direction=direction, name_contains=None
+    )
 
 
 @pytest.mark.parametrize("pk", [1, 2, 3, 4, 5])
