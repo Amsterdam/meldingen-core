@@ -5,7 +5,7 @@ from meldingen_core.statemachine import BaseMeldingState
 
 
 @dataclass
-class ListFilters:
+class NameListFilters:
     name_contains: str | None = None
 
 
