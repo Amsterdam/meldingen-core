@@ -3,6 +3,7 @@ from typing import Any, Generic, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import ListFilters
 from meldingen_core.repositories import BaseRepository
 
 T = TypeVar("T")
@@ -33,14 +34,14 @@ class BaseListAction(BaseCRUDAction[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        name_contains: str | None = None,
+        filters: ListFilters | None = None,
     ) -> Sequence[T]:
         return await self._repository.list(
             limit=limit,
             offset=offset,
             sort_attribute_name=sort_attribute_name,
             sort_direction=sort_direction,
-            name_contains=name_contains,
+            filters=filters,
         )
 
 

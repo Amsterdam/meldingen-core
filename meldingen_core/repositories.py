@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
-from meldingen_core.filters import MeldingListFilters
+from meldingen_core.filters import ListFilters, MeldingListFilters
 from meldingen_core.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, User
 
 T = TypeVar("T")
@@ -21,7 +21,7 @@ class BaseRepository(Generic[T], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        name_contains: str | None = None,
+        filters: ListFilters | None = None,
     ) -> Sequence[T]: ...
 
     @abstractmethod
