@@ -38,7 +38,7 @@ from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -117,10 +117,12 @@ async def test_melding_update_action() -> None:
     repository.retrieve.return_value = melding
 
     action: MeldingUpdateAction[Melding] = MeldingUpdateAction(repository)
+    labels = [Label("test label 1"), Label("test label 2")]
 
-    result = await action(123, {"urgency": 1})
+    result = await action(123, {"urgency": 1, "labels": labels})
 
     assert result.urgency == 1
+    assert result.labels == labels
     repository.save.assert_called_once_with(melding)
 
 
