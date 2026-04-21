@@ -4,7 +4,18 @@ from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.filters import MeldingListFilters, NameListFilters
-from meldingen_core.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, User
+from meldingen_core.models import (
+    Answer,
+    Asset,
+    AssetType,
+    Attachment,
+    Classification,
+    Form,
+    Label,
+    Melding,
+    Question,
+    User,
+)
 
 T = TypeVar("T")
 
@@ -101,3 +112,8 @@ AS = TypeVar("AS", bound=Asset)
 class BaseAssetRepository(BaseRepository[AS], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> AS | None: ...
+
+
+class BaseLabelRepository(BaseRepository[Label], metaclass=ABCMeta):
+    @abstractmethod
+    async def list_by_ids(self, ids: list[int]) -> Sequence[T]: ...

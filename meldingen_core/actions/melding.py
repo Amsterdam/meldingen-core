@@ -18,11 +18,13 @@ from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
     BaseAssetTypeRepository,
+    BaseLabelRepository,
     BaseMeldingRepository,
     BaseRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
+from meldingen_core.validators import MeldingUpdateValidator
 
 log = logging.getLogger(__name__)
 
@@ -103,6 +105,17 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
 
 class MeldingUpdateAction(BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
+
+    _validate_data: MeldingUpdateValidator
+
+    def __init__(self, repository: BaseMeldingRepository[T], melding_update_validator: MeldingUpdateValidator) -> None:
+        super().__init__(repository)
+        self._validate_data = melding_update_validator
+
+    async def __call__(self, pk: int, values: dict[str, Any]) -> Melding:
+        self._validate_data(values)
+
+        return super().__call__(pk, values)
 
 
 class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
