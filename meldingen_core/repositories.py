@@ -113,7 +113,8 @@ class BaseAssetRepository(BaseRepository[AS], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> AS | None: ...
 
+L = TypeVar("L", bound=Label)
 
-class BaseLabelRepository(BaseRepository[Label], metaclass=ABCMeta):
+class BaseLabelRepository(BaseRepository[L], metaclass=ABCMeta):
     @abstractmethod
     async def list_by_ids(self, ids: list[int]) -> Sequence[T]: ...
