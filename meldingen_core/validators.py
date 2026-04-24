@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from meldingen_core.models import Label
+from meldingen_core.repositories import BaseLabelRepository
 
 
 class MediaTypeNotAllowed(Exception): ...
@@ -23,6 +24,12 @@ class BaseMediaTypeIntegrityValidator(metaclass=ABCMeta):
 
 
 class BaseLabelValidator(metaclass=ABCMeta):
+    _label_repository: BaseLabelRepository[Label]
+
+    def __init__(self, label_repository: BaseLabelRepository[Label]) -> None:
+        self._label_repository = label_repository
+
     @abstractmethod
     async def __call__(self, label_ids: list[int]) -> list[Label]:
-        """Abstraction to check if given label id's exist. Will return retrieved labels if they can all be found. Raises NotFoundException if not."""
+        """Abstraction to check if given label id's exist. Will return retrieved labels if they can all be found. Raises NotFoundException if not.
+        This is an abstraction because we need to validate ids and return the label id's that don't exist."""
