@@ -4,7 +4,7 @@ from meldingen_core.models import Label, Melding
 from meldingen_core.repositories import BaseLabelRepository
 
 
-class LabelReplacer(metaclass=ABCMeta):
+class BaseLabelReplacer(metaclass=ABCMeta):
     label_repository: BaseLabelRepository[Label]
 
     def __init__(self, label_repository: BaseLabelRepository[Label]) -> None:
