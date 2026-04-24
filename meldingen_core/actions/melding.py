@@ -10,7 +10,7 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
-from meldingen_core.labels import LabelReplacer
+from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
@@ -105,9 +105,9 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
 class MeldingUpdateAction(BaseUpdateAction[Melding]):
     """Action that updates specific fields on a melding."""
 
-    _replace_labels: LabelReplacer
+    _replace_labels: BaseLabelReplacer
 
-    def __init__(self, repository: BaseMeldingRepository[Melding], label_adder: LabelReplacer) -> None:
+    def __init__(self, repository: BaseMeldingRepository[Melding], label_adder: BaseLabelReplacer) -> None:
         super().__init__(repository)
         self._replace_labels = label_adder
 
