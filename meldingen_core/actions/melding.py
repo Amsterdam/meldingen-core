@@ -105,9 +105,9 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
 class MeldingUpdateAction(BaseUpdateAction[Melding]):
     """Action that updates specific fields on a melding."""
 
-    _replace_labels: BaseLabelReplacer
+    _replace_labels: BaseLabelReplacer[Label, Melding]
 
-    def __init__(self, repository: BaseMeldingRepository[Melding], label_adder: BaseLabelReplacer) -> None:
+    def __init__(self, repository: BaseMeldingRepository[Melding], label_adder: BaseLabelReplacer[Label, Melding]) -> None:
         super().__init__(repository)
         self._replace_labels = label_adder
 
