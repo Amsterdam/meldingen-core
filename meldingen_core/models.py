@@ -42,7 +42,7 @@ class Melding:
     state: str | None = None
     assets: MutableSequence["Asset"] = field(default_factory=list)
     urgency: int = 0  # Expected values: -1 (less urgent), 0 (default), 1 (more urgent)
-    labels: MutableSequence[Label] = field(default_factory=list)
+    labels: Sequence[Label] = field(default_factory=list)
 
 
 @dataclass
