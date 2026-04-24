@@ -37,7 +37,7 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
-from meldingen_core.labels import LabelReplacer
+from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
@@ -118,7 +118,7 @@ async def test_melding_update_action() -> None:
     melding = Melding("text", urgency=0, labels=[Label(name="label 1")])
     repository.retrieve.return_value = melding
 
-    label_replacer = AsyncMock(LabelReplacer)
+    label_replacer = AsyncMock(BaseLabelReplacer)
 
     updated_melding = Melding("text", urgency=1, labels=[Label(name="label 2"), Label(name="label 3")])
     label_replacer.return_value = updated_melding
@@ -147,7 +147,7 @@ async def test_melding_update_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    label_replacer = AsyncMock(LabelReplacer)
+    label_replacer = AsyncMock(BaseLabelReplacer)
 
     action = MeldingUpdateAction(repository, label_replacer)
 
