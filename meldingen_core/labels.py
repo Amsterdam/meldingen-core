@@ -4,6 +4,8 @@ from meldingen_core.models import Label, Melding
 from meldingen_core.repositories import BaseLabelRepository
 
 
+class InvalidLabelException(Exception): ...
+
 class BaseLabelReplacer(metaclass=ABCMeta):
     label_repository: BaseLabelRepository[Label]
 
@@ -12,4 +14,4 @@ class BaseLabelReplacer(metaclass=ABCMeta):
 
     @abstractmethod
     async def __call__(self, melding: Melding, label_ids: list[int]) -> Melding:
-        """Abstraction to overwrite a melding's current labels with a new set. Will return the updated melding if they can all be found. Raises NotFoundException if not."""
+        """Abstraction to overwrite a melding's current labels with a new set. Will return the updated melding if they can all be found. Raises InvalidLabelException if not."""
