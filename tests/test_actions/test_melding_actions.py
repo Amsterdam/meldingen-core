@@ -123,7 +123,7 @@ async def test_melding_update_action() -> None:
     updated_melding = Melding("text", urgency=1, labels=[Label(name="label 2"), Label(name="label 3")])
     label_replacer.return_value = updated_melding
 
-    action = MeldingUpdateAction(repository, label_replacer)
+    action = MeldingUpdateAction[Label, Melding](repository, label_replacer)
     result = await action(
         123,
         {
@@ -149,7 +149,7 @@ async def test_melding_update_action_not_found() -> None:
 
     label_replacer = AsyncMock(BaseLabelReplacer)
 
-    action = MeldingUpdateAction(repository, label_replacer)
+    action = MeldingUpdateAction[Label, Melding](repository, label_replacer)
 
     with pytest.raises(NotFoundException):
         await action(123, {"urgency": 1})

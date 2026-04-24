@@ -31,6 +31,7 @@ C = TypeVar("C", bound=Classification)
 T = TypeVar("T", bound=Melding)
 AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
+L = TypeVar("L", bound=Label)
 
 
 class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
@@ -102,16 +103,16 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseUpdateAction[Melding]):
+class MeldingUpdateAction(Generic[L, T], BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
 
-    _replace_labels: BaseLabelReplacer[Label, Melding]
+    _replace_labels: BaseLabelReplacer[L, T]
 
-    def __init__(self, repository: BaseMeldingRepository[Melding], label_adder: BaseLabelReplacer[Label, Melding]) -> None:
+    def __init__(self, repository: BaseMeldingRepository[T], label_adder: BaseLabelReplacer[L, T]) -> None:
         super().__init__(repository)
         self._replace_labels = label_adder
 
-    async def __call__(self, pk: int, values: dict[str, Any]) -> Melding:
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
         # Pop everything that is not a direct attribute of the melding
         label_ids = values.pop("label_ids", None)
 
