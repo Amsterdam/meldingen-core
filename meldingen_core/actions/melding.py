@@ -115,7 +115,7 @@ class MeldingUpdateAction(BaseUpdateAction[T]):
     async def __call__(self, pk: int, values: dict[str, Any]) -> Melding:
         self._validate_data(values)
 
-        return super().__call__(pk, values)
+        return await super().__call__(pk, values)
 
 
 class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
