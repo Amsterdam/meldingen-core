@@ -12,19 +12,18 @@ from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
     BaseAssetTypeRepository,
-    BaseLabelRepository,
     BaseMeldingRepository,
     BaseRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
-from meldingen_core.validators import BaseMeldingUpdateValidator
+from meldingen_core.validators import BaseLabelValidator
 
 log = logging.getLogger(__name__)
 
@@ -106,14 +105,19 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
 class MeldingUpdateAction(BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
 
-    _validate_data: BaseMeldingUpdateValidator
+    _validate_labels: BaseLabelValidator
 
-    def __init__(self, repository: BaseMeldingRepository[T], melding_update_validator: BaseMeldingUpdateValidator) -> None:
+    def __init__(self, repository: BaseMeldingRepository[T], label_validator: BaseLabelValidator) -> None:
         super().__init__(repository)
-        self._validate_data = melding_update_validator
+        self._validate_labels = label_validator
 
-    async def __call__(self, pk: int, values: dict[str, Any]) -> Melding:
-        self._validate_data(values)
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
+        label_ids: list[int] | None = values.get("label_ids", None)
+
+        if label_ids is not None:
+            labels = await self._validate_labels(label_ids)
+            values["labels"] = labels
+            values.pop("label_ids", None)
 
         return await super().__call__(pk, values)
 
