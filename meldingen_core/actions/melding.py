@@ -103,7 +103,7 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(Generic[L, T], BaseUpdateAction[T]):
+class MeldingUpdateAction(Generic[T, L], BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
 
     _replace_labels: BaseLabelReplacer[L, T]
