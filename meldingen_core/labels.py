@@ -11,7 +11,7 @@ L = TypeVar("L", bound=Label)
 class InvalidLabelException(Exception): ...
 
 
-class BaseLabelReplacer(Generic[L, T], metaclass=ABCMeta):
+class BaseLabelReplacer(Generic[T, L], metaclass=ABCMeta):
     label_repository: BaseLabelRepository[L]
 
     def __init__(self, label_repository: BaseLabelRepository[L]) -> None:
