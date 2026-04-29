@@ -40,13 +40,14 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Source
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
     BaseAssetTypeRepository,
     BaseMeldingRepository,
+    BaseSourceRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
@@ -123,7 +124,9 @@ async def test_melding_update_action() -> None:
     updated_melding = Melding("text", urgency=1, labels=[Label(name="label 2"), Label(name="label 3")])
     label_replacer.return_value = updated_melding
 
-    action = MeldingUpdateAction[Melding, Label](repository, label_replacer)
+    source_repository = Mock(BaseSourceRepository)
+
+    action = MeldingUpdateAction[Melding, Label, Source](repository, label_replacer, source_repository)
     result = await action(
         123,
         {
@@ -140,6 +143,40 @@ async def test_melding_update_action() -> None:
 
     repository.save.assert_called_once_with(updated_melding)
     label_replacer.assert_awaited_once()
+    source_repository.retrieve.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_with_source_id() -> None:
+    repository = Mock(BaseMeldingRepository)
+    melding = Melding("text")
+    repository.retrieve.return_value = melding
+
+    source = Source(name="telephone")
+    source_repository = Mock(BaseSourceRepository)
+    source_repository.retrieve = AsyncMock(return_value=source)
+
+    action = MeldingUpdateAction[Melding, Label, Source](repository, AsyncMock(BaseLabelReplacer), source_repository)
+
+    result = await action(123, {"source_id": 7})
+
+    assert result.source is source
+    source_repository.retrieve.assert_awaited_once_with(pk=7)
+    repository.save.assert_called_once_with(melding)
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_source_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text")
+
+    source_repository = Mock(BaseSourceRepository)
+    source_repository.retrieve = AsyncMock(return_value=None)
+
+    action = MeldingUpdateAction[Melding, Label, Source](repository, AsyncMock(BaseLabelReplacer), source_repository)
+
+    with pytest.raises(NotFoundException):
+        await action(123, {"source_id": 99})
 
 
 @pytest.mark.anyio
@@ -149,7 +186,7 @@ async def test_melding_update_action_not_found() -> None:
 
     label_replacer = AsyncMock(BaseLabelReplacer)
 
-    action = MeldingUpdateAction[Melding, Label](repository, label_replacer)
+    action = MeldingUpdateAction[Melding, Label, Source](repository, label_replacer, Mock(BaseSourceRepository))
 
     with pytest.raises(NotFoundException):
         await action(123, {"urgency": 1})

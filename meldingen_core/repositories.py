@@ -14,6 +14,7 @@ from meldingen_core.models import (
     Label,
     Melding,
     Question,
+    Source,
     User,
 )
 
@@ -120,3 +121,10 @@ L = TypeVar("L", bound=Label)
 class BaseLabelRepository(BaseRepository[L], metaclass=ABCMeta):
     @abstractmethod
     async def list_by_ids(self, ids: list[int]) -> Sequence[L]: ...
+
+
+S = TypeVar("S", bound=Source)
+
+
+class BaseSourceRepository(BaseRepository[S], metaclass=ABCMeta):
+    """Repository for Source."""
