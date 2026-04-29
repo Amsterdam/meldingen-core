@@ -18,4 +18,3 @@ class BaseMediaTypeIntegrityValidator(metaclass=ABCMeta):
     def __call__(self, media_type: str, data: bytes) -> None:
         """Checks if the provided media type matches the media type that is determined from the provided data,
         raises MediaTypeIntegrityError if not."""
-
