@@ -10,9 +10,10 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -30,6 +31,7 @@ C = TypeVar("C", bound=Classification)
 T = TypeVar("T", bound=Melding)
 AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
+L = TypeVar("L", bound=Label)
 
 
 class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
@@ -101,8 +103,32 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(BaseUpdateAction[T]):
+class MeldingUpdateAction(Generic[T, L], BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
+
+    _replace_labels: BaseLabelReplacer[T, L]
+
+    def __init__(self, repository: BaseMeldingRepository[T], label_adder: BaseLabelReplacer[T, L]) -> None:
+        super().__init__(repository)
+        self._replace_labels = label_adder
+
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
+        # Pop everything that is not a direct attribute of the melding
+        label_ids = values.pop("label_ids", None)
+
+        melding = await self._repository.retrieve(pk=pk)
+        if melding is None:
+            raise NotFoundException()
+
+        for key, value in values.items():
+            setattr(melding, key, value)
+
+        if label_ids is not None:
+            melding = await self._replace_labels(melding, label_ids)
+
+        await self._repository.save(melding)
+
+        return melding
 
 
 class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from typing import MutableSequence
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -36,9 +37,10 @@ from meldingen_core.classification import ClassificationNotFoundException, Class
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -113,15 +115,31 @@ def test_can_instantiate_melding_retrieve_action() -> None:
 @pytest.mark.anyio
 async def test_melding_update_action() -> None:
     repository = Mock(BaseMeldingRepository)
-    melding = Melding("text", urgency=0)
+    melding = Melding("text", urgency=0, labels=[Label(name="label 1")])
     repository.retrieve.return_value = melding
 
-    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(repository)
+    label_replacer = AsyncMock(BaseLabelReplacer)
 
-    result = await action(123, {"urgency": 1})
+    updated_melding = Melding("text", urgency=1, labels=[Label(name="label 2"), Label(name="label 3")])
+    label_replacer.return_value = updated_melding
+
+    action = MeldingUpdateAction[Melding, Label](repository, label_replacer)
+    result = await action(
+        123,
+        {
+            "urgency": 1,
+            "label_ids": [
+                2,
+                3,
+            ],
+        },
+    )
 
     assert result.urgency == 1
-    repository.save.assert_called_once_with(melding)
+    assert len(result.labels) == 2
+
+    repository.save.assert_called_once_with(updated_melding)
+    label_replacer.assert_awaited_once()
 
 
 @pytest.mark.anyio
@@ -129,7 +147,9 @@ async def test_melding_update_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    action: MeldingUpdateAction[Melding] = MeldingUpdateAction(repository)
+    label_replacer = AsyncMock(BaseLabelReplacer)
+
+    action = MeldingUpdateAction[Melding, Label](repository, label_replacer)
 
     with pytest.raises(NotFoundException):
         await action(123, {"urgency": 1})
