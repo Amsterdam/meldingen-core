@@ -977,9 +977,9 @@ async def test_delete_asset_asset_exists() -> None:
 
 
 @pytest.mark.anyio
-async def test_delete_answer_answer_does_not_exist() -> None:
+async def test_delete_answer_not_found_for_melding() -> None:
     answer_repository = Mock(BaseAnswerRepository)
-    answer_repository.retrieve.return_value = None
+    answer_repository.find_by_id_and_melding = AsyncMock(return_value=None)
 
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = Melding("text")
@@ -992,18 +992,14 @@ async def test_delete_answer_answer_does_not_exist() -> None:
     with pytest.raises(NotFoundException):
         await action(123, 456, "token")
 
+    answer_repository.delete.assert_not_called()
+
 
 @pytest.mark.anyio
-async def test_delete_answer_answer_does_not_belong_to_melding() -> None:
-    melding = Melding("text")
-    other_melding = Melding("other text")
-    answer = Answer(question=Question("question text"), melding=other_melding)
-
+async def test_delete_answer_invalid_token() -> None:
     answer_repository = Mock(BaseAnswerRepository)
-    answer_repository.retrieve.return_value = answer
 
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = melding
+    token_verifier = AsyncMock(TokenVerifier, side_effect=NotFoundException)
 
     action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
         token_verifier,
@@ -1022,7 +1018,7 @@ async def test_delete_answer_answer_exists() -> None:
     answer = Answer(question=Question("question text"), melding=melding)
 
     answer_repository = Mock(BaseAnswerRepository)
-    answer_repository.retrieve.return_value = answer
+    answer_repository.find_by_id_and_melding = AsyncMock(return_value=answer)
 
     token_verifier = AsyncMock(TokenVerifier)
     token_verifier.return_value = melding
@@ -1034,4 +1030,5 @@ async def test_delete_answer_answer_exists() -> None:
 
     await action(123, 456, "token")
 
+    answer_repository.find_by_id_and_melding.assert_awaited_once_with(456, 123)
     answer_repository.delete.assert_awaited_once_with(456)
