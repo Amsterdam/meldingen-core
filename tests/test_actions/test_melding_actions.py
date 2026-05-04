@@ -12,6 +12,7 @@ from meldingen_core.actions.melding import (
     MeldingAddAssetAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
+    MeldingAnswerDeleteAction,
     MeldingAnswerQuestionsAction,
     MeldingCancelAction,
     MeldingCompleteAction,
@@ -38,7 +39,7 @@ from meldingen_core.factories import BaseAssetFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Melding, Question
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -973,3 +974,61 @@ async def test_delete_asset_asset_exists() -> None:
     await action(123, 456, "token")
 
     asset_repository.delete.assert_awaited_once_with(456)
+
+
+@pytest.mark.anyio
+async def test_delete_answer_not_found_for_melding() -> None:
+    answer_repository = Mock(BaseAnswerRepository)
+    answer_repository.find_by_id_and_melding = AsyncMock(return_value=None)
+
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = Melding("text")
+
+    action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
+        token_verifier,
+        answer_repository,
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, 456, "token")
+
+    answer_repository.delete.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_delete_answer_invalid_token() -> None:
+    answer_repository = Mock(BaseAnswerRepository)
+
+    token_verifier = AsyncMock(TokenVerifier, side_effect=NotFoundException)
+
+    action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
+        token_verifier,
+        answer_repository,
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(123, 456, "token")
+
+    answer_repository.delete.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_delete_answer_answer_exists() -> None:
+    melding = Melding("text")
+    answer = Answer(question=Question("question text"), melding=melding)
+
+    answer_repository = Mock(BaseAnswerRepository)
+    answer_repository.find_by_id_and_melding = AsyncMock(return_value=answer)
+
+    token_verifier = AsyncMock(TokenVerifier)
+    token_verifier.return_value = melding
+
+    action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
+        token_verifier,
+        answer_repository,
+    )
+
+    await action(123, 456, "token")
+
+    answer_repository.find_by_id_and_melding.assert_awaited_once_with(456, 123)
+    answer_repository.delete.assert_awaited_once_with(456)

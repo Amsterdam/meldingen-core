@@ -75,6 +75,9 @@ class BaseAnswerRepository(BaseRepository[Ans], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_melding(self, melding_id: int) -> Sequence[Ans]: ...
 
+    @abstractmethod
+    async def find_by_id_and_melding(self, answer_id: int, melding_id: int) -> Ans | None: ...
+
 
 A = TypeVar("A", bound=Attachment)
 

@@ -367,6 +367,28 @@ class MeldingListQuestionsAnswersAction(Generic[A]):
         return await self._answer_repository.find_by_melding(melding_id)
 
 
+class MeldingAnswerDeleteAction(Generic[T, A]):
+    _verify_token: TokenVerifier[T]
+    _answer_repository: BaseAnswerRepository[A]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[T],
+        answer_repository: BaseAnswerRepository[A],
+    ) -> None:
+        self._verify_token = token_verifier
+        self._answer_repository = answer_repository
+
+    async def __call__(self, melding_id: int, answer_id: int, token: str) -> None:
+        await self._verify_token(melding_id, token)
+
+        answer = await self._answer_repository.find_by_id_and_melding(answer_id, melding_id)
+        if answer is None:
+            raise NotFoundException(f"Melding with id {melding_id} does not have answer with id {answer_id}")
+
+        await self._answer_repository.delete(answer_id)
+
+
 class MeldingSubmitActionMelder(BaseCRUDAction[T]):
     _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
