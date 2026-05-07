@@ -12,7 +12,7 @@ class InvalidLabelException(Exception): ...
 
 
 class BaseLabelReplacer(Generic[T, L], metaclass=ABCMeta):
-    _label_repository: BaseLabelRepository[L]
+    label_repository: BaseLabelRepository[L]
 
     def __init__(self, label_repository: BaseLabelRepository[L]) -> None:
         self._label_repository = label_repository

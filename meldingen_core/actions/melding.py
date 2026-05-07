@@ -13,7 +13,7 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Source
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -21,6 +21,7 @@ from meldingen_core.repositories import (
     BaseAssetTypeRepository,
     BaseMeldingRepository,
     BaseRepository,
+    BaseSourceRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
@@ -32,6 +33,7 @@ T = TypeVar("T", bound=Melding)
 AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
 L = TypeVar("L", bound=Label)
+S = TypeVar("S", bound=Source)
 
 
 class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
@@ -103,18 +105,26 @@ class MeldingRetrieveAction(BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(Generic[T, L], BaseUpdateAction[T]):
+class MeldingUpdateAction(Generic[T, L, S], BaseUpdateAction[T]):
     """Action that updates specific fields on a melding."""
 
     _replace_labels: BaseLabelReplacer[T, L]
+    _source_repository: BaseSourceRepository[S]
 
-    def __init__(self, repository: BaseMeldingRepository[T], label_adder: BaseLabelReplacer[T, L]) -> None:
+    def __init__(
+        self,
+        repository: BaseMeldingRepository[T],
+        label_adder: BaseLabelReplacer[T, L],
+        source_repository: BaseSourceRepository[S],
+    ) -> None:
         super().__init__(repository)
         self._replace_labels = label_adder
+        self._source_repository = source_repository
 
     async def __call__(self, pk: int, values: dict[str, Any]) -> T:
         # Pop everything that is not a direct attribute of the melding
         label_ids = values.pop("label_ids", None)
+        source_id = values.pop("source_id", None)
 
         melding = await self._repository.retrieve(pk=pk)
         if melding is None:
@@ -125,6 +135,12 @@ class MeldingUpdateAction(Generic[T, L], BaseUpdateAction[T]):
 
         if label_ids is not None:
             melding = await self._replace_labels(melding, label_ids)
+
+        if source_id is not None:
+            source = await self._source_repository.retrieve(pk=source_id)
+            if source is None:
+                raise NotFoundException(f"Failed to find source with id {source_id}")
+            melding.source = source
 
         await self._repository.save(melding)
 

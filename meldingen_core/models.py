@@ -26,6 +26,11 @@ class Label:
 
 
 @dataclass
+class Source:
+    name: str
+
+
+@dataclass
 class Melding:
     text: str
     classification: Classification | None = None
@@ -43,6 +48,7 @@ class Melding:
     assets: MutableSequence["Asset"] = field(default_factory=list)
     urgency: int = 0  # Expected values: -1 (less urgent), 0 (default), 1 (more urgent)
     labels: Sequence[Label] = field(default_factory=list)
+    source: Source | None = None
 
 
 @dataclass
