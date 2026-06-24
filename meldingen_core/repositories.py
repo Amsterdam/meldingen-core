@@ -13,6 +13,7 @@ from meldingen_core.models import (
     Form,
     Label,
     Melding,
+    Note,
     Question,
     Source,
     User,
@@ -131,3 +132,10 @@ S = TypeVar("S", bound=Source)
 
 class BaseSourceRepository(BaseRepository[S], metaclass=ABCMeta):
     """Repository for Source."""
+
+
+N = TypeVar("N", bound=Note)
+
+
+class BaseNoteRepository(BaseRepository[N], metaclass=ABCMeta):
+    """Repository for Note."""
