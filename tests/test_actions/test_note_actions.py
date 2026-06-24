@@ -28,9 +28,7 @@ async def test_note_create_action() -> None:
     melding_repository.retrieve = AsyncMock(return_value=melding)
     note_factory = Mock(BaseNoteFactory, return_value=note)
 
-    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(
-        note_repository, melding_repository, note_factory
-    )
+    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(note_repository, melding_repository, note_factory)
 
     result = await action(123, "a note", user)
 
@@ -50,9 +48,7 @@ async def test_note_create_action_raises_not_found_when_melding_does_not_exist()
     melding_repository.retrieve = AsyncMock(return_value=None)
     note_factory = Mock(BaseNoteFactory)
 
-    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(
-        note_repository, melding_repository, note_factory
-    )
+    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(note_repository, melding_repository, note_factory)
 
     with pytest.raises(NotFoundException):
         await action(123, "a note", user)
