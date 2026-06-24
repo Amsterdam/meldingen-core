@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from meldingen_core.actions.note import NoteCreateAction
+from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
@@ -55,3 +55,33 @@ async def test_note_create_action_raises_not_found_when_melding_does_not_exist()
 
     note_factory.assert_not_called()
     note_repository.save.assert_not_awaited()
+
+
+def test_can_instantiate_note_retrieve_action() -> None:
+    action: NoteRetrieveAction[Note] = NoteRetrieveAction(Mock(BaseNoteRepository))
+    assert isinstance(action, NoteRetrieveAction)
+
+
+@pytest.mark.anyio
+async def test_note_retrieve_action() -> None:
+    note = Mock(Note)
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=note)
+
+    action: NoteRetrieveAction[Note] = NoteRetrieveAction(note_repository)
+
+    result = await action(5, 9)
+
+    assert result is note
+    note_repository.find_by_id_and_melding.assert_awaited_once_with(9, 5)
+
+
+@pytest.mark.anyio
+async def test_note_retrieve_action_raises_not_found_when_note_does_not_exist() -> None:
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=None)
+
+    action: NoteRetrieveAction[Note] = NoteRetrieveAction(note_repository)
+
+    with pytest.raises(NotFoundException):
+        await action(5, 9)

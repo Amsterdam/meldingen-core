@@ -36,3 +36,19 @@ class NoteCreateAction(Generic[N, T, U]):
         await self._note_repository.save(note)
 
         return note
+
+
+class NoteRetrieveAction(Generic[N]):
+    """Action that retrieves a single note belonging to a melding."""
+
+    _note_repository: BaseNoteRepository[N]
+
+    def __init__(self, note_repository: BaseNoteRepository[N]) -> None:
+        self._note_repository = note_repository
+
+    async def __call__(self, melding_id: int, note_id: int) -> N:
+        note = await self._note_repository.find_by_id_and_melding(note_id, melding_id)
+        if note is None:
+            raise NotFoundException()
+
+        return note

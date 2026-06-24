@@ -138,4 +138,5 @@ N = TypeVar("N", bound=Note)
 
 
 class BaseNoteRepository(BaseRepository[N], metaclass=ABCMeta):
-    """Repository for Note."""
+    @abstractmethod
+    async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> N | None: ...
