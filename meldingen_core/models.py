@@ -95,3 +95,10 @@ class Attachment:
     optimized_media_type: str | None = None
     thumbnail_path: str | None = None
     thumbnail_media_type: str | None = None
+
+
+@dataclass
+class Note:
+    text: str
+    melding: Melding
+    user: User

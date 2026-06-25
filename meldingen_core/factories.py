@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Generic, TypeVar
 
-from meldingen_core.models import Asset, AssetType, Attachment, Melding
+from meldingen_core.models import Asset, AssetType, Attachment, Melding, Note, User
 
 A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
@@ -19,3 +19,12 @@ AT = TypeVar("AT", bound=AssetType)
 class BaseAssetFactory(Generic[AS, AT, M], metaclass=ABCMeta):
     @abstractmethod
     def __call__(self, external_id: str, asset_type: AT, melding: M) -> AS: ...
+
+
+N = TypeVar("N", bound=Note)
+U = TypeVar("U", bound=User)
+
+
+class BaseNoteFactory(Generic[N, M, U], metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self, text: str, melding: M, user: U) -> N: ...
