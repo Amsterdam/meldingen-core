@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
@@ -52,3 +53,25 @@ class NoteRetrieveAction(Generic[N]):
             raise NotFoundException()
 
         return note
+
+
+class NoteListAction(Generic[N, T]):
+    """Action that lists the notes belonging to a melding."""
+
+    _note_repository: BaseNoteRepository[N]
+    _melding_repository: BaseMeldingRepository[T]
+
+    def __init__(
+        self,
+        note_repository: BaseNoteRepository[N],
+        melding_repository: BaseMeldingRepository[T],
+    ) -> None:
+        self._note_repository = note_repository
+        self._melding_repository = melding_repository
+
+    async def __call__(self, melding_id: int) -> Sequence[N]:
+        melding = await self._melding_repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException()
+
+        return await self._note_repository.find_by_melding(melding_id)

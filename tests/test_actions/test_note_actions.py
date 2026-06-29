@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
@@ -85,3 +85,42 @@ async def test_note_retrieve_action_raises_not_found_when_note_does_not_exist() 
 
     with pytest.raises(NotFoundException):
         await action(5, 9)
+
+
+def test_can_instantiate_note_list_action() -> None:
+    action: NoteListAction[Note, Melding] = NoteListAction(Mock(BaseNoteRepository), Mock(BaseMeldingRepository))
+    assert isinstance(action, NoteListAction)
+
+
+@pytest.mark.anyio
+async def test_note_list_action() -> None:
+    melding = Melding(text="melding")
+    notes = [Mock(Note), Mock(Note)]
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_melding = AsyncMock(return_value=notes)
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+
+    action: NoteListAction[Note, Melding] = NoteListAction(note_repository, melding_repository)
+
+    result = await action(123)
+
+    assert result is notes
+    melding_repository.retrieve.assert_awaited_once_with(123)
+    note_repository.find_by_melding.assert_awaited_once_with(123)
+
+
+@pytest.mark.anyio
+async def test_note_list_action_raises_not_found_when_melding_does_not_exist() -> None:
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_melding = AsyncMock()
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=None)
+
+    action: NoteListAction[Note, Melding] = NoteListAction(note_repository, melding_repository)
+
+    with pytest.raises(NotFoundException):
+        await action(123)
+
+    note_repository.find_by_melding.assert_not_awaited()
