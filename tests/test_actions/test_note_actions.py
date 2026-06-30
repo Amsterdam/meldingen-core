@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
+from meldingen_core.exceptions import ForbiddenException, NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
 from meldingen_core.repositories import BaseMeldingRepository, BaseNoteRepository
@@ -124,3 +124,81 @@ async def test_note_list_action_raises_not_found_when_melding_does_not_exist() -
         await action(123)
 
     note_repository.find_by_melding.assert_not_awaited()
+
+
+def test_can_instantiate_note_update_action() -> None:
+    action: NoteUpdateAction[Note, User] = NoteUpdateAction(Mock(BaseNoteRepository))
+    assert isinstance(action, NoteUpdateAction)
+
+
+@pytest.mark.anyio
+async def test_note_update_action() -> None:
+    user = User(username="behandelaar", email="behandelaar@example.com")
+    note = Mock(Note)
+    note.user = user
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=note)
+    note_repository.save = AsyncMock()
+
+    action: NoteUpdateAction[Note, User] = NoteUpdateAction(note_repository)
+
+    result = await action(5, 9, "updated text", user)
+
+    assert result is note
+    assert note.text == "updated text"
+    note_repository.find_by_id_and_melding.assert_awaited_once_with(9, 5)
+    note_repository.save.assert_awaited_once_with(note)
+
+
+@pytest.mark.anyio
+async def test_note_update_action_allows_empty_text() -> None:
+    user = User(username="behandelaar", email="behandelaar@example.com")
+    note = Mock(Note)
+    note.user = user
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=note)
+    note_repository.save = AsyncMock()
+
+    action: NoteUpdateAction[Note, User] = NoteUpdateAction(note_repository)
+
+    await action(5, 9, "", user)
+
+    assert note.text == ""
+    note_repository.save.assert_awaited_once_with(note)
+
+
+@pytest.mark.anyio
+async def test_note_update_action_raises_not_found_when_note_does_not_exist() -> None:
+    user = User(username="behandelaar", email="behandelaar@example.com")
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=None)
+    note_repository.save = AsyncMock()
+
+    action: NoteUpdateAction[Note, User] = NoteUpdateAction(note_repository)
+
+    with pytest.raises(NotFoundException):
+        await action(5, 9, "text", user)
+
+    note_repository.save.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_note_update_action_raises_forbidden_when_user_is_not_owner() -> None:
+    owner = User(username="owner", email="owner@example.com")
+    other = User(username="other", email="other@example.com")
+    note = Mock(Note)
+    note.user = owner
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=note)
+    note_repository.save = AsyncMock()
+
+    action: NoteUpdateAction[Note, User] = NoteUpdateAction(note_repository)
+
+    with pytest.raises(ForbiddenException):
+        await action(5, 9, "text", other)
+
+    note_repository.save.assert_not_awaited()

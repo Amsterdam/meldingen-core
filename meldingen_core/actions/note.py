@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Generic, TypeVar
 
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.exceptions import ForbiddenException, NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
 from meldingen_core.repositories import BaseMeldingRepository, BaseNoteRepository
@@ -75,3 +75,28 @@ class NoteListAction(Generic[N, T]):
             raise NotFoundException()
 
         return await self._note_repository.find_by_melding(melding_id)
+
+
+class NoteUpdateAction(Generic[N, U]):
+    """Action that updates the text of a note. Only the user that owns the note may update it."""
+
+    _note_repository: BaseNoteRepository[N]
+
+    def __init__(self, note_repository: BaseNoteRepository[N]) -> None:
+        self._note_repository = note_repository
+
+    async def __call__(self, melding_id: int, note_id: int, text: str, user: U) -> N:
+        note = await self._note_repository.find_by_id_and_melding(note_id, melding_id)
+        if note is None:
+            raise NotFoundException()
+
+        # Notes may only be edited by the user that created them. Users are identified by their
+        # (unique) email, which is also what authentication resolves them by; comparing the whole
+        # user objects would needlessly load relationships.
+        if note.user.email != user.email:
+            raise ForbiddenException()
+
+        note.text = text
+        await self._note_repository.save(note)
+
+        return note
