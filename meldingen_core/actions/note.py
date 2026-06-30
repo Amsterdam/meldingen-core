@@ -75,3 +75,26 @@ class NoteListAction(Generic[N, T]):
             raise NotFoundException()
 
         return await self._note_repository.find_by_melding(melding_id)
+
+
+class NoteUpdateAction(Generic[N]):
+    """Action that updates the text of a note belonging to a melding.
+
+    Whether the acting user is allowed to update the note (e.g. ownership) is the
+    responsibility of the caller.
+    """
+
+    _note_repository: BaseNoteRepository[N]
+
+    def __init__(self, note_repository: BaseNoteRepository[N]) -> None:
+        self._note_repository = note_repository
+
+    async def __call__(self, melding_id: int, note_id: int, text: str) -> N:
+        note = await self._note_repository.find_by_id_and_melding(note_id, melding_id)
+        if note is None:
+            raise NotFoundException()
+
+        note.text = text
+        await self._note_repository.save(note)
+
+        return note
