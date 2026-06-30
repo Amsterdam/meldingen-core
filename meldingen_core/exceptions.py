@@ -1,6 +1,9 @@
 class NotFoundException(Exception): ...
 
 
+class ForbiddenException(Exception): ...
+
+
 class LimitReachedException(Exception): ...
 
 
