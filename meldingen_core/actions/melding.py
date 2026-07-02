@@ -1,6 +1,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, cast, override
 
@@ -470,6 +471,16 @@ class MeldingSubmitActionMelder(BaseCRUDAction[T]):
         return MeldingTransitions.SUBMIT
 
 
+@dataclass
+class AssetData:
+    """The fields needed to create an asset when adding it to a melding."""
+
+    external_id: str
+    asset_type_id: int
+    label: str
+    subtype: str
+
+
 class MeldingAddAssetAction(Generic[T, AS, AT]):
     _verify_token: TokenVerifier[T]
     _melding_repository: BaseMeldingRepository[T]
@@ -494,7 +505,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
-    async def __call__(self, melding_id: int, external_asset_id: str, asset_type_id: int, token: str) -> T:
+    async def __call__(self, melding_id: int, data: AssetData, token: str) -> T:
         melding = await self._verify_token(melding_id, token)
 
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
@@ -502,9 +513,9 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         if melding_asset_type is None:
             raise NotFoundException(f"Failed to find asset type for melding")
 
-        asset_type = await self._asset_type_repository.retrieve(asset_type_id)
+        asset_type = await self._asset_type_repository.retrieve(data.asset_type_id)
         if asset_type is None:
-            raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
+            raise NotFoundException(f"Failed to find asset type with id {data.asset_type_id}")
 
         if asset_type is not melding_asset_type:
             raise InvalidInputException("The melding has a different asset type associated than the one being added")
@@ -516,9 +527,9 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
                 f"Melding with id {melding_id} already has the maximum number of assets for asset type {asset_type.name} associated"
             )
 
-        asset = await self._asset_repository.find_by_external_id_and_asset_type_id(external_asset_id, asset_type_id)
+        asset = await self._asset_repository.find_by_external_id_and_asset_type_id(data.external_id, data.asset_type_id)
         if asset is None:
-            asset = self._create_asset(external_asset_id, asset_type, melding)
+            asset = self._create_asset(data.external_id, asset_type, melding, data.label, data.subtype)
             await self._asset_repository.save(asset)
 
         await self._melding_asset_relationship_manager.add_relationship(melding, asset)

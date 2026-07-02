@@ -56,6 +56,8 @@ class Asset:
     external_id: str
     type: AssetType
     melding: Melding
+    label: str
+    subtype: str
 
 
 @dataclass
