@@ -724,7 +724,7 @@ async def test_add_asset_asset_type_not_found() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -750,7 +750,7 @@ async def test_add_asset_asset_does_not_yet_exist() -> None:
         relationship_manager,
     )
 
-    melding = await action(123, "external_id", 456, "token")
+    melding = await action(123, "external_id", 456, "label", "subtype", "token")
     assert melding is not None
 
 
@@ -774,7 +774,7 @@ async def test_add_asset_asset_exists() -> None:
         relationship_manager,
     )
 
-    melding = await action(123, "external_id", 456, "token")
+    melding = await action(123, "external_id", 456, "label", "subtype", "token")
     assert melding is not None
 
 
@@ -799,7 +799,7 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -823,7 +823,7 @@ async def test_add_asset_asset_type_does_not_exist() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -849,7 +849,7 @@ async def test_add_asset_wrong_asset_type() -> None:
     )
 
     with pytest.raises(InvalidInputException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -874,7 +874,7 @@ async def test_add_asset_already_linked() -> None:
     )
 
     with pytest.raises(RelationshipExistsException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -901,7 +901,7 @@ async def test_add_asset_limit_exceeded() -> None:
     )
 
     with pytest.raises(LimitReachedException):
-        await action(123, "external_id", 456, "token")
+        await action(123, "external_id", 456, "label", "subtype", "token")
 
 
 @pytest.mark.anyio
@@ -986,6 +986,8 @@ async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
         external_id="external_id",
         type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3),
         melding=melding,
+        label="label",
+        subtype="subtype",
     )
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = asset
@@ -1012,6 +1014,8 @@ async def test_delete_asset_asset_exists() -> None:
         external_id="external_id",
         type=AssetType(name="type", class_name="class_name", arguments={}, max_assets=3),
         melding=melding,
+        label="label",
+        subtype="subtype",
     )
     melding.assets = [asset]
     asset_repository = Mock(BaseAssetRepository)
