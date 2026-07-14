@@ -139,7 +139,13 @@ N = TypeVar("N", bound=Note)
 
 class BaseNoteRepository(BaseRepository[N], metaclass=ABCMeta):
     @abstractmethod
-    async def find_by_melding(self, melding_id: int) -> Sequence[N]: ...
+    async def find_by_melding(
+        self,
+        melding_id: int,
+        *,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Sequence[N]: ...
 
     @abstractmethod
     async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> N | None: ...

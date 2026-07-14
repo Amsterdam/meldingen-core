@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from meldingen_core import SortingDirection
 from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
@@ -108,7 +109,27 @@ async def test_note_list_action() -> None:
 
     assert result is notes
     melding_repository.retrieve.assert_awaited_once_with(123)
-    note_repository.find_by_melding.assert_awaited_once_with(123)
+    note_repository.find_by_melding.assert_awaited_once_with(123, sort_attribute_name=None, sort_direction=None)
+
+
+@pytest.mark.anyio
+async def test_note_list_action_passes_sorting_to_repository() -> None:
+    melding = Melding(text="melding")
+    notes = [Mock(Note), Mock(Note)]
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_melding = AsyncMock(return_value=notes)
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+
+    action: NoteListAction[Note, Melding] = NoteListAction(note_repository, melding_repository)
+
+    result = await action(123, sort_attribute_name="created_at", sort_direction=SortingDirection.DESC)
+
+    assert result is notes
+    note_repository.find_by_melding.assert_awaited_once_with(
+        123, sort_attribute_name="created_at", sort_direction=SortingDirection.DESC
+    )
 
 
 @pytest.mark.anyio
