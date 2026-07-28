@@ -9,7 +9,7 @@ M = TypeVar("M", bound=Melding)
 
 class BaseAttachmentFactory(Generic[A, M], metaclass=ABCMeta):
     @abstractmethod
-    def __call__(self, original_filename: str, melding: M, media_type: str) -> A: ...
+    def __call__(self, original_filename: str, melding: M, media_type: str, user: User | None) -> A: ...
 
 
 AS = TypeVar("AS", bound=Asset)

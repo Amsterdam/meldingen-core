@@ -12,12 +12,13 @@ from meldingen_core.actions.attachment import (
     ListAttachmentsAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
+    MelderUploadAttachmentAction,
     UploadAttachmentAction,
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
-from meldingen_core.models import Attachment, Melding
+from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository
 from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
@@ -28,7 +29,7 @@ async def _iterator() -> AsyncIterator[bytes]:
         yield chunk
 
 
-class TestUploadAttachmentAction:
+class TestMelderUploadAttachmentAction:
     @pytest.mark.anyio
     async def test_can_handle_attachment(self) -> None:
         melding = Melding("melding text")
@@ -38,10 +39,10 @@ class TestUploadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
-        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+        action: MelderUploadAttachmentAction[Attachment, Melding] = MelderUploadAttachmentAction(
+            token_verifier,
             Mock(BaseAttachmentFactory),
             attachment_repository,
-            token_verifier,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
             AsyncMock(BaseIngestor),
@@ -74,7 +75,7 @@ class TestMelderDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
         attachment = Attachment(
-            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
         )
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -98,7 +99,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.original_media_type = "image/png"
         attachment.optimized_path = "/path/to/file-optimized.ext"
@@ -123,7 +124,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -146,7 +147,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.optimized_path = "/path/to/file-optimized.ext"
 
@@ -170,7 +171,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -193,7 +194,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
 
@@ -217,7 +218,7 @@ class TestMelderDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -262,7 +263,7 @@ class TestDownloadAttachmentAction:
     async def test_can_handle_attachment_download(self, _type: AttachmentTypes) -> None:
         melding = Melding(text="text")
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.original_media_type = "image/png"
         attachment.optimized_path = "/path/to/file-optimized.ext"
@@ -286,7 +287,7 @@ class TestDownloadAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -306,7 +307,7 @@ class TestDownloadAttachmentAction:
     async def test_optimized_media_type_none(self) -> None:
         melding = Melding(text="text")
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.optimized_path = "/path/to/file-optimized.ext"
 
@@ -325,7 +326,7 @@ class TestDownloadAttachmentAction:
 
     @pytest.mark.anyio
     async def test_thumbnail_path_none(self) -> None:
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=Mock(Melding))
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=Mock(Melding))
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -343,7 +344,7 @@ class TestDownloadAttachmentAction:
 
     @pytest.mark.anyio
     async def test_thumbnail_media_type_none(self) -> None:
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=Mock(Melding))
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=Mock(Melding))
         attachment.file_path = "/path/to/file.ext"
         attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
 
@@ -364,7 +365,7 @@ class TestDownloadAttachmentAction:
     async def test_file_not_found(self) -> None:
         melding = Melding(text="text")
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -440,7 +441,7 @@ class TestDeleteAttachmentAction:
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
         attachment = Attachment(
-            original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
         )
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -463,7 +464,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -489,7 +490,7 @@ class TestDeleteAttachmentAction:
         token_verifier = AsyncMock(TokenVerifier)
         token_verifier.return_value = melding
 
-        attachment = Attachment(original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
 
         attachment_repository = Mock(BaseAttachmentRepository)
@@ -507,3 +508,30 @@ class TestDeleteAttachmentAction:
 
         filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
         attachment_repository.delete.assert_awaited_once_with(456)
+
+
+class TestUploadAttachmentAction:
+    @pytest.mark.anyio
+    async def test_can_handle_attachment(self) -> None:
+        melding = Melding(text="melding text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        user = User(id=1, username="behandelaar", email="user@example.com")
+
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment])
+        attachment_repository.save = AsyncMock()
+
+        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+            Mock(BaseAttachmentFactory),
+            attachment_repository,
+            Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseIngestor),
+        )
+
+        iterator = _iterator()
+
+        attachment = await action(melding, "original_filename.ext", "image/png", b"test", iterator, user)
+
+        attachment_repository.save.assert_awaited_once_with(attachment)

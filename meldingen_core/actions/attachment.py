@@ -8,7 +8,7 @@ from plugfs.filesystem import Filesystem
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
-from meldingen_core.models import Attachment, Melding
+from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository
 from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
@@ -17,11 +17,10 @@ A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
 
 
-class UploadAttachmentAction(Generic[A, M]):
+class BaseUploadAttachmentAction(Generic[A, M]):
     _create_attachment: BaseAttachmentFactory[A, M]
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
-    _verify_token: TokenVerifier[M]
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
@@ -31,17 +30,51 @@ class UploadAttachmentAction(Generic[A, M]):
         self,
         attachment_factory: BaseAttachmentFactory[A, M],
         attachment_repository: BaseAttachmentRepository[A],
-        token_verifier: TokenVerifier[M],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
         ingestor: BaseIngestor[A],
     ):
         self._create_attachment = attachment_factory
         self._attachment_repository = attachment_repository
-        self._verify_token = token_verifier
         self._validate_media_type = media_type_validator
         self._validate_media_type_integrity = media_type_integrity_validator
         self._ingest = ingestor
+
+    def _validate_media(self, media_type: str, data_header: bytes) -> None:
+        self._validate_media_type(media_type)
+        self._validate_media_type_integrity(media_type, data_header)
+
+    async def _save_attachment(
+        self, original_filename: str, melding: M, media_type: str, user: User | None, data: AsyncIterator[bytes]
+    ) -> A:
+        attachment = self._create_attachment(original_filename, melding, media_type, user)
+
+        await self._ingest(attachment, data)
+        await self._attachment_repository.save(attachment)
+
+        return attachment
+
+
+class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+    _verify_token: TokenVerifier[M]
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[M],
+        attachment_factory: BaseAttachmentFactory[A, M],
+        attachment_repository: BaseAttachmentRepository[A],
+        media_type_validator: BaseMediaTypeValidator,
+        media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        ingestor: BaseIngestor[A],
+    ):
+        self._verify_token = token_verifier
+        super().__init__(
+            attachment_factory,
+            attachment_repository,
+            media_type_validator,
+            media_type_integrity_validator,
+            ingestor,
+        )
 
     async def __call__(
         self,
@@ -53,17 +86,22 @@ class UploadAttachmentAction(Generic[A, M]):
         data: AsyncIterator[bytes],
     ) -> A:
         melding = await self._verify_token(melding_id, token)
+        self._validate_media(media_type, data_header)
+        return await self._save_attachment(original_filename, melding, media_type, None, data)
 
-        self._validate_media_type(media_type)
-        self._validate_media_type_integrity(media_type, data_header)
 
-        attachment = self._create_attachment(original_filename, melding, media_type)
-
-        await self._ingest(attachment, data)
-
-        await self._attachment_repository.save(attachment)
-
-        return attachment
+class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+    async def __call__(
+        self,
+        melding: M,
+        original_filename: str,
+        media_type: str,
+        data_header: bytes,
+        data: AsyncIterator[bytes],
+        user: User,
+    ) -> A:
+        self._validate_media(media_type, data_header)
+        return await self._save_attachment(original_filename, melding, media_type, user, data)
 
 
 class AttachmentTypes(StrEnum):
