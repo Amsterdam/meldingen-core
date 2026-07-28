@@ -9,7 +9,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding, User
-from meldingen_core.repositories import BaseAttachmentRepository
+from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
 
@@ -91,9 +91,28 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
 
 
 class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+
+    def __init__(
+        self,
+        attachment_factory: BaseAttachmentFactory[A, M],
+        attachment_repository: BaseAttachmentRepository[A],
+        media_type_validator: BaseMediaTypeValidator,
+        media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        ingestor: BaseIngestor[A],
+        melding_repository: BaseMeldingRepository[M],
+    ):
+        super().__init__(
+            attachment_factory,
+            attachment_repository,
+            media_type_validator,
+            media_type_integrity_validator,
+            ingestor,
+        )
+        self._melding_repository = melding_repository
+
     async def __call__(
         self,
-        melding: M,
+        melding_id: int,
         original_filename: str,
         media_type: str,
         data_header: bytes,
@@ -101,6 +120,10 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         user: User,
     ) -> A:
         self._validate_media(media_type, data_header)
+        melding = await self._melding_repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException("Melding not found")
+
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
 
