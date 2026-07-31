@@ -44,7 +44,7 @@ class TestMelderUploadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
-        action: MelderUploadAttachmentAction[Attachment, Melding] = MelderUploadAttachmentAction(
+        action: MelderUploadAttachmentAction[Attachment, Melding, User] = MelderUploadAttachmentAction(
             token_verifier,
             Mock(BaseAttachmentFactory),
             attachment_repository,
@@ -69,11 +69,11 @@ class TestMelderUploadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
-        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator)
+        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator[Melding])
         attachment_limit_validator.side_effect = AttachmentLimitReachedException()
         ingestor = AsyncMock(BaseIngestor)
 
-        action: MelderUploadAttachmentAction[Attachment, Melding] = MelderUploadAttachmentAction(
+        action: MelderUploadAttachmentAction[Attachment, Melding, User] = MelderUploadAttachmentAction(
             token_verifier,
             Mock(BaseAttachmentFactory),
             attachment_repository,
@@ -562,7 +562,7 @@ class TestUploadAttachmentAction:
         melding_repository = AsyncMock(BaseMeldingRepository)
         melding_repository.retrieve.return_value = melding
 
-        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+        action: UploadAttachmentAction[Attachment, Melding, User] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             Mock(BaseMediaTypeValidator),
@@ -589,14 +589,14 @@ class TestUploadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
-        melding_repository = AsyncMock(BaseMeldingRepository)
-        melding_repository.retrieve.return_value = melding
+        melding_repository = Mock(BaseMeldingRepository)
+        melding_repository.retrieve = AsyncMock(return_value=melding)
 
         attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator[Melding])
         attachment_limit_validator.side_effect = AttachmentLimitReachedException()
         ingestor = AsyncMock(BaseIngestor)
 
-        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+        action: UploadAttachmentAction[Attachment, Melding, User] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             Mock(BaseMediaTypeValidator),
@@ -628,7 +628,7 @@ class TestUploadAttachmentAction:
         melding_repository = AsyncMock(BaseMeldingRepository)
         melding_repository.retrieve.return_value = None
 
-        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+        action: UploadAttachmentAction[Attachment, Melding, User] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             Mock(BaseMediaTypeValidator),

@@ -19,10 +19,11 @@ from meldingen_core.validators import (
 
 A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
+U = TypeVar("U", bound=User)
 
 
-class BaseUploadAttachmentAction(Generic[A, M]):
-    _create_attachment: BaseAttachmentFactory[A, M]
+class BaseUploadAttachmentAction(Generic[A, M, U]):
+    _create_attachment: BaseAttachmentFactory[A, M, U]
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
     _base_directory: str
@@ -33,7 +34,7 @@ class BaseUploadAttachmentAction(Generic[A, M]):
 
     def __init__(
         self,
-        attachment_factory: BaseAttachmentFactory[A, M],
+        attachment_factory: BaseAttachmentFactory[A, M, U],
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
@@ -47,15 +48,13 @@ class BaseUploadAttachmentAction(Generic[A, M]):
         self._validate_attachment_is_under_limit = attachment_limit_validator
         self._ingest = ingestor
 
-    def _validate_media(self, media_type: str, data_header: bytes) -> None:
+    async def _validate_attachment(self, media_type: str, data_header: bytes, melding: M) -> None:
         self._validate_media_type(media_type)
         self._validate_media_type_integrity(media_type, data_header)
-
-    async def _validate_attachment_limit(self, melding: M) -> None:
         await self._validate_attachment_is_under_limit(melding)
 
     async def _save_attachment(
-        self, original_filename: str, melding: M, media_type: str, user: User | None, data: AsyncIterator[bytes]
+        self, original_filename: str, melding: M, media_type: str, user: U | None, data: AsyncIterator[bytes]
     ) -> A:
         attachment = self._create_attachment(original_filename, melding, media_type, user)
 
@@ -65,13 +64,13 @@ class BaseUploadAttachmentAction(Generic[A, M]):
         return attachment
 
 
-class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
     _verify_token: TokenVerifier[M]
 
     def __init__(
         self,
         token_verifier: TokenVerifier[M],
-        attachment_factory: BaseAttachmentFactory[A, M],
+        attachment_factory: BaseAttachmentFactory[A, M, U],
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
@@ -98,17 +97,16 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         data: AsyncIterator[bytes],
     ) -> A:
         melding = await self._verify_token(melding_id, token)
-        self._validate_media(media_type, data_header)
-        await self._validate_attachment_limit(melding)
+        await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, None, data)
 
 
-class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+class UploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
     _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
-        attachment_factory: BaseAttachmentFactory[A, M],
+        attachment_factory: BaseAttachmentFactory[A, M, U],
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
@@ -133,14 +131,13 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         media_type: str,
         data_header: bytes,
         data: AsyncIterator[bytes],
-        user: User,
+        user: U,
     ) -> A:
-        self._validate_media(media_type, data_header)
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException("Melding not found")
 
-        await self._validate_attachment_limit(melding)
+        await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
 
