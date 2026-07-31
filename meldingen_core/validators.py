@@ -9,7 +9,7 @@ M = TypeVar("M", bound=Melding)
 class MediaTypeNotAllowed(Exception): ...
 
 
-class AttachmentLimitReached(Exception): ...
+class AttachmentLimitReachedException(Exception): ...
 
 
 class BaseMediaTypeValidator(metaclass=ABCMeta):
@@ -31,4 +31,4 @@ class BaseMediaTypeIntegrityValidator(metaclass=ABCMeta):
 class BaseAttachmentLimitValidator(Generic[M], metaclass=ABCMeta):
     @abstractmethod
     async def __call__(self, melding: M) -> None:
-        """Checks if the provided melding has reached the attachment limit, raises AttachmentLimitReached if so."""
+        """Checks if the provided melding has reached the attachment limit, raises AttachmentLimitReachedException if so."""

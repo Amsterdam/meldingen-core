@@ -22,7 +22,7 @@ from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
 from meldingen_core.validators import (
-    AttachmentLimitReached,
+    AttachmentLimitReachedException,
     BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,
     BaseMediaTypeValidator,
@@ -70,7 +70,7 @@ class TestMelderUploadAttachmentAction:
         attachment_repository.save = AsyncMock()
 
         attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator)
-        attachment_limit_validator.side_effect = AttachmentLimitReached()
+        attachment_limit_validator.side_effect = AttachmentLimitReachedException()
         ingestor = AsyncMock(BaseIngestor)
 
         action: MelderUploadAttachmentAction[Attachment, Melding] = MelderUploadAttachmentAction(
@@ -85,7 +85,7 @@ class TestMelderUploadAttachmentAction:
 
         iterator = _iterator()
 
-        with pytest.raises(AttachmentLimitReached):
+        with pytest.raises(AttachmentLimitReachedException):
             await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", iterator)
 
         attachment_limit_validator.assert_awaited_once_with(melding)
@@ -593,7 +593,7 @@ class TestUploadAttachmentAction:
         melding_repository.retrieve.return_value = melding
 
         attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator[Melding])
-        attachment_limit_validator.side_effect = AttachmentLimitReached()
+        attachment_limit_validator.side_effect = AttachmentLimitReachedException()
         ingestor = AsyncMock(BaseIngestor)
 
         action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
@@ -608,7 +608,7 @@ class TestUploadAttachmentAction:
 
         iterator = _iterator()
 
-        with pytest.raises(AttachmentLimitReached):
+        with pytest.raises(AttachmentLimitReachedException):
             await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
 
         melding_repository.retrieve.assert_awaited_once_with(melding_id)
