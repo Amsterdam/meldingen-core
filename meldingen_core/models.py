@@ -99,6 +99,7 @@ class Attachment:
     optimized_media_type: str | None = None
     thumbnail_path: str | None = None
     thumbnail_media_type: str | None = None
+    user: User | None = None
 
 
 @dataclass
