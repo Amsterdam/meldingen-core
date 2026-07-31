@@ -615,3 +615,34 @@ class TestUploadAttachmentAction:
         attachment_limit_validator.assert_awaited_once_with(melding)
         ingestor.assert_not_awaited()
         attachment_repository.save.assert_not_awaited()
+
+
+    @pytest.mark.anyio
+    async def test_raises_when_melding_not_found(self) -> None:
+        melding_id = 123
+
+        user = User(id=1, username="behandelaar", email="user@example.com")
+
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment])
+        attachment_repository.save = AsyncMock()
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = None
+
+        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+            Mock(BaseAttachmentFactory),
+            attachment_repository,
+            Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseAttachmentLimitValidator[Melding]),
+            AsyncMock(BaseIngestor),
+            melding_repository,
+        )
+
+        iterator = _iterator()
+
+        with pytest.raises(NotFoundException):
+            await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
+
+        melding_repository.retrieve.assert_awaited_once_with(melding_id)
+        attachment_repository.save.assert_not_awaited()
