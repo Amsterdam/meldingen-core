@@ -1,7 +1,7 @@
 ## Using IDs In Model Dataclasses
 
 ### Status
-Accepted
+Accepted & Implementing
 
 ### Date accepted
 2026-07-28
