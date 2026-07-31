@@ -616,7 +616,6 @@ class TestUploadAttachmentAction:
         ingestor.assert_not_awaited()
         attachment_repository.save.assert_not_awaited()
 
-
     @pytest.mark.anyio
     async def test_raises_when_melding_not_found(self) -> None:
         melding_id = 123
