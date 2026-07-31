@@ -24,6 +24,7 @@ class BaseAssetFactory(Generic[AS, AT, M], metaclass=ABCMeta):
 
 N = TypeVar("N", bound=Note)
 
+
 class BaseNoteFactory(Generic[N, M, U], metaclass=ABCMeta):
     @abstractmethod
     def __call__(self, text: str, melding: M, user: U) -> N: ...
