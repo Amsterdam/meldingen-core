@@ -28,7 +28,7 @@ class BaseUploadAttachmentAction(Generic[A, M]):
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
-    _validate_attachment_is_under_limit: BaseAttachmentLimitValidator
+    _validate_attachment_is_under_limit: BaseAttachmentLimitValidator[M]
     _ingest: BaseIngestor[A]
 
     def __init__(
@@ -37,7 +37,7 @@ class BaseUploadAttachmentAction(Generic[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        attachment_limit_validator: BaseAttachmentLimitValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator[M],
         ingestor: BaseIngestor[A],
     ):
         self._create_attachment = attachment_factory
@@ -75,7 +75,7 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        attachment_limit_validator: BaseAttachmentLimitValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator[M],
         ingestor: BaseIngestor[A],
     ):
         self._verify_token = token_verifier
@@ -112,7 +112,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        attachment_limit_validator: BaseAttachmentLimitValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator[M],
         ingestor: BaseIngestor[A],
         melding_repository: BaseMeldingRepository[M],
     ):

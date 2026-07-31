@@ -50,7 +50,7 @@ class TestMelderUploadAttachmentAction:
             attachment_repository,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
-            AsyncMock(BaseAttachmentLimitValidator),
+            AsyncMock(BaseAttachmentLimitValidator[Melding]),
             AsyncMock(BaseIngestor),
         )
 
@@ -592,7 +592,7 @@ class TestUploadAttachmentAction:
         melding_repository = AsyncMock(BaseMeldingRepository)
         melding_repository.retrieve.return_value = melding
 
-        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator)
+        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator[Melding])
         attachment_limit_validator.side_effect = AttachmentLimitReached()
         ingestor = AsyncMock(BaseIngestor)
 
