@@ -21,7 +21,12 @@ from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
-from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
+from meldingen_core.validators import (
+    AttachmentLimitReached,
+    BaseAttachmentLimitValidator,
+    BaseMediaTypeIntegrityValidator,
+    BaseMediaTypeValidator,
+)
 
 
 async def _iterator() -> AsyncIterator[bytes]:
@@ -45,6 +50,7 @@ class TestMelderUploadAttachmentAction:
             attachment_repository,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseAttachmentLimitValidator),
             AsyncMock(BaseIngestor),
         )
 
@@ -53,6 +59,38 @@ class TestMelderUploadAttachmentAction:
         attachment = await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", iterator)
 
         attachment_repository.save.assert_awaited_once_with(attachment)
+
+    @pytest.mark.anyio
+    async def test_raises_when_attachment_limit_is_reached(self) -> None:
+        melding = Melding("melding text")
+        token_verifier = AsyncMock(TokenVerifier)
+        token_verifier.return_value = melding
+
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment])
+        attachment_repository.save = AsyncMock()
+
+        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator)
+        attachment_limit_validator.side_effect = AttachmentLimitReached()
+        ingestor = AsyncMock(BaseIngestor)
+
+        action: MelderUploadAttachmentAction[Attachment, Melding] = MelderUploadAttachmentAction(
+            token_verifier,
+            Mock(BaseAttachmentFactory),
+            attachment_repository,
+            Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
+            attachment_limit_validator,
+            ingestor,
+        )
+
+        iterator = _iterator()
+
+        with pytest.raises(AttachmentLimitReached):
+            await action(123, "super_secret_token", "original_filename.ext", "image/png", b"test", iterator)
+
+        attachment_limit_validator.assert_awaited_once_with(melding)
+        ingestor.assert_not_awaited()
+        attachment_repository.save.assert_not_awaited()
 
 
 class TestMelderDownloadAttachmentAction:
@@ -513,26 +551,67 @@ class TestDeleteAttachmentAction:
 class TestUploadAttachmentAction:
     @pytest.mark.anyio
     async def test_can_handle_attachment(self) -> None:
+        melding_id = 123
         melding = Melding(text="melding text")
-        token_verifier = AsyncMock(TokenVerifier)
-        token_verifier.return_value = melding
 
         user = User(id=1, username="behandelaar", email="user@example.com")
 
         attachment_repository = Mock(BaseAttachmentRepository[Attachment])
         attachment_repository.save = AsyncMock()
 
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
         action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
             Mock(BaseAttachmentFactory),
             attachment_repository,
             Mock(BaseMediaTypeValidator),
             Mock(BaseMediaTypeIntegrityValidator),
+            AsyncMock(BaseAttachmentLimitValidator),
             AsyncMock(BaseIngestor),
-            AsyncMock(BaseMeldingRepository)
+            melding_repository,
         )
 
         iterator = _iterator()
 
-        attachment = await action(melding, "original_filename.ext", "image/png", b"test", iterator, user)
+        attachment = await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
 
+        melding_repository.retrieve.assert_awaited_once_with(melding_id)
         attachment_repository.save.assert_awaited_once_with(attachment)
+
+    @pytest.mark.anyio
+    async def test_raises_when_attachment_limit_is_reached(self) -> None:
+        melding_id = 123
+        melding = Melding(text="melding text")
+
+        user = User(id=1, username="behandelaar", email="user@example.com")
+
+        attachment_repository = Mock(BaseAttachmentRepository[Attachment])
+        attachment_repository.save = AsyncMock()
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment_limit_validator = AsyncMock(BaseAttachmentLimitValidator)
+        attachment_limit_validator.side_effect = AttachmentLimitReached()
+        ingestor = AsyncMock(BaseIngestor)
+
+        action: UploadAttachmentAction[Attachment, Melding] = UploadAttachmentAction(
+            Mock(BaseAttachmentFactory),
+            attachment_repository,
+            Mock(BaseMediaTypeValidator),
+            Mock(BaseMediaTypeIntegrityValidator),
+            attachment_limit_validator,
+            ingestor,
+            melding_repository,
+        )
+
+        iterator = _iterator()
+
+        with pytest.raises(AttachmentLimitReached):
+            await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
+
+        melding_repository.retrieve.assert_awaited_once_with(melding_id)
+        attachment_limit_validator.assert_awaited_once_with(melding)
+        ingestor.assert_not_awaited()
+        attachment_repository.save.assert_not_awaited()

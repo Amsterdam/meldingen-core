@@ -11,7 +11,11 @@ from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
-from meldingen_core.validators import BaseMediaTypeIntegrityValidator, BaseMediaTypeValidator
+from meldingen_core.validators import (
+    BaseAttachmentLimitValidator,
+    BaseMediaTypeIntegrityValidator,
+    BaseMediaTypeValidator,
+)
 
 A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
@@ -24,6 +28,7 @@ class BaseUploadAttachmentAction(Generic[A, M]):
     _base_directory: str
     _validate_media_type: BaseMediaTypeValidator
     _validate_media_type_integrity: BaseMediaTypeIntegrityValidator
+    _validate_attachment_is_under_limit: BaseAttachmentLimitValidator
     _ingest: BaseIngestor[A]
 
     def __init__(
@@ -32,17 +37,22 @@ class BaseUploadAttachmentAction(Generic[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator,
         ingestor: BaseIngestor[A],
     ):
         self._create_attachment = attachment_factory
         self._attachment_repository = attachment_repository
         self._validate_media_type = media_type_validator
         self._validate_media_type_integrity = media_type_integrity_validator
+        self._validate_attachment_is_under_limit = attachment_limit_validator
         self._ingest = ingestor
 
     def _validate_media(self, media_type: str, data_header: bytes) -> None:
         self._validate_media_type(media_type)
         self._validate_media_type_integrity(media_type, data_header)
+
+    async def _validate_attachment_limit(self, melding: M) -> None:
+        await self._validate_attachment_is_under_limit(melding)
 
     async def _save_attachment(
         self, original_filename: str, melding: M, media_type: str, user: User | None, data: AsyncIterator[bytes]
@@ -65,6 +75,7 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator,
         ingestor: BaseIngestor[A],
     ):
         self._verify_token = token_verifier
@@ -73,6 +84,7 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
             attachment_repository,
             media_type_validator,
             media_type_integrity_validator,
+            attachment_limit_validator,
             ingestor,
         )
 
@@ -87,10 +99,12 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
     ) -> A:
         melding = await self._verify_token(melding_id, token)
         self._validate_media(media_type, data_header)
+        await self._validate_attachment_limit(melding)
         return await self._save_attachment(original_filename, melding, media_type, None, data)
 
 
 class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
@@ -98,6 +112,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
+        attachment_limit_validator: BaseAttachmentLimitValidator,
         ingestor: BaseIngestor[A],
         melding_repository: BaseMeldingRepository[M],
     ):
@@ -106,6 +121,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
             attachment_repository,
             media_type_validator,
             media_type_integrity_validator,
+            attachment_limit_validator,
             ingestor,
         )
         self._melding_repository = melding_repository
@@ -124,6 +140,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M]):
         if melding is None:
             raise NotFoundException("Melding not found")
 
+        await self._validate_attachment_limit(melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
 
