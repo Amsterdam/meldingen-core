@@ -35,6 +35,7 @@ class BaseListAction(BaseCRUDAction[T]):
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         filters: NameListFilters | None = None,
+        apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         return await self._repository.list(
             limit=limit,
@@ -42,6 +43,7 @@ class BaseListAction(BaseCRUDAction[T]):
             sort_attribute_name=sort_attribute_name,
             sort_direction=sort_direction,
             filters=filters,
+            apply_visibility_filters=apply_visibility_filters,
         )
 
 
