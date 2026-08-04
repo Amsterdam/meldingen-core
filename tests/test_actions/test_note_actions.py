@@ -20,7 +20,7 @@ def test_can_instantiate_note_create_action() -> None:
 @pytest.mark.anyio
 async def test_note_create_action() -> None:
     melding = Melding(text="melding")
-    user = User(username="behandelaar", email="behandelaar@example.com")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
     note = Mock(Note)
 
     note_repository = Mock(BaseNoteRepository)
@@ -41,7 +41,7 @@ async def test_note_create_action() -> None:
 
 @pytest.mark.anyio
 async def test_note_create_action_raises_not_found_when_melding_does_not_exist() -> None:
-    user = User(username="behandelaar", email="behandelaar@example.com")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
 
     note_repository = Mock(BaseNoteRepository)
     note_repository.save = AsyncMock()

@@ -64,6 +64,7 @@ class Asset:
 class User:
     """This is the base model for a 'user'."""
 
+    id: int
     username: str
     email: str
 
@@ -89,6 +90,7 @@ class Answer:
 
 @dataclass
 class Attachment:
+    id: int
     file_path: str = field(init=False)
     original_filename: str
     original_media_type: str
@@ -97,6 +99,7 @@ class Attachment:
     optimized_media_type: str | None = None
     thumbnail_path: str | None = None
     thumbnail_media_type: str | None = None
+    user: User | None = None
 
 
 @dataclass
