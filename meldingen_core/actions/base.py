@@ -29,7 +29,6 @@ class BaseRetrieveAction(BaseCRUDAction[T]):
 class BaseListAction(BaseCRUDAction[T]):
     async def __call__(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,

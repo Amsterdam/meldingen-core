@@ -29,7 +29,6 @@ class BaseRepository(Generic[T], metaclass=ABCMeta):
     @abstractmethod
     async def list(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
