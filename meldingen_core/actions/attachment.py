@@ -244,10 +244,36 @@ class MelderListAttachmentsAction(Generic[A, M]):
         return await self._attachment_repository.find_by_melding(melding_id)
 
 
-class DeleteAttachmentAction(Generic[A, M]):
-    _verify_token: TokenVerifier[M]
+class BaseDeleteAttachmentAction(Generic[A]):
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
+
+    def __init__(
+        self,
+        attachment_repository: BaseAttachmentRepository[A],
+        filesystem: Filesystem,
+    ):
+        self._attachment_repository = attachment_repository
+        self._filesystem = filesystem
+
+    async def _get_attachment(self, attachment_id: int) -> A:
+        attachment = await self._attachment_repository.retrieve(attachment_id)
+        if attachment is None:
+            raise NotFoundException("Attachment not found")
+
+        return attachment
+
+    async def _delete(self, attachment: A) -> None:
+        try:
+            await self._filesystem.delete(attachment.file_path)
+        except filesystem.NotFoundException as exception:
+            raise NotFoundException("File not found") from exception
+
+        await self._attachment_repository.delete(attachment.id)
+
+
+class MelderDeleteAttachmentAction(Generic[A, M], BaseDeleteAttachmentAction[A]):
+    _verify_token: TokenVerifier[M]
 
     def __init__(
         self,
@@ -256,22 +282,18 @@ class DeleteAttachmentAction(Generic[A, M]):
         filesystem: Filesystem,
     ):
         self._verify_token = token_verifier
-        self._attachment_repository = attachment_repository
-        self._filesystem = filesystem
+        super().__init__(attachment_repository, filesystem)
 
     async def __call__(self, melding_id: int, attachment_id: int, token: str) -> None:
         melding = await self._verify_token(melding_id, token)
 
-        attachment = await self._attachment_repository.retrieve(attachment_id)
-        if attachment is None:
-            raise NotFoundException("Attachment not found")
-
+        attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
             raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
 
-        try:
-            await self._filesystem.delete(attachment.file_path)
-        except filesystem.NotFoundException as exception:
-            raise NotFoundException("File not found") from exception
+        await self._delete(attachment)
 
-        await self._attachment_repository.delete(attachment_id)
+
+class DeleteAttachmentAction(BaseDeleteAttachmentAction[A]):
+    async def __call__(self, attachment_id: int) -> None:
+        await self._delete(await self._get_attachment(attachment_id))
