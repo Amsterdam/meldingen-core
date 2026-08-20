@@ -107,3 +107,6 @@ class Note:
     text: str
     melding: Melding
     user: User
+    # Set on the note that records why a melding was reclassified, pointing at the classification
+    # the melding was moved to. None for a note that was written by hand.
+    classification: Classification | None = None

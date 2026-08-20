@@ -9,18 +9,20 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
-from meldingen_core.factories import BaseAssetFactory
+from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Source
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Source, User
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
     BaseAssetTypeRepository,
+    BaseClassificationRepository,
     BaseMeldingRepository,
+    BaseNoteRepository,
     BaseRepository,
     BaseSourceRepository,
 )
@@ -35,6 +37,8 @@ AS = TypeVar("AS", bound=Asset)
 AT = TypeVar("AT", bound=AssetType)
 L = TypeVar("L", bound=Label)
 S = TypeVar("S", bound=Source)
+N = TypeVar("N", bound=Note)
+U = TypeVar("U", bound=User)
 
 
 class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
@@ -372,6 +376,62 @@ class MeldingCompleteAction(Generic[T]):
 
         if mail_text is not None and melding.email is not None:
             await self._mailer.__call__(melding, mail_text)
+
+        return melding
+
+
+class MeldingReclassifyAction(Generic[T, C, N, U]):
+    """Action that assigns a different classification to a melding from the backoffice.
+
+    Unlike the melder's reclassification (see BaseReclassification) the data the melder supplied is
+    deliberately kept: answers to the additional questions and assets stay on the melding, because
+    someone correcting the classification is no reason to throw the melder's input away. The reason
+    given for the reclassification is stored as a note referencing the new classification.
+    """
+
+    _melding_repository: BaseMeldingRepository[T]
+    _classification_repository: BaseClassificationRepository[C]
+    _note_repository: BaseNoteRepository[N]
+    _create_note: BaseNoteFactory[N, T, U]
+    _state_machine: BaseMeldingStateMachine[T]
+
+    def __init__(
+        self,
+        melding_repository: BaseMeldingRepository[T],
+        classification_repository: BaseClassificationRepository[C],
+        note_repository: BaseNoteRepository[N],
+        note_factory: BaseNoteFactory[N, T, U],
+        state_machine: BaseMeldingStateMachine[T],
+    ) -> None:
+        self._melding_repository = melding_repository
+        self._classification_repository = classification_repository
+        self._note_repository = note_repository
+        self._create_note = note_factory
+        self._state_machine = state_machine
+
+    async def __call__(self, melding_id: int, classification_id: int, reason: str, user: U) -> T:
+        melding = await self._melding_repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException(f"Failed to find melding with id {melding_id}")
+
+        classification = await self._classification_repository.retrieve(classification_id)
+        if classification is None:
+            raise NotFoundException(f"Failed to find classification with id {classification_id}")
+
+        # Raises when the melding is in a state that may not be reclassified. Done before anything
+        # is written, so a refused reclassification leaves no trace.
+        await self._state_machine.transition(melding, MeldingTransitions.RECLASSIFY)
+
+        melding.classification = classification
+
+        note = self._create_note(reason, melding, user)
+        note.classification = classification
+
+        # The melding is saved last on purpose. Both changes belong to one reclassification, so they
+        # are handed to the repositories back to back before either is read again, and saving the
+        # melding last is what reads back the values its store fills in itself.
+        await self._note_repository.save(note)
+        await self._melding_repository.save(melding)
 
         return melding
 

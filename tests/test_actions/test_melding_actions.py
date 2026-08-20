@@ -25,6 +25,7 @@ from meldingen_core.actions.melding import (
     MeldingListQuestionsAnswersAction,
     MeldingPlanAction,
     MeldingProcessAction,
+    MeldingReclassifyAction,
     MeldingReopenAction,
     MeldingRequestProcessingAction,
     MeldingRequestReopenAction,
@@ -37,18 +38,20 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
-from meldingen_core.factories import BaseAssetFactory
+from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Question, Source
+from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Question, Source, User
 from meldingen_core.reclassification import BaseReclassification
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
     BaseAssetTypeRepository,
+    BaseClassificationRepository,
     BaseMeldingRepository,
+    BaseNoteRepository,
     BaseSourceRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
@@ -484,6 +487,129 @@ async def test_add_attachments_action_not_found() -> None:
 
     with pytest.raises(NotFoundException):
         await process(1, "token")
+
+
+def _reclassify_action(
+    melding_repository: Mock,
+    classification_repository: Mock,
+    note_repository: Mock,
+    note_factory: Mock,
+    state_machine: Mock,
+) -> MeldingReclassifyAction[Melding, Classification, Note, User]:
+    return MeldingReclassifyAction(
+        melding_repository, classification_repository, note_repository, note_factory, state_machine
+    )
+
+
+@pytest.mark.anyio
+async def test_reclassify_action() -> None:
+    melding = Melding("melding text", classification=Classification(name="old"))
+    classification = Classification(name="new")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
+    note = Note(text="the reason", melding=melding, user=user)
+
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=classification)
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_factory = Mock(BaseNoteFactory, return_value=note)
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    action = _reclassify_action(
+        melding_repository, classification_repository, note_repository, note_factory, state_machine
+    )
+
+    result = await action(1, 2, "the reason", user)
+
+    assert result is melding
+    assert melding.classification is classification
+    state_machine.transition.assert_called_once_with(melding, MeldingTransitions.RECLASSIFY)
+
+    note_factory.assert_called_once_with("the reason", melding, user)
+    assert note.classification is classification
+    note_repository.save.assert_awaited_once_with(note)
+    melding_repository.save.assert_called_once_with(melding)
+
+
+@pytest.mark.anyio
+async def test_reclassify_action_melding_not_found() -> None:
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=None)
+    classification_repository = Mock(BaseClassificationRepository)
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_factory = Mock(BaseNoteFactory)
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    action = _reclassify_action(
+        melding_repository, classification_repository, note_repository, note_factory, state_machine
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(1, 2, "the reason", User(id=1, username="behandelaar", email="behandelaar@example.com"))
+
+    state_machine.transition.assert_not_called()
+    note_factory.assert_not_called()
+    note_repository.save.assert_not_awaited()
+    melding_repository.save.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_reclassify_action_classification_not_found() -> None:
+    melding = Melding("melding text")
+
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=None)
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_factory = Mock(BaseNoteFactory)
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    action = _reclassify_action(
+        melding_repository, classification_repository, note_repository, note_factory, state_machine
+    )
+
+    with pytest.raises(NotFoundException):
+        await action(1, 2, "the reason", User(id=1, username="behandelaar", email="behandelaar@example.com"))
+
+    state_machine.transition.assert_not_called()
+    note_factory.assert_not_called()
+    note_repository.save.assert_not_awaited()
+    melding_repository.save.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_reclassify_action_does_not_write_when_transition_is_refused() -> None:
+    """A melding in a state that may not be reclassified leaves neither a changed melding nor a
+    note behind, so the transition is attempted before anything is handed to a repository."""
+    melding = Melding("melding text", classification=Classification(name="old"))
+    classification = Classification(name="new")
+
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=classification)
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_factory = Mock(BaseNoteFactory)
+    state_machine = Mock(BaseMeldingStateMachine)
+    state_machine.transition = AsyncMock(side_effect=Exception("transition not allowed"))
+
+    action = _reclassify_action(
+        melding_repository, classification_repository, note_repository, note_factory, state_machine
+    )
+
+    with pytest.raises(Exception, match="transition not allowed"):
+        await action(1, 2, "the reason", User(id=1, username="behandelaar", email="behandelaar@example.com"))
+
+    assert melding.classification is not classification
+    note_factory.assert_not_called()
+    note_repository.save.assert_not_awaited()
+    melding_repository.save.assert_not_called()
 
 
 @pytest.mark.anyio
