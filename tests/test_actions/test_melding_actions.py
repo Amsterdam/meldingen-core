@@ -525,12 +525,12 @@ async def test_reclassify_action() -> None:
 
     assert result is melding
     assert melding.classification is classification
-    state_machine.transition.assert_called_once_with(melding, MeldingTransitions.RECLASSIFY)
+    state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.RECLASSIFY)
 
     note_factory.assert_called_once_with("the reason", melding, user)
     assert note.classification is classification
     note_repository.save.assert_awaited_once_with(note)
-    melding_repository.save.assert_called_once_with(melding)
+    melding_repository.save.assert_awaited_once_with(melding)
 
 
 @pytest.mark.anyio
@@ -550,10 +550,10 @@ async def test_reclassify_action_melding_not_found() -> None:
     with pytest.raises(NotFoundException):
         await action(1, 2, "the reason", User(id=1, username="behandelaar", email="behandelaar@example.com"))
 
-    state_machine.transition.assert_not_called()
+    state_machine.transition.assert_not_awaited()
     note_factory.assert_not_called()
     note_repository.save.assert_not_awaited()
-    melding_repository.save.assert_not_called()
+    melding_repository.save.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -576,10 +576,10 @@ async def test_reclassify_action_classification_not_found() -> None:
     with pytest.raises(NotFoundException):
         await action(1, 2, "the reason", User(id=1, username="behandelaar", email="behandelaar@example.com"))
 
-    state_machine.transition.assert_not_called()
+    state_machine.transition.assert_not_awaited()
     note_factory.assert_not_called()
     note_repository.save.assert_not_awaited()
-    melding_repository.save.assert_not_called()
+    melding_repository.save.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -609,7 +609,7 @@ async def test_reclassify_action_does_not_write_when_transition_is_refused() -> 
     assert melding.classification is not classification
     note_factory.assert_not_called()
     note_repository.save.assert_not_awaited()
-    melding_repository.save.assert_not_called()
+    melding_repository.save.assert_not_awaited()
 
 
 @pytest.mark.anyio
