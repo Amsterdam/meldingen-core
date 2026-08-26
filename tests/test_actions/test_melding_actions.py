@@ -44,7 +44,7 @@ from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Question, Source, User
-from meldingen_core.reclassification import BaseReclassification
+from meldingen_core.reclassification import BaseReclassification, ReclassificationNotAllowedException
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -54,7 +54,12 @@ from meldingen_core.repositories import (
     BaseNoteRepository,
     BaseSourceRepository,
 )
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, MeldingTransitions
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingStates,
+    MeldingTransitions,
+)
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
 
 
@@ -118,6 +123,24 @@ def test_can_instantiate_melding_retrieve_action() -> None:
     assert isinstance(action, MeldingRetrieveAction)
 
 
+def _melding_update_action(
+    repository: Mock,
+    label_replacer: AsyncMock | None = None,
+    source_repository: Mock | None = None,
+    classification_repository: Mock | None = None,
+    reclassifier: AsyncMock | None = None,
+    state_machine: Mock | None = None,
+) -> MeldingUpdateAction[Melding, Classification, Label, Source]:
+    return MeldingUpdateAction[Melding, Classification, Label, Source](
+        repository,
+        label_replacer if label_replacer is not None else AsyncMock(BaseLabelReplacer),
+        source_repository if source_repository is not None else Mock(BaseSourceRepository),
+        classification_repository if classification_repository is not None else Mock(BaseClassificationRepository),
+        reclassifier if reclassifier is not None else AsyncMock(BaseReclassification),
+        state_machine if state_machine is not None else Mock(BaseMeldingStateMachine),
+    )
+
+
 @pytest.mark.anyio
 async def test_melding_update_action() -> None:
     repository = Mock(BaseMeldingRepository)
@@ -130,8 +153,14 @@ async def test_melding_update_action() -> None:
     label_replacer.return_value = updated_melding
 
     source_repository = Mock(BaseSourceRepository)
+    classification_repository = Mock(BaseClassificationRepository)
 
-    action = MeldingUpdateAction[Melding, Label, Source](repository, label_replacer, source_repository)
+    action = _melding_update_action(
+        repository,
+        label_replacer=label_replacer,
+        source_repository=source_repository,
+        classification_repository=classification_repository,
+    )
     result = await action(
         123,
         {
@@ -149,6 +178,7 @@ async def test_melding_update_action() -> None:
     repository.save.assert_called_once_with(updated_melding)
     label_replacer.assert_awaited_once()
     source_repository.retrieve.assert_not_called()
+    classification_repository.retrieve.assert_not_called()
 
 
 @pytest.mark.anyio
@@ -161,7 +191,7 @@ async def test_melding_update_action_with_source_id() -> None:
     source_repository = Mock(BaseSourceRepository)
     source_repository.retrieve = AsyncMock(return_value=source)
 
-    action = MeldingUpdateAction[Melding, Label, Source](repository, AsyncMock(BaseLabelReplacer), source_repository)
+    action = _melding_update_action(repository, source_repository=source_repository)
 
     result = await action(123, {"source_id": 7})
 
@@ -178,7 +208,7 @@ async def test_melding_update_action_source_not_found() -> None:
     source_repository = Mock(BaseSourceRepository)
     source_repository.retrieve = AsyncMock(return_value=None)
 
-    action = MeldingUpdateAction[Melding, Label, Source](repository, AsyncMock(BaseLabelReplacer), source_repository)
+    action = _melding_update_action(repository, source_repository=source_repository)
 
     with pytest.raises(NotFoundException):
         await action(123, {"source_id": 99})
@@ -189,12 +219,107 @@ async def test_melding_update_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
 
-    label_replacer = AsyncMock(BaseLabelReplacer)
-
-    action = MeldingUpdateAction[Melding, Label, Source](repository, label_replacer, Mock(BaseSourceRepository))
+    action = _melding_update_action(repository)
 
     with pytest.raises(NotFoundException):
         await action(123, {"urgency": 1})
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_with_classification_id() -> None:
+    old_classification = Classification(name="old")
+    melding = Melding("text", classification=old_classification, state=MeldingStates.LOCATION_SUBMITTED)
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = melding
+
+    classification = Classification(name="new")
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=classification)
+
+    reclassifier = AsyncMock(BaseReclassification)
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    action = _melding_update_action(
+        repository,
+        classification_repository=classification_repository,
+        reclassifier=reclassifier,
+        state_machine=state_machine,
+    )
+
+    result = await action(123, {"classification_id": 7})
+
+    assert result.classification is classification
+    classification_repository.retrieve.assert_awaited_once_with(pk=7)
+    reclassifier.assert_awaited_once_with(melding, old_classification, classification)
+    state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.CLASSIFY)
+    repository.save.assert_called_once_with(melding)
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_with_unchanged_classification_id() -> None:
+    """Assigning the classification the melding already has leaves the melder's input and the state
+    of the melding alone."""
+    classification = Classification(name="the one it already has")
+    melding = Melding("text", classification=classification, state=MeldingStates.LOCATION_SUBMITTED)
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = melding
+
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=classification)
+
+    reclassifier = AsyncMock(BaseReclassification)
+    state_machine = Mock(BaseMeldingStateMachine)
+
+    action = _melding_update_action(
+        repository,
+        classification_repository=classification_repository,
+        reclassifier=reclassifier,
+        state_machine=state_machine,
+    )
+
+    result = await action(123, {"classification_id": 7})
+
+    assert result.classification is classification
+    reclassifier.assert_not_awaited()
+    state_machine.transition.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_melding_update_action_classification_not_found() -> None:
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = Melding("text", state=MeldingStates.CLASSIFIED)
+
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.retrieve = AsyncMock(return_value=None)
+
+    action = _melding_update_action(repository, classification_repository=classification_repository)
+
+    with pytest.raises(NotFoundException):
+        await action(123, {"classification_id": 99})
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("state", [state for state in MeldingBackofficeStates])
+async def test_melding_update_action_refuses_classification_in_backoffice_state(state: MeldingBackofficeStates) -> None:
+    melding = Melding("text", state=state)
+    repository = Mock(BaseMeldingRepository)
+    repository.retrieve.return_value = melding
+
+    classification_repository = Mock(BaseClassificationRepository)
+    reclassifier = AsyncMock(BaseReclassification)
+
+    action = _melding_update_action(
+        repository, classification_repository=classification_repository, reclassifier=reclassifier
+    )
+
+    with pytest.raises(ReclassificationNotAllowedException):
+        await action(123, {"urgency": 1, "classification_id": 7})
+
+    # Refused before anything is written: not even the urgency that came with it is applied.
+    assert melding.urgency == 0
+    classification_repository.retrieve.assert_not_called()
+    reclassifier.assert_not_awaited()
+    repository.save.assert_not_called()
 
 
 @pytest.mark.anyio
