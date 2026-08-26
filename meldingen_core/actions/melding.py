@@ -158,8 +158,7 @@ class MeldingUpdateAction(Generic[T, C, L, S], BaseUpdateAction[T]):
         # on it differing from the current one: in the backoffice this field is simply not part of
         # what this endpoint accepts.
         classification: C | None = None
-        if classification_id is not None:
-            if melding.state in MeldingBackofficeStates:
+            if melding.state in {state.value for state in MeldingBackofficeStates}:
                 raise ReclassificationNotAllowedException(
                     f"Melding with id {pk} has reached the backoffice and may not be classified this way"
                 )
