@@ -562,7 +562,9 @@ class MeldingSubmitActionMelder(BaseCRUDAction[T]):
         await self._state_machine.transition(melding, self.transition_name)
         await self._invalidate_token(melding)
         await self._repository.save(melding)
-        await self._send_mail(melding)
+
+        if melding.email:
+            await self._send_mail(melding)
 
         return melding
 
