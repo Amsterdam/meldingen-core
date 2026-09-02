@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import Generic, TypeVar
 
+from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
@@ -69,12 +70,22 @@ class NoteListAction(Generic[N, T]):
         self._note_repository = note_repository
         self._melding_repository = melding_repository
 
-    async def __call__(self, melding_id: int) -> Sequence[N]:
+    async def __call__(
+        self,
+        melding_id: int,
+        *,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Sequence[N]:
         melding = await self._melding_repository.retrieve(melding_id)
         if melding is None:
             raise NotFoundException()
 
-        return await self._note_repository.find_by_melding(melding_id)
+        return await self._note_repository.find_by_melding(
+            melding_id,
+            sort_attribute_name=sort_attribute_name,
+            sort_direction=sort_direction,
+        )
 
 
 class NoteUpdateAction(Generic[N]):

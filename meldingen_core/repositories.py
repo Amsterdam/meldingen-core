@@ -29,12 +29,12 @@ class BaseRepository(Generic[T], metaclass=ABCMeta):
     @abstractmethod
     async def list(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         filters: NameListFilters | None = None,
+        apply_visibility_filters: bool = True,
     ) -> Sequence[T]: ...
 
     @abstractmethod
@@ -139,7 +139,13 @@ N = TypeVar("N", bound=Note)
 
 class BaseNoteRepository(BaseRepository[N], metaclass=ABCMeta):
     @abstractmethod
-    async def find_by_melding(self, melding_id: int) -> Sequence[N]: ...
+    async def find_by_melding(
+        self,
+        melding_id: int,
+        *,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Sequence[N]: ...
 
     @abstractmethod
     async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> N | None: ...
