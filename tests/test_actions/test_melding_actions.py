@@ -904,7 +904,9 @@ async def test_melder_list_answers() -> None:
     assert answers == []
 
 
-async def assert_melding_submit_action_melder(repo_melding: Melding):
+async def assert_melding_submit_action_melder(
+    repo_melding: Melding,
+) -> tuple[Mock, Mock, AsyncMock, AsyncMock, Melding]:
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     token_verifier = AsyncMock(TokenVerifier)
@@ -921,7 +923,7 @@ async def assert_melding_submit_action_melder(repo_melding: Melding):
     melding = await action(1, "token")
 
     assert melding == repo_melding
-    
+
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
     token_invalidator.assert_called_once_with(repo_melding)
     repository.save.assert_called_once_with(repo_melding)
@@ -938,7 +940,9 @@ async def test_submit_melding_melder() -> None:
 @pytest.mark.anyio
 async def test_submit_melding_melder_without_email() -> None:
     repo_melding = Melding("melding text")
-    state_machine, repository, token_invalidator, confirmation_mailer, melding = await assert_melding_submit_action_melder(repo_melding)
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
 
     confirmation_mailer.assert_not_called()
 
@@ -946,7 +950,9 @@ async def test_submit_melding_melder_without_email() -> None:
 @pytest.mark.anyio
 async def test_submit_melding_melder_with_email_empty_string() -> None:
     repo_melding = Melding(text="melding text", email="")
-    state_machine, repository, token_invalidator, confirmation_mailer, melding = await assert_melding_submit_action_melder(repo_melding)
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
 
     confirmation_mailer.assert_not_called()
 
@@ -954,7 +960,9 @@ async def test_submit_melding_melder_with_email_empty_string() -> None:
 @pytest.mark.anyio
 async def test_submit_melding_melder_with_email() -> None:
     repo_melding = Melding(text="melding text", email="test@example.com")
-    state_machine, repository, token_invalidator, confirmation_mailer, melding = await assert_melding_submit_action_melder(repo_melding)
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
 
     confirmation_mailer.assert_called_once_with(repo_melding)
 
