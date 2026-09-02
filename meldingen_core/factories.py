@@ -5,11 +5,12 @@ from meldingen_core.models import Asset, AssetType, Attachment, Melding, Note, U
 
 A = TypeVar("A", bound=Attachment)
 M = TypeVar("M", bound=Melding)
+U = TypeVar("U", bound=User)
 
 
-class BaseAttachmentFactory(Generic[A, M], metaclass=ABCMeta):
+class BaseAttachmentFactory(Generic[A, M, U], metaclass=ABCMeta):
     @abstractmethod
-    def __call__(self, original_filename: str, melding: M, media_type: str) -> A: ...
+    def __call__(self, original_filename: str, melding: M, media_type: str, user: U | None) -> A: ...
 
 
 AS = TypeVar("AS", bound=Asset)
@@ -22,7 +23,6 @@ class BaseAssetFactory(Generic[AS, AT, M], metaclass=ABCMeta):
 
 
 N = TypeVar("N", bound=Note)
-U = TypeVar("U", bound=User)
 
 
 class BaseNoteFactory(Generic[N, M, U], metaclass=ABCMeta):

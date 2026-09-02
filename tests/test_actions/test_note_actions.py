@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from meldingen_core import SortingDirection
 from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
@@ -19,7 +20,7 @@ def test_can_instantiate_note_create_action() -> None:
 @pytest.mark.anyio
 async def test_note_create_action() -> None:
     melding = Melding(text="melding")
-    user = User(username="behandelaar", email="behandelaar@example.com")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
     note = Mock(Note)
 
     note_repository = Mock(BaseNoteRepository)
@@ -40,7 +41,7 @@ async def test_note_create_action() -> None:
 
 @pytest.mark.anyio
 async def test_note_create_action_raises_not_found_when_melding_does_not_exist() -> None:
-    user = User(username="behandelaar", email="behandelaar@example.com")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
 
     note_repository = Mock(BaseNoteRepository)
     note_repository.save = AsyncMock()
@@ -108,7 +109,27 @@ async def test_note_list_action() -> None:
 
     assert result is notes
     melding_repository.retrieve.assert_awaited_once_with(123)
-    note_repository.find_by_melding.assert_awaited_once_with(123)
+    note_repository.find_by_melding.assert_awaited_once_with(123, sort_attribute_name=None, sort_direction=None)
+
+
+@pytest.mark.anyio
+async def test_note_list_action_passes_sorting_to_repository() -> None:
+    melding = Melding(text="melding")
+    notes = [Mock(Note), Mock(Note)]
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.find_by_melding = AsyncMock(return_value=notes)
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+
+    action: NoteListAction[Note, Melding] = NoteListAction(note_repository, melding_repository)
+
+    result = await action(123, sort_attribute_name="created_at", sort_direction=SortingDirection.DESC)
+
+    assert result is notes
+    note_repository.find_by_melding.assert_awaited_once_with(
+        123, sort_attribute_name="created_at", sort_direction=SortingDirection.DESC
+    )
 
 
 @pytest.mark.anyio
