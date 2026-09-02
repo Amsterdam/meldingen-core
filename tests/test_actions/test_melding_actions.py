@@ -904,7 +904,6 @@ async def test_melder_list_answers() -> None:
     assert answers == []
 
 
-
 async def assert_melding_submit_action_melder(repo_melding: Melding):
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
