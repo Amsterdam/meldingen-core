@@ -944,7 +944,7 @@ async def test_submit_melding_melder_without_email() -> None:
         await assert_melding_submit_action_melder(repo_melding)
     )
 
-    confirmation_mailer.assert_not_called()
+    confirmation_mailer.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -954,7 +954,7 @@ async def test_submit_melding_melder_with_email_empty_string() -> None:
         await assert_melding_submit_action_melder(repo_melding)
     )
 
-    confirmation_mailer.assert_not_called()
+    confirmation_mailer.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -1344,7 +1344,7 @@ async def test_delete_answer_not_found_for_melding() -> None:
     with pytest.raises(NotFoundException):
         await action(123, 456, "token")
 
-    answer_repository.delete.assert_not_called()
+    answer_repository.delete.assert_not_awaited()
 
 
 @pytest.mark.anyio
