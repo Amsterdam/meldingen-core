@@ -904,9 +904,9 @@ async def test_melder_list_answers() -> None:
     assert answers == []
 
 
-@pytest.mark.anyio
-async def test_submit_melding_melder() -> None:
-    repo_melding = Melding("text")
+async def assert_melding_submit_action_melder(
+    repo_melding: Melding,
+) -> tuple[Mock, Mock, AsyncMock, AsyncMock, Melding]:
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     token_verifier = AsyncMock(TokenVerifier)
@@ -921,11 +921,50 @@ async def test_submit_melding_melder() -> None:
     )
 
     melding = await action(1, "token")
+
     assert melding == repo_melding
 
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT)
     token_invalidator.assert_called_once_with(repo_melding)
     repository.save.assert_called_once_with(repo_melding)
+
+    return state_machine, repository, token_invalidator, confirmation_mailer, melding
+
+
+@pytest.mark.anyio
+async def test_submit_melding_melder() -> None:
+    repo_melding = Melding("melding text")
+    await assert_melding_submit_action_melder(repo_melding)
+
+
+@pytest.mark.anyio
+async def test_submit_melding_melder_without_email() -> None:
+    repo_melding = Melding("melding text")
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
+
+    confirmation_mailer.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_submit_melding_melder_with_email_empty_string() -> None:
+    repo_melding = Melding(text="melding text", email="")
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
+
+    confirmation_mailer.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_submit_melding_melder_with_email() -> None:
+    repo_melding = Melding(text="melding text", email="test@example.com")
+    state_machine, repository, token_invalidator, confirmation_mailer, melding = (
+        await assert_melding_submit_action_melder(repo_melding)
+    )
+
+    confirmation_mailer.assert_called_once_with(repo_melding)
 
 
 @pytest.mark.anyio
@@ -1305,7 +1344,7 @@ async def test_delete_answer_not_found_for_melding() -> None:
     with pytest.raises(NotFoundException):
         await action(123, 456, "token")
 
-    answer_repository.delete.assert_not_called()
+    answer_repository.delete.assert_not_awaited()
 
 
 @pytest.mark.anyio
