@@ -29,12 +29,12 @@ class BaseRepository(Generic[T], metaclass=ABCMeta):
     @abstractmethod
     async def list(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         filters: NameListFilters | None = None,
+        apply_visibility_filters: bool = True,
     ) -> Sequence[T]: ...
 
     @abstractmethod

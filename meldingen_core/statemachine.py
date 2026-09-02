@@ -62,6 +62,7 @@ class MeldingTransitions(StrEnum):
     REOPEN = "reopen"
     PROCESS = "process"
     COMPLETE = "complete"
+    RECLASSIFY = "reclassify"
 
 
 class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):

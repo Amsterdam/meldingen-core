@@ -10,6 +10,7 @@ from meldingen_core.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderUploadAttachmentAction,
@@ -459,13 +460,13 @@ class TestListAttachmentsAction:
         repository.find_by_melding.assert_awaited_once_with(melding_id)
 
 
-class TestDeleteAttachmentAction:
+class TestMelderDeleteAttachmentAction:
     @pytest.mark.anyio
     async def test_attachment_not_found(self) -> None:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = None
 
-        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -485,7 +486,7 @@ class TestDeleteAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
             AsyncMock(TokenVerifier),
             attachment_repository,
             Mock(Filesystem),
@@ -511,7 +512,7 @@ class TestDeleteAttachmentAction:
         filesystem_mock = Mock(Filesystem)
         filesystem_mock.delete.side_effect = filesystem.NotFoundException
 
-        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
@@ -536,7 +537,7 @@ class TestDeleteAttachmentAction:
 
         filesystem_mock = Mock(Filesystem)
 
-        action: DeleteAttachmentAction[Attachment, Melding] = DeleteAttachmentAction(
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
             token_verifier,
             attachment_repository,
             filesystem_mock,
@@ -545,7 +546,72 @@ class TestDeleteAttachmentAction:
         await action(123, 456, "supersecrettoken")
 
         filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
-        attachment_repository.delete.assert_awaited_once_with(456)
+        attachment_repository.delete.assert_awaited_once_with(attachment.id)
+
+
+class TestDeleteAttachmentAction:
+    @pytest.mark.anyio
+    async def test_attachment_not_found(self) -> None:
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = None
+
+        action: DeleteAttachmentAction[Attachment] = DeleteAttachmentAction(
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(456)
+
+        assert str(exception_info.value) == "Attachment not found"
+
+    @pytest.mark.anyio
+    async def test_file_not_found(self) -> None:
+        attachment = Attachment(
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="text")
+        )
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        filesystem_mock = Mock(Filesystem)
+        filesystem_mock.delete.side_effect = filesystem.NotFoundException
+
+        action: DeleteAttachmentAction[Attachment] = DeleteAttachmentAction(
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(456)
+
+        assert str(exception_info.value) == "File not found"
+
+        attachment_repository.delete.assert_not_awaited()
+
+    @pytest.mark.anyio
+    async def test_delete_attachment(self) -> None:
+        attachment = Attachment(
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="text")
+        )
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        filesystem_mock = Mock(Filesystem)
+
+        action: DeleteAttachmentAction[Attachment] = DeleteAttachmentAction(
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        await action(456)
+
+        attachment_repository.retrieve.assert_awaited_once_with(456)
+        filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
+        attachment_repository.delete.assert_awaited_once_with(attachment.id)
 
 
 class TestUploadAttachmentAction:
