@@ -2,9 +2,9 @@ from typing import Generic, Sequence, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.melding_retriever import retrieve_or_raise
 from meldingen_core.models import Asset, Melding
 from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repository_item import retrieve_or_raise
 
 A = TypeVar("A", bound=Asset)
 M = TypeVar("M", bound=Melding)

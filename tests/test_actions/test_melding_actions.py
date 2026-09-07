@@ -41,7 +41,6 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
-from meldingen_core.melding_retriever import MeldingRetriever
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Question, Source, User
 from meldingen_core.reclassification import BaseReclassification, ReclassificationNotAllowedException
 from meldingen_core.repositories import (
@@ -53,6 +52,7 @@ from meldingen_core.repositories import (
     BaseNoteRepository,
     BaseSourceRepository,
 )
+from meldingen_core.repository_item import RepositoryItem
 from meldingen_core.statemachine import (
     BaseMeldingStateMachine,
     MeldingBackofficeStates,
@@ -1193,7 +1193,7 @@ async def test_delete_asset_asset_does_not_exist() -> None:
     asset_repository.retrieve.return_value = None
 
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        MeldingRetriever(Mock(BaseMeldingRepository)),
+        RepositoryItem(Mock(BaseMeldingRepository)),
         asset_repository,
         AsyncMock(RelationshipManager),
     )
@@ -1217,11 +1217,11 @@ async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = asset
 
-    melding_retriever = AsyncMock(MeldingRetriever)
-    melding_retriever.return_value = Melding("different melding")
+    repository_item_retrieve = AsyncMock(RepositoryItem)
+    repository_item_retrieve.return_value = Melding("different melding")
 
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        melding_retriever,
+        repository_item_retrieve,
         asset_repository,
         AsyncMock(RelationshipManager),
     )
@@ -1245,14 +1245,14 @@ async def test_delete_asset_asset_exists() -> None:
     melding.assets = [asset]
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = asset
-    melding_retriever = AsyncMock(MeldingRetriever)
-    melding_retriever.return_value = melding
+    repository_item_retrieve = AsyncMock(RepositoryItem)
+    repository_item_retrieve.return_value = melding
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [asset]
 
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        melding_retriever,
+        repository_item_retrieve,
         asset_repository,
         relationship_manager,
     )
@@ -1267,11 +1267,11 @@ async def test_delete_answer_not_found_for_melding() -> None:
     answer_repository = Mock(BaseAnswerRepository)
     answer_repository.find_by_id_and_melding = AsyncMock(return_value=None)
 
-    melding_retriever = AsyncMock(MeldingRetriever)
-    melding_retriever.return_value = Melding("text")
+    repository_item_retrieve = AsyncMock(RepositoryItem)
+    repository_item_retrieve.return_value = Melding("text")
 
     action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
-        melding_retriever,
+        repository_item_retrieve,
         answer_repository,
     )
 
@@ -1289,11 +1289,11 @@ async def test_delete_answer_answer_exists() -> None:
     answer_repository = Mock(BaseAnswerRepository)
     answer_repository.find_by_id_and_melding = AsyncMock(return_value=answer)
 
-    melding_retriever = AsyncMock(MeldingRetriever)
-    melding_retriever.return_value = melding
+    repository_item_retrieve = AsyncMock(RepositoryItem)
+    repository_item_retrieve.return_value = melding
 
     action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
-        melding_retriever,
+        repository_item_retrieve,
         answer_repository,
     )
 

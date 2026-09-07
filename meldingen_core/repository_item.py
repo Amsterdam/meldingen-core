@@ -7,7 +7,7 @@ from meldingen_core.repositories import BaseRepository
 T = TypeVar("T", bound=Melding)
 
 
-class MeldingRetriever(Generic[T]):
+class RepositoryItem(Generic[T]):
     _repository: BaseRepository[T]
 
     def __init__(self, repository: BaseRepository[T]):

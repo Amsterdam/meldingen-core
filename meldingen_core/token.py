@@ -2,9 +2,9 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from typing import Generic, TypeVar
 
-from meldingen_core.melding_retriever import retrieve_or_raise
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repository_item import retrieve_or_raise
 
 T = TypeVar("T", bound=Melding)
 

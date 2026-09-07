@@ -14,7 +14,6 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.melding_retriever import MeldingRetriever, retrieve_or_raise
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Source, User
 from meldingen_core.reclassification import BaseReclassification, ReclassificationNotAllowedException
 from meldingen_core.repositories import (
@@ -27,6 +26,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseSourceRepository,
 )
+from meldingen_core.repository_item import RepositoryItem, retrieve_or_raise
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingBackofficeStates, MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator
 
@@ -439,19 +439,19 @@ class MeldingListQuestionsAnswersAction(Generic[A]):
 
 
 class MeldingAnswerDeleteAction(Generic[T, A]):
-    _melding_retriever: MeldingRetriever[T]
+    _repository_item_retrieve: RepositoryItem[T]
     _answer_repository: BaseAnswerRepository[A]
 
     def __init__(
         self,
-        melding_retriever: MeldingRetriever[T],
+        repository_item_retrieve: RepositoryItem[T],
         answer_repository: BaseAnswerRepository[A],
     ) -> None:
-        self._melding_retriever = melding_retriever
+        self._repository_item_retrieve = repository_item_retrieve
         self._answer_repository = answer_repository
 
     async def __call__(self, melding_id: int, answer_id: int) -> None:
-        await self._melding_retriever(melding_id)
+        await self._repository_item_retrieve(melding_id)
 
         answer = await self._answer_repository.find_by_id_and_melding(answer_id, melding_id)
         if answer is None:
@@ -562,22 +562,22 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
 
 
 class MeldingDeleteAssetAction(Generic[T, AS]):
-    _retrieve_or_raise: MeldingRetriever[T]
+    _repository_item_retrieve: RepositoryItem[T]
     _asset_repository: BaseAssetRepository[AS]
     _relationship_manager: RelationshipManager[T, AS]
 
     def __init__(
         self,
-        melding_retriever: MeldingRetriever[T],
+        repository_item_retrieve: RepositoryItem[T],
         asset_repository: BaseAssetRepository[AS],
         relationship_manager: RelationshipManager[T, AS],
     ):
-        self._retrieve_or_raise = melding_retriever
+        self._repository_item_retrieve = repository_item_retrieve
         self._asset_repository = asset_repository
         self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int, asset_id: int) -> None:
-        melding = await self._retrieve_or_raise(melding_id)
+        melding = await self._repository_item_retrieve(melding_id)
         asset = await self._asset_repository.retrieve(asset_id)
 
         if asset is None:

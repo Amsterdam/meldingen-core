@@ -8,9 +8,9 @@ from plugfs.filesystem import Filesystem
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
-from meldingen_core.melding_retriever import MeldingRetriever, retrieve_or_raise
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
+from meldingen_core.repository_item import RepositoryItem, retrieve_or_raise
 from meldingen_core.validators import (
     BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,
@@ -153,21 +153,21 @@ class BaseDownloadAttachmentAction(Generic[A]):
 
 
 class DownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
-    _retrieve_or_raise: MeldingRetriever[M]
+    _repository_item_retrieve: RepositoryItem[M]
 
     def __init__(
         self,
-        melding_retriever: MeldingRetriever[M],
+        repository_item_retrieve: RepositoryItem[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._retrieve_or_raise = melding_retriever
+        self._repository_item_retrieve = repository_item_retrieve
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(
         self, melding_id: int, attachment_id: int, _type: AttachmentTypes
     ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await self._retrieve_or_raise(melding_id)
+        melding = await self._repository_item_retrieve(melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
@@ -215,19 +215,19 @@ class BaseDeleteAttachmentAction(Generic[A]):
 
 
 class MelderDeleteAttachmentAction(Generic[A, M], BaseDeleteAttachmentAction[A]):
-    _retrieve_or_raise: MeldingRetriever[M]
+    _repository_item_retrieve: RepositoryItem[M]
 
     def __init__(
         self,
-        melding_retriever: MeldingRetriever[M],
+        repository_item_retrieve: RepositoryItem[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._retrieve_or_raise = melding_retriever
+        self._repository_item_retrieve = repository_item_retrieve
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(self, melding_id: int, attachment_id: int) -> None:
-        melding = await self._retrieve_or_raise(melding_id)
+        melding = await self._repository_item_retrieve(melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:

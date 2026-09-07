@@ -16,9 +16,9 @@ from meldingen_core.actions.attachment import (
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
-from meldingen_core.melding_retriever import MeldingRetriever
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
+from meldingen_core.repository_item import RepositoryItem
 from meldingen_core.validators import (
     AttachmentLimitReachedException,
     BaseAttachmentLimitValidator,
@@ -39,7 +39,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = None
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            AsyncMock(MeldingRetriever),
+            AsyncMock(RepositoryItem),
             attachment_repository,
             Mock(Filesystem),
         )
@@ -59,7 +59,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            AsyncMock(MeldingRetriever),
+            AsyncMock(RepositoryItem),
             attachment_repository,
             Mock(Filesystem),
         )
@@ -73,8 +73,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.parametrize("_type", AttachmentTypes)
     async def test_can_handle_attachment_download(self, _type: AttachmentTypes) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -88,7 +88,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             Mock(Filesystem),
         )
@@ -98,8 +98,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_optimized_path_none(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -108,7 +108,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             Mock(Filesystem),
         )
@@ -121,8 +121,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_optimized_media_type_none(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -132,7 +132,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             Mock(Filesystem),
         )
@@ -145,8 +145,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_thumbnail_path_none(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -155,7 +155,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             Mock(Filesystem),
         )
@@ -168,8 +168,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_thumbnail_media_type_none(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -179,7 +179,7 @@ class TestDownloadAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             Mock(Filesystem),
         )
@@ -192,8 +192,8 @@ class TestDownloadAttachmentAction:
     @pytest.mark.anyio
     async def test_file_not_found(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -208,7 +208,7 @@ class TestDownloadAttachmentAction:
         filesystem_mock.get_file.return_value = file
 
         action: DownloadAttachmentAction[Attachment, Melding] = DownloadAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             filesystem_mock,
         )
@@ -241,7 +241,7 @@ class TestMelderDeleteAttachmentAction:
         attachment_repository.retrieve.return_value = None
 
         action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
-            AsyncMock(MeldingRetriever),
+            AsyncMock(RepositoryItem),
             attachment_repository,
             Mock(Filesystem),
         )
@@ -261,7 +261,7 @@ class TestMelderDeleteAttachmentAction:
         attachment_repository.retrieve.return_value = attachment
 
         action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
-            AsyncMock(MeldingRetriever),
+            AsyncMock(RepositoryItem),
             attachment_repository,
             Mock(Filesystem),
         )
@@ -274,8 +274,8 @@ class TestMelderDeleteAttachmentAction:
     @pytest.mark.anyio
     async def test_file_not_found(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -287,7 +287,7 @@ class TestMelderDeleteAttachmentAction:
         filesystem_mock.delete.side_effect = filesystem.NotFoundException
 
         action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             filesystem_mock,
         )
@@ -300,8 +300,8 @@ class TestMelderDeleteAttachmentAction:
     @pytest.mark.anyio
     async def test_delete_attachment(self) -> None:
         melding = Melding(text="text")
-        melding_retriever = AsyncMock(MeldingRetriever)
-        melding_retriever.return_value = melding
+        repository_item_retrieve = AsyncMock(RepositoryItem)
+        repository_item_retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
@@ -312,7 +312,7 @@ class TestMelderDeleteAttachmentAction:
         filesystem_mock = Mock(Filesystem)
 
         action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
-            melding_retriever,
+            repository_item_retrieve,
             attachment_repository,
             filesystem_mock,
         )
