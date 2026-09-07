@@ -2,7 +2,7 @@ from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
-from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
+from meldingen_core.repositories import BaseRepository
 
 T = TypeVar("T", bound=Melding)
 

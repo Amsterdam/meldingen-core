@@ -8,10 +8,9 @@ from plugfs.filesystem import Filesystem
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
-from meldingen_core.melding_retriever import retrieve_or_raise
+from meldingen_core.melding_retriever import MeldingRetriever, retrieve_or_raise
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
-from meldingen_core.melding_retriever import MeldingRetriever
 from meldingen_core.validators import (
     BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,

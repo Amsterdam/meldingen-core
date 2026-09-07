@@ -4,9 +4,9 @@ from typing import Generic, TypeVar
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
+from meldingen_core.melding_retriever import retrieve_or_raise
 from meldingen_core.models import Melding, Note, User
 from meldingen_core.repositories import BaseMeldingRepository, BaseNoteRepository
-from meldingen_core.melding_retriever import retrieve_or_raise
 
 N = TypeVar("N", bound=Note)
 T = TypeVar("T", bound=Melding)
