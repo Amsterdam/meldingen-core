@@ -4,24 +4,10 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.models import Asset, Melding
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.token import TokenVerifier
+from meldingen_core.melding_retriever import retrieve_or_raise
 
 A = TypeVar("A", bound=Asset)
 M = TypeVar("M", bound=Melding)
-
-
-class MelderListAssetsAction(Generic[A, M]):
-    _verify_token: TokenVerifier[M]
-    _relationship_manager: RelationshipManager[M, A]
-
-    def __init__(self, token_verifier: TokenVerifier[M], relationship_manager: RelationshipManager[M, A]) -> None:
-        self._verify_token = token_verifier
-        self._relationship_manager = relationship_manager
-
-    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
-        melding = await self._verify_token(melding_id, token)
-
-        return await self._relationship_manager.get_related(melding)
 
 
 class ListAssetsAction(Generic[A, M]):
@@ -35,9 +21,7 @@ class ListAssetsAction(Generic[A, M]):
         self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
-        melding = await self._melding_repository.retrieve(melding_id)
 
-        if melding is None:
-            raise NotFoundException("Melding not found")
+        melding = await retrieve_or_raise(self._melding_repository, melding_id)
 
         return await self._relationship_manager.get_related(melding)

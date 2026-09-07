@@ -8,9 +8,10 @@ from plugfs.filesystem import Filesystem
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
+from meldingen_core.melding_retriever import retrieve_or_raise
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
-from meldingen_core.token import TokenVerifier
+from meldingen_core.melding_retriever import MeldingRetriever
 from meldingen_core.validators import (
     BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,
@@ -64,43 +65,6 @@ class BaseUploadAttachmentAction(Generic[A, M, U]):
         return attachment
 
 
-class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
-    _verify_token: TokenVerifier[M]
-
-    def __init__(
-        self,
-        token_verifier: TokenVerifier[M],
-        attachment_factory: BaseAttachmentFactory[A, M, U],
-        attachment_repository: BaseAttachmentRepository[A],
-        media_type_validator: BaseMediaTypeValidator,
-        media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        attachment_limit_validator: BaseAttachmentLimitValidator[M],
-        ingestor: BaseIngestor[A],
-    ):
-        self._verify_token = token_verifier
-        super().__init__(
-            attachment_factory,
-            attachment_repository,
-            media_type_validator,
-            media_type_integrity_validator,
-            attachment_limit_validator,
-            ingestor,
-        )
-
-    async def __call__(
-        self,
-        melding_id: int,
-        token: str,
-        original_filename: str,
-        media_type: str,
-        data_header: bytes,
-        data: AsyncIterator[bytes],
-    ) -> A:
-        melding = await self._verify_token(melding_id, token)
-        await self._validate_attachment(media_type, data_header, melding)
-        return await self._save_attachment(original_filename, melding, media_type, None, data)
-
-
 class UploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
     _melding_repository: BaseMeldingRepository[M]
 
@@ -133,9 +97,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
         data: AsyncIterator[bytes],
         user: U,
     ) -> A:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException("Melding not found")
+        melding = await retrieve_or_raise(self._melding_repository, melding_id)
 
         await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
@@ -191,33 +153,28 @@ class BaseDownloadAttachmentAction(Generic[A]):
             raise NotFoundException("File not found") from exception
 
 
-class MelderDownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
-    _verify_token: TokenVerifier[M]
+class DownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
+    _retrieve_or_raise: MeldingRetriever[M]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M],
+        melding_retriever: MeldingRetriever[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._verify_token = token_verifier
+        self._retrieve_or_raise = melding_retriever
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(
-        self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
+        self, melding_id: int, attachment_id: int, _type: AttachmentTypes
     ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await self._verify_token(melding_id, token)
+        melding = await self._retrieve_or_raise(melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
             raise NotFoundException(f"Melding with id {melding_id} does not have attachment with id {attachment_id}")
 
         return await self._get_data(attachment, _type)
-
-
-class DownloadAttachmentAction(BaseDownloadAttachmentAction[A]):
-    async def __call__(self, attachment_id: int, _type: AttachmentTypes) -> tuple[AsyncIterator[bytes], str]:
-        return await self._get_data(await self._get_attachment(attachment_id), _type)
 
 
 class ListAttachmentsAction(Generic[A]):
@@ -227,20 +184,6 @@ class ListAttachmentsAction(Generic[A]):
         self._attachment_repository = attachment_repository
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
-        return await self._attachment_repository.find_by_melding(melding_id)
-
-
-class MelderListAttachmentsAction(Generic[A, M]):
-    _verify_token: TokenVerifier[M]
-    _attachment_repository: BaseAttachmentRepository[A]
-
-    def __init__(self, token_verifier: TokenVerifier[M], attachment_repository: BaseAttachmentRepository[A]):
-        self._attachment_repository = attachment_repository
-        self._verify_token = token_verifier
-
-    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
-        await self._verify_token(melding_id, token)
-
         return await self._attachment_repository.find_by_melding(melding_id)
 
 
@@ -273,19 +216,19 @@ class BaseDeleteAttachmentAction(Generic[A]):
 
 
 class MelderDeleteAttachmentAction(Generic[A, M], BaseDeleteAttachmentAction[A]):
-    _verify_token: TokenVerifier[M]
+    _retrieve_or_raise: MeldingRetriever[M]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M],
+        melding_retriever: MeldingRetriever[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._verify_token = token_verifier
+        self._retrieve_or_raise = melding_retriever
         super().__init__(attachment_repository, filesystem)
 
-    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> None:
-        melding = await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int, attachment_id: int) -> None:
+        melding = await self._retrieve_or_raise(melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:

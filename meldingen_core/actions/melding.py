@@ -14,6 +14,7 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
+from meldingen_core.melding_retriever import MeldingRetriever, retrieve_or_raise
 from meldingen_core.models import Answer, Asset, AssetType, Classification, Label, Melding, Note, Source, User
 from meldingen_core.reclassification import BaseReclassification, ReclassificationNotAllowedException
 from meldingen_core.repositories import (
@@ -27,7 +28,7 @@ from meldingen_core.repositories import (
     BaseSourceRepository,
 )
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingBackofficeStates, MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
+from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator
 
 log = logging.getLogger(__name__)
 
@@ -148,10 +149,7 @@ class MeldingUpdateAction(Generic[T, C, L, S], BaseUpdateAction[T]):
         label_ids = values.pop("label_ids", None)
         source_id = values.pop("source_id", None)
         classification_id = values.pop("classification_id", None)
-
-        melding = await self._repository.retrieve(pk=pk)
-        if melding is None:
-            raise NotFoundException()
+        melding = await retrieve_or_raise(self._repository, pk)
 
         # Both checks are done before anything is written, so a refused classification leaves the
         # melding untouched. The state is refused on the presence of a classification_id rather than
@@ -195,7 +193,6 @@ class MeldingUpdateAction(Generic[T, C, L, S], BaseUpdateAction[T]):
 class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
-    _verify_token: TokenVerifier[T]
     _classify: Classifier[C]
     _state_machine: BaseMeldingStateMachine[T]
     _reclassifier: BaseReclassification[T, C]
@@ -203,19 +200,17 @@ class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
     def __init__(
         self,
         repository: BaseRepository[T],
-        token_verifier: TokenVerifier[T],
         classifier: Classifier[C],
         state_machine: BaseMeldingStateMachine[T],
         reclassifier: BaseReclassification[T, C],
     ) -> None:
         super().__init__(repository)
-        self._verify_token = token_verifier
         self._classify = classifier
         self._state_machine = state_machine
         self._reclassifier = reclassifier
 
-    async def __call__(self, pk: int, values: dict[str, Any], token: str) -> T:
-        melding = await self._verify_token(pk, token)
+    async def __call__(self, pk: int, values: dict[str, Any]) -> T:
+        melding = await retrieve_or_raise(self._repository, pk)
         old_classification: C = cast(C, melding.classification)
 
         for key, value in values.items():
@@ -239,18 +234,8 @@ class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
 class MeldingAddContactInfoAction(BaseCRUDAction[T]):
     """Action that adds contact information to a melding."""
 
-    _verify_token: TokenVerifier[T]
-
-    def __init__(
-        self,
-        repository: BaseMeldingRepository[T],
-        token_verifier: TokenVerifier[T],
-    ) -> None:
-        super().__init__(repository)
-        self._verify_token = token_verifier
-
-    async def __call__(self, pk: int, phone: str | None, email: str | None, token: str) -> T:
-        melding = await self._verify_token(pk, token)
+    async def __call__(self, pk: int, phone: str | None, email: str | None) -> T:
+        melding = await retrieve_or_raise(self._repository, pk)
 
         melding.phone = phone
         melding.email = email
@@ -282,42 +267,7 @@ class BaseStateTransitionAction(Generic[T], metaclass=ABCMeta):
     def transition_name(self) -> str: ...
 
     async def __call__(self, melding_id: int) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
-        await self._state_machine.transition(melding, self.transition_name)
-        await self._repository.save(melding)
-
-        return melding
-
-
-class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
-    """
-    This action covers transitions that require the melding's token to be verified.
-    This is the case for unauthenticated state transitions where a user submits a melding.
-    """
-
-    _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T]
-    _verify_token: TokenVerifier[T]
-
-    def __init__(
-        self,
-        state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T],
-        token_verifier: TokenVerifier[T],
-    ):
-        self._state_machine = state_machine
-        self._repository = repository
-        self._verify_token = token_verifier
-
-    @property
-    @abstractmethod
-    def transition_name(self) -> str: ...
-
-    async def __call__(self, melding_id: int, token: str) -> T:
-        melding = await self._verify_token(melding_id, token)
+        melding = await retrieve_or_raise(self._repository, melding_id)
 
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
@@ -407,9 +357,7 @@ class MeldingCompleteAction(Generic[T]):
         self._mailer = mailer
 
     async def __call__(self, melding_id: int, mail_text: str | None = None) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
+        melding = await retrieve_or_raise(self._repository, melding_id)
 
         await self._state_machine.transition(melding, MeldingTransitions.COMPLETE)
         await self._repository.save(melding)
@@ -450,9 +398,7 @@ class MeldingReclassifyAction(Generic[T, C, N, U]):
         self._state_machine = state_machine
 
     async def __call__(self, melding_id: int, classification_id: int, reason: str, user: U) -> T:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException(f"Failed to find melding with id {melding_id}")
+        melding = await retrieve_or_raise(self._melding_repository, melding_id)
 
         classification = await self._classification_repository.retrieve(classification_id)
         if classification is None:
@@ -479,24 +425,6 @@ class MeldingReclassifyAction(Generic[T, C, N, U]):
 A = TypeVar("A", bound=Answer)
 
 
-class MelderMeldingListQuestionsAnswersAction(Generic[T, A]):
-    _verify_token: TokenVerifier[T]
-    _answer_repository: BaseAnswerRepository[A]
-
-    def __init__(
-        self,
-        token_verifier: TokenVerifier[T],
-        answer_repository: BaseAnswerRepository[A],
-    ) -> None:
-        self._verify_token = token_verifier
-        self._answer_repository = answer_repository
-
-    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
-        await self._verify_token(melding_id, token)
-
-        return await self._answer_repository.find_by_melding(melding_id)
-
-
 class MeldingListQuestionsAnswersAction(Generic[A]):
     _answer_repository: BaseAnswerRepository[A]
 
@@ -511,19 +439,19 @@ class MeldingListQuestionsAnswersAction(Generic[A]):
 
 
 class MeldingAnswerDeleteAction(Generic[T, A]):
-    _verify_token: TokenVerifier[T]
+    _melding_retriever: MeldingRetriever[T]
     _answer_repository: BaseAnswerRepository[A]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[T],
+        melding_retriever: MeldingRetriever[T],
         answer_repository: BaseAnswerRepository[A],
     ) -> None:
-        self._verify_token = token_verifier
+        self._melding_retriever = melding_retriever
         self._answer_repository = answer_repository
 
-    async def __call__(self, melding_id: int, answer_id: int, token: str) -> None:
-        await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int, answer_id: int) -> None:
+        await self._melding_retriever(melding_id)
 
         answer = await self._answer_repository.find_by_id_and_melding(answer_id, melding_id)
         if answer is None:
@@ -533,9 +461,8 @@ class MeldingAnswerDeleteAction(Generic[T, A]):
 
 
 class MeldingSubmitActionMelder(BaseCRUDAction[T]):
-    _repository: BaseMeldingRepository[T]
+    _repository: BaseRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
-    _verify_token: TokenVerifier[T]
     _invalidate_token: BaseTokenInvalidator[T]
     _send_mail: BaseMeldingConfirmationMailer[T]
 
@@ -543,23 +470,22 @@ class MeldingSubmitActionMelder(BaseCRUDAction[T]):
         self,
         repository: BaseMeldingRepository[T],
         state_machine: BaseMeldingStateMachine[T],
-        token_verifier: TokenVerifier[T],
         token_invalidator: BaseTokenInvalidator[T],
         confirmation_mailer: BaseMeldingConfirmationMailer[T],
     ) -> None:
         self._repository = repository
         self._state_machine = state_machine
-        self._verify_token = token_verifier
         self._invalidate_token = token_invalidator
         self._send_mail = confirmation_mailer
 
     async def __call__(
         self,
         melding_id: int,
-        token: str,
     ) -> T:
-        melding = await self._verify_token(melding_id, token)
+        melding = await retrieve_or_raise(self._repository, melding_id)
+
         await self._state_machine.transition(melding, self.transition_name)
+        # Invalidate the token after transitioning the state. No further actions should rely on the old token.
         await self._invalidate_token(melding)
         await self._repository.save(melding)
 
@@ -584,7 +510,6 @@ class AssetData:
 
 
 class MeldingAddAssetAction(Generic[T, AS, AT]):
-    _verify_token: TokenVerifier[T]
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
@@ -593,23 +518,20 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[T],
         melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
         melding_asset_relationship_manager: RelationshipManager[T, AS],
     ):
-        self._verify_token = token_verifier
         self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
-    async def __call__(self, melding_id: int, data: AssetData, token: str) -> T:
-        melding = await self._verify_token(melding_id, token)
-
+    async def __call__(self, melding_id: int, data: AssetData) -> T:
+        melding = await retrieve_or_raise(self._melding_repository, melding_id)
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
 
         if melding_asset_type is None:
@@ -640,22 +562,22 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
 
 
 class MeldingDeleteAssetAction(Generic[T, AS]):
-    _verify_token: TokenVerifier[T]
+    _retrieve_or_raise: MeldingRetriever[T]
     _asset_repository: BaseAssetRepository[AS]
     _relationship_manager: RelationshipManager[T, AS]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[T],
+        melding_retriever: MeldingRetriever[T],
         asset_repository: BaseAssetRepository[AS],
         relationship_manager: RelationshipManager[T, AS],
     ):
-        self._verify_token = token_verifier
+        self._retrieve_or_raise = melding_retriever
         self._asset_repository = asset_repository
         self._relationship_manager = relationship_manager
 
-    async def __call__(self, melding_id: int, asset_id: int, token: str) -> None:
-        melding = await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int, asset_id: int) -> None:
+        melding = await self._retrieve_or_raise(melding_id)
         asset = await self._asset_repository.retrieve(asset_id)
 
         if asset is None:

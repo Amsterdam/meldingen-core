@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from typing import Generic, TypeVar
 
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.melding_retriever import retrieve_or_raise
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
 
@@ -34,9 +34,7 @@ class TokenVerifier(Generic[T]):
         self._repository = repository
 
     async def __call__(self, melding_id: int, token: str) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException("Melding not found")
+        melding = await retrieve_or_raise(self._repository, melding_id)
 
         if token != melding.token:
             raise InvalidTokenException()
