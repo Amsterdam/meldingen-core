@@ -331,19 +331,19 @@ class MeldingAnswerQuestionsAction(BaseStateTransitionAction[T]):
         return MeldingTransitions.ANSWER_QUESTIONS
 
 
-class MeldingAddAttachmentsAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingAddAttachmentsAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_ATTACHMENTS
 
 
-class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingSubmitLocationAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT_LOCATION
 
 
-class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingContactInfoAddedAction(BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_CONTACT_INFO
