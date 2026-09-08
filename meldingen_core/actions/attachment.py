@@ -94,7 +94,7 @@ class UploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
         media_type: str,
         data_header: bytes,
         data: AsyncIterator[bytes],
-        user: U,
+        user: U | None,
     ) -> A:
         melding = await retrieve_or_raise(self._melding_repository, melding_id)
 
