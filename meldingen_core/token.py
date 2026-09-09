@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 
 
 class BaseTokenGenerator(metaclass=ABCMeta):
@@ -30,7 +31,6 @@ class TokenVerifier[T: Melding]:
         self._repository = repository
 
     async def __call__(self, melding_id: int, token: str) -> T:
-        from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 
         melding = await retrieve_or_raise_not_found(self._repository, melding_id)
 
