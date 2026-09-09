@@ -60,7 +60,7 @@ class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User | None]:
 
 
 class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUploadAttachmentAction[A, M, U]):
-    _repository: BaseMeldingRepository[M]
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
@@ -72,7 +72,6 @@ class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUplo
         attachment_limit_validator: BaseAttachmentLimitValidator[M],
         ingestor: BaseIngestor[A],
     ):
-        self._repository = melding_repository
         super().__init__(
             attachment_factory,
             attachment_repository,
@@ -81,6 +80,7 @@ class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUplo
             attachment_limit_validator,
             ingestor,
         )
+        self._melding_repository = melding_repository
 
     async def __call__(
         self,
@@ -91,7 +91,7 @@ class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUplo
         data: AsyncIterator[bytes],
         user: U,
     ) -> A:
-        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
         await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
@@ -147,7 +147,7 @@ class BaseDownloadAttachmentAction[A: Attachment]:
 
 
 class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAttachmentAction[A]):
-    _repository: BaseMeldingRepository[M]
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
@@ -155,13 +155,13 @@ class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAtta
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._repository = melding_repository
+        self._melding_repository = melding_repository
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(
         self, melding_id: int, attachment_id: int, _type: AttachmentTypes
     ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
@@ -186,17 +186,17 @@ class ListAttachmentsAction[A: Attachment]:
 
 
 class MelderListAttachmentsAction[A: Attachment, M: Melding]:
-    _repository: BaseMeldingRepository[M]
+    _melding_repository: BaseMeldingRepository[M]
     _attachment_repository: BaseAttachmentRepository[A]
 
     def __init__(
         self, melding_repository: BaseMeldingRepository[M], attachment_repository: BaseAttachmentRepository[A]
     ):
         self._attachment_repository = attachment_repository
-        self._repository = melding_repository
+        self._melding_repository = melding_repository
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
-        await retrieve_or_raise_not_found(self._repository, melding_id)
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         return await self._attachment_repository.find_by_melding(melding_id)
 
@@ -230,7 +230,7 @@ class BaseDeleteAttachmentAction[A: Attachment]:
 
 
 class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachmentAction[A]):
-    _repository: BaseMeldingRepository[M]
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
@@ -238,11 +238,11 @@ class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachme
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._repository = melding_repository
+        self._melding_repository = melding_repository
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(self, melding_id: int, attachment_id: int) -> None:
-        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
