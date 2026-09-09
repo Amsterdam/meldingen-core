@@ -58,7 +58,7 @@ async def test_token_valid() -> None:
     repo_melding = Melding(
         "text",
         token=token,
-        token_expires=dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=1),
+        token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1),
     )
 
     repository = Mock(BaseMeldingRepository)
