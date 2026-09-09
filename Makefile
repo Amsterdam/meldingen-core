@@ -26,7 +26,7 @@ rebuild: ## Rebuild and start Docker Compose stack (detached)
 
 format: ## Auto-fix formatting + linting (ruff)
 	$(core) uv run ruff check --fix .
-	$(core) uv run ruff format --fix .
+	$(core) uv run ruff format .
 
 typecheck: ## Run mypy type checking
 	$(core) sh -c "rm -rf .mypy_cache && uv run mypy --strict ."
