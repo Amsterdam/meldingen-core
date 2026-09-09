@@ -14,7 +14,7 @@ class TestRetrieveOrRaiseNotFound:
         repository = AsyncMock(spec=BaseRepository)
         repository.retrieve = AsyncMock(return_value="item")
 
-        result = await retrieve_or_raise_not_found(repository, 123)
+        result: str = await retrieve_or_raise_not_found(repository, 123)
 
         assert result == "item"
         repository.retrieve.assert_awaited_once_with(123)
@@ -22,13 +22,13 @@ class TestRetrieveOrRaiseNotFound:
     @pytest.mark.anyio
     async def test_raises_not_found_with_default_message(self) -> None:
         class SomeEntityRepository:
-            async def retrieve(self, id: int):
+            async def retrieve(self, _id: int) -> None:
                 return None
 
         repository = SomeEntityRepository()
 
         with pytest.raises(NotFoundException) as exception_info:
-            await retrieve_or_raise_not_found(cast(BaseRepository, repository), 456)
+            await retrieve_or_raise_not_found(cast(BaseRepository[str], repository), 456)
 
         assert str(exception_info.value) == "Repository item with id:456 not found"
 
