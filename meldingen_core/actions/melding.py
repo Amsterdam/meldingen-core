@@ -141,9 +141,7 @@ class MeldingUpdateAction[T: Melding, C: Classification, L: Label, S: Source](Ba
         source_id = values.pop("source_id", None)
         classification_id = values.pop("classification_id", None)
 
-        melding = await self._repository.retrieve(pk=pk)
-        if melding is None:
-            raise NotFoundException()
+        melding = await retrieve_or_raise_not_found(self._repository, pk)
 
         # Both checks are done before anything is written, so a refused classification leaves the
         # melding untouched. The state is refused on the presence of a classification_id rather than
@@ -261,9 +259,7 @@ class BaseStateTransitionAction[T: Melding](metaclass=ABCMeta):
     def transition_name(self) -> str: ...
 
     async def __call__(self, melding_id: int) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
+        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
 
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
@@ -383,9 +379,8 @@ class MeldingCompleteAction[T: Melding](BaseStateTransitionAction[T]):
         self._mailer = mailer
 
     async def __call__(self, melding_id: int, mail_text: str | None = None) -> T:
-        melding = await self._repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
+
+        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
 
         await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
@@ -430,9 +425,7 @@ class MeldingReclassifyAction[T: Melding, C: Classification, N: Note, U: User]:
         self._state_machine = state_machine
 
     async def __call__(self, melding_id: int, classification_id: int, reason: str, user: U) -> T:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException(f"Failed to find melding with id {melding_id}")
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         classification = await self._classification_repository.retrieve(classification_id)
         if classification is None:
