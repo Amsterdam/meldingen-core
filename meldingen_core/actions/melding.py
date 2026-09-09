@@ -3,7 +3,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, TypeVar, cast, override
+from typing import Any, cast, override
 
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
@@ -469,9 +469,6 @@ class MeldingReclassifyAction[T: Melding, C: Classification, N: Note, U: User]:
         await self._melding_repository.save(melding)
 
         return melding
-
-
-A = TypeVar("A", bound=Answer)
 
 
 class MelderMeldingListQuestionsAnswersAction[T: Melding, A: Answer]:

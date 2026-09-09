@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar
 
 from meldingen_core.models import Asset, AssetType, Attachment, Melding, Note, User
 
@@ -12,9 +11,6 @@ class BaseAttachmentFactory[A: Attachment, M: Melding, U: User](metaclass=ABCMet
 class BaseAssetFactory[AS: Asset, AT: AssetType, M: Melding](metaclass=ABCMeta):
     @abstractmethod
     def __call__(self, external_id: str, asset_type: AT, melding: M, label: str, subtype: str) -> AS: ...
-
-
-N = TypeVar("N", bound=Note)
 
 
 class BaseNoteFactory[N: Note, M: Melding, U: User](metaclass=ABCMeta):

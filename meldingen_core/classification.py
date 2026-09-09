@@ -1,11 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
-
-C = TypeVar("C", bound=Classification)
 
 
 class ClassificationNotFoundException(NotFoundException): ...

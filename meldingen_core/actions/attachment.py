@@ -1,6 +1,5 @@
 from collections.abc import AsyncIterator, Sequence
 from enum import StrEnum
-from typing import TypeVar
 
 from plugfs import filesystem
 from plugfs.filesystem import Filesystem
@@ -16,10 +15,6 @@ from meldingen_core.validators import (
     BaseMediaTypeIntegrityValidator,
     BaseMediaTypeValidator,
 )
-
-A = TypeVar("A", bound=Attachment)
-M = TypeVar("M", bound=Melding)
-U = TypeVar("U", bound=User)
 
 
 class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
@@ -64,7 +59,7 @@ class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
         return attachment
 
 
-class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
+class MelderUploadAttachmentAction[A: Attachment, M: Melding, U: User](BaseUploadAttachmentAction[A, M, U]):
     _verify_token: TokenVerifier[M]
 
     def __init__(
@@ -101,7 +96,7 @@ class MelderUploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
         return await self._save_attachment(original_filename, melding, media_type, None, data)
 
 
-class UploadAttachmentAction(BaseUploadAttachmentAction[A, M, U]):
+class UploadAttachmentAction[A: Attachment, M: Melding, U: User](BaseUploadAttachmentAction[A, M, U]):
     _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
@@ -215,7 +210,7 @@ class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAtta
         return await self._get_data(attachment, _type)
 
 
-class DownloadAttachmentAction(BaseDownloadAttachmentAction[A]):
+class DownloadAttachmentAction[A: Attachment](BaseDownloadAttachmentAction[A]):
     async def __call__(self, attachment_id: int, _type: AttachmentTypes) -> tuple[AsyncIterator[bytes], str]:
         return await self._get_data(await self._get_attachment(attachment_id), _type)
 
@@ -294,6 +289,6 @@ class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachme
         await self._delete(attachment)
 
 
-class DeleteAttachmentAction(BaseDeleteAttachmentAction[A]):
+class DeleteAttachmentAction[A: Attachment](BaseDeleteAttachmentAction[A]):
     async def __call__(self, attachment_id: int) -> None:
         await self._delete(await self._get_attachment(attachment_id))
