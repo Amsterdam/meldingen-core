@@ -7,7 +7,7 @@ from meldingen_core.repositories import BaseRepository
 async def retrieve_or_raise_not_found[T](repository: BaseRepository[T], pk: int, error_message: str | None = None) -> T:
     item = await repository.retrieve(pk)
     if item is None:
-        default_error_message = type(repository).__name__ + " item not found"
+        default_error_message = f"Repository item with id:{pk} not found"
         raise NotFoundException(error_message or default_error_message)
 
     return item

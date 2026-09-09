@@ -30,7 +30,7 @@ class TestRetrieveOrRaiseNotFound:
         with pytest.raises(NotFoundException) as exception_info:
             await retrieve_or_raise_not_found(cast(BaseRepository, repository), 456)
 
-        assert str(exception_info.value) == "SomeEntityRepository item not found"
+        assert str(exception_info.value) == "Repository item with id:456 not found"
 
     @pytest.mark.anyio
     async def test_raises_not_found_with_custom_message(self) -> None:
