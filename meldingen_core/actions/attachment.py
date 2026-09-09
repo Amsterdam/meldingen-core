@@ -155,8 +155,8 @@ class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAtta
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._melding_repository = melding_repository
         super().__init__(attachment_repository, filesystem)
+        self._melding_repository = melding_repository
 
     async def __call__(
         self, melding_id: int, attachment_id: int, _type: AttachmentTypes

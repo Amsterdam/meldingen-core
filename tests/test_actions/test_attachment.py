@@ -10,6 +10,8 @@ from meldingen_core.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
+    MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     UploadAttachmentAction,
 )
@@ -29,6 +31,75 @@ from meldingen_core.validators import (
 async def _iterator() -> AsyncIterator[bytes]:
     for chunk in [b"Hello ", b"world", b"!"]:
         yield chunk
+
+
+class TestMelderDownloadAttachmentAction:
+    @pytest.mark.anyio
+    async def test_attachment_melding_not_found(self) -> None:
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = Attachment(
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = None
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.ORIGINAL)
+
+        assert str(exception_info.value) == "Repository item with id:123 not found"
+
+    @pytest.mark.anyio
+    async def test_attachment_does_not_belong_to_melding(self) -> None:
+        attachment = Attachment(
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        melding = Melding(text="another text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.ORIGINAL)
+
+        assert str(exception_info.value) == "Melding with id 123 does not have attachment with id 456"
+
+    @pytest.mark.anyio
+    async def test_attachment_can_be_downloaded(self) -> None:
+        melding = Melding(text="some text")
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.original_media_type = "image/png"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        await action(123, 456, AttachmentTypes.ORIGINAL)
 
 
 class TestDownloadAttachmentAction:
@@ -267,6 +338,105 @@ class TestDeleteAttachmentAction:
 
         await action(456)
 
+        attachment_repository.retrieve.assert_awaited_once_with(456)
+        filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
+        attachment_repository.delete.assert_awaited_once_with(attachment.id)
+
+
+class TestMelderDeleteAttachmentAction:
+    @pytest.mark.anyio
+    async def test_attachment_melding_not_found(self) -> None:
+        attachment_repository = Mock(BaseAttachmentRepository)
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = None
+
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456)
+
+        assert str(exception_info.value) == "Repository item with id:123 not found"
+        attachment_repository.retrieve.assert_not_awaited()
+
+    @pytest.mark.anyio
+    async def test_attachment_does_not_belong_to_melding(self) -> None:
+        attachment = Attachment(
+            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
+        )
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        melding = Melding(text="another text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456)
+
+        assert str(exception_info.value) == "Melding with id 123 does not have attachment with id 456"
+
+    @pytest.mark.anyio
+    async def test_file_not_found(self) -> None:
+        melding = Melding(text="text")
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        filesystem_mock = Mock(Filesystem)
+        filesystem_mock.delete.side_effect = filesystem.NotFoundException
+
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456)
+
+        assert str(exception_info.value) == "File not found"
+        attachment_repository.delete.assert_not_awaited()
+
+    @pytest.mark.anyio
+    async def test_delete_attachment(self) -> None:
+        melding = Melding(text="text")
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        filesystem_mock = Mock(Filesystem)
+
+        action: MelderDeleteAttachmentAction[Attachment, Melding] = MelderDeleteAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        await action(123, 456)
+
+        melding_repository.retrieve.assert_awaited_once_with(123)
         attachment_repository.retrieve.assert_awaited_once_with(456)
         filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
         attachment_repository.delete.assert_awaited_once_with(attachment.id)
