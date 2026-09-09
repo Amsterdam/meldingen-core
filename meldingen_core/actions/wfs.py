@@ -1,4 +1,5 @@
-from typing import AsyncIterator, Generic, Literal, TypeVar
+from collections.abc import AsyncIterator
+from typing import Generic, Literal, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType

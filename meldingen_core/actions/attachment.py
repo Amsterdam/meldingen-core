@@ -1,6 +1,6 @@
-from collections.abc import Sequence
+from collections.abc import AsyncIterator, Sequence
 from enum import StrEnum
-from typing import AsyncIterator, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from plugfs import filesystem
 from plugfs.filesystem import Filesystem

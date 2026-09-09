@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import override
 from unittest.mock import Mock
 
 import pytest

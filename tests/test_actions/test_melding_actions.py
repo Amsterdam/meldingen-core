@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import MutableSequence
 from unittest.mock import AsyncMock, Mock
 
 import pytest

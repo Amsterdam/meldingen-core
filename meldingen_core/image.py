@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod  # pragma: no cover
-from typing import AsyncIterator, Generic, TypeVar
+from collections.abc import AsyncIterator
+from typing import Generic, TypeVar
 
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.models import Attachment

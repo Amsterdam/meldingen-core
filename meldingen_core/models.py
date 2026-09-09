@@ -1,7 +1,7 @@
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, MutableSequence, TypeAlias
+from typing import Any, TypeAlias
 
 AssetTypeArguments: TypeAlias = dict[str, Any]
 

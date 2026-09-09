@@ -613,7 +613,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
 
         if melding_asset_type is None:
-            raise NotFoundException(f"Failed to find asset type for melding")
+            raise NotFoundException("Failed to find asset type for melding")
 
         asset_type = await self._asset_type_repository.retrieve(data.asset_type_id)
         if asset_type is None:

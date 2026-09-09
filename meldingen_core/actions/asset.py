@@ -1,4 +1,5 @@
-from typing import Generic, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.managers import RelationshipManager

@@ -1,4 +1,5 @@
-from typing import AsyncIterator, Literal, cast
+from collections.abc import AsyncIterator
+from typing import Literal, cast
 
 import pytest
 

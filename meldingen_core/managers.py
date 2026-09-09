@@ -1,4 +1,5 @@
-from typing import Awaitable, Callable, Generic, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Generic, TypeVar
 
 from meldingen_core.repositories import BaseRepository
 
@@ -9,7 +10,6 @@ B = TypeVar("B")  # Related model B
 class RelationshipExistsException(Exception):
     """Raised when relationship already exists between parent and related model."""
 
-    pass
 
 
 class RelationshipManager(Generic[A, B]):
