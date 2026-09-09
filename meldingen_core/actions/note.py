@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import Generic, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -7,12 +6,8 @@ from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
 from meldingen_core.repositories import BaseMeldingRepository, BaseNoteRepository
 
-N = TypeVar("N", bound=Note)
-T = TypeVar("T", bound=Melding)
-U = TypeVar("U", bound=User)
 
-
-class NoteCreateAction(Generic[N, T, U]):
+class NoteCreateAction[N: Note, T: Melding, U: User]:
     """Action that stores a note on a melding."""
 
     _note_repository: BaseNoteRepository[N]
@@ -40,7 +35,7 @@ class NoteCreateAction(Generic[N, T, U]):
         return note
 
 
-class NoteRetrieveAction(Generic[N]):
+class NoteRetrieveAction[N: Note]:
     """Action that retrieves a single note belonging to a melding."""
 
     _note_repository: BaseNoteRepository[N]
@@ -56,7 +51,7 @@ class NoteRetrieveAction(Generic[N]):
         return note
 
 
-class NoteListAction(Generic[N, T]):
+class NoteListAction[N: Note, T: Melding]:
     """Action that lists the notes belonging to a melding."""
 
     _note_repository: BaseNoteRepository[N]
@@ -88,7 +83,7 @@ class NoteListAction(Generic[N, T]):
         )
 
 
-class NoteUpdateAction(Generic[N]):
+class NoteUpdateAction[N: Note]:
     """Action that updates the text of a note belonging to a melding.
 
     Whether the acting user is allowed to update the note (e.g. ownership) is the

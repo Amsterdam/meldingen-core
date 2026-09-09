@@ -1,17 +1,13 @@
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
 
 from meldingen_core.models import Label, Melding
 from meldingen_core.repositories import BaseLabelRepository
-
-T = TypeVar("T", bound=Melding)
-L = TypeVar("L", bound=Label)
 
 
 class InvalidLabelException(Exception): ...
 
 
-class BaseLabelReplacer(Generic[T, L], metaclass=ABCMeta):
+class BaseLabelReplacer[T: Melding, L: Label](metaclass=ABCMeta):
     label_repository: BaseLabelRepository[L]
 
     def __init__(self, label_repository: BaseLabelRepository[L]) -> None:

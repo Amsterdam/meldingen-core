@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar, override
+from typing import Any, override
 
 from meldingen_core.actions.base import (
     BaseCreateAction,
@@ -11,11 +11,8 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType, Classification
 from meldingen_core.repositories import BaseAssetTypeRepository, BaseRepository
 
-T = TypeVar("T", bound=Classification)
-AT = TypeVar("AT", bound=AssetType)
 
-
-class ClassificationCreateAction(Generic[T, AT], BaseCreateAction[T]):
+class ClassificationCreateAction[T: Classification, AT: AssetType](BaseCreateAction[T]):
     _asset_type_repository: BaseAssetTypeRepository[AT]
 
     @override
@@ -35,13 +32,13 @@ class ClassificationCreateAction(Generic[T, AT], BaseCreateAction[T]):
         await super().__call__(obj)
 
 
-class ClassificationListAction(BaseListAction[T]): ...
+class ClassificationListAction[T: Classification](BaseListAction[T]): ...
 
 
-class ClassificationRetrieveAction(BaseRetrieveAction[T]): ...
+class ClassificationRetrieveAction[T: Classification](BaseRetrieveAction[T]): ...
 
 
-class ClassificationUpdateAction(Generic[T, AT], BaseUpdateAction[T]):
+class ClassificationUpdateAction[T: Classification, AT: AssetType](BaseUpdateAction[T]):
     _asset_type_repository: BaseAssetTypeRepository[AT]
 
     @override
@@ -62,4 +59,4 @@ class ClassificationUpdateAction(Generic[T, AT], BaseUpdateAction[T]):
         return await super().__call__(pk, values)
 
 
-class ClassificationDeleteAction(BaseDeleteAction[T]): ...
+class ClassificationDeleteAction[T: Classification](BaseDeleteAction[T]): ...

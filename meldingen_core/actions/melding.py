@@ -1,9 +1,9 @@
+import datetime as dt
 import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, cast, override
+from typing import Any, TypeVar, cast, override
 
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
@@ -31,23 +31,14 @@ from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, Token
 
 log = logging.getLogger(__name__)
 
-C = TypeVar("C", bound=Classification)
-T = TypeVar("T", bound=Melding)
-AS = TypeVar("AS", bound=Asset)
-AT = TypeVar("AT", bound=AssetType)
-L = TypeVar("L", bound=Label)
-S = TypeVar("S", bound=Source)
-N = TypeVar("N", bound=Note)
-U = TypeVar("U", bound=User)
 
-
-class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
+class MeldingCreateAction[T: Melding, C: Classification](BaseCreateAction[T]):
     """Action that stores a melding."""
 
     _classify: Classifier[C]
     _state_machine: BaseMeldingStateMachine[T]
     _generate_token: BaseTokenGenerator
-    _token_duration: timedelta
+    _token_duration: dt.timedelta
 
     def __init__(
         self,
@@ -55,7 +46,7 @@ class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
         classifier: Classifier[C],
         state_machine: BaseMeldingStateMachine[T],
         token_generator: BaseTokenGenerator,
-        token_duration: timedelta,
+        token_duration: dt.timedelta,
     ):
         super().__init__(repository)
         self._classify = classifier
@@ -68,7 +59,7 @@ class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
         await super().__call__(obj)
 
         obj.token = await self._generate_token()
-        obj.token_expires = datetime.now() + self._token_duration
+        obj.token_expires = dt.datetime.now(tz=dt.UTC) + self._token_duration
 
         try:
             classification = await self._classify(obj.text)
@@ -80,7 +71,7 @@ class MeldingCreateAction(Generic[T, C], BaseCreateAction[T]):
         await self._repository.save(obj)
 
 
-class MeldingListAction(Generic[T]):
+class MeldingListAction[T: Melding]:
     """Action that retrieves a list of meldingen."""
 
     _repository: BaseMeldingRepository[T]
@@ -106,11 +97,11 @@ class MeldingListAction(Generic[T]):
         )
 
 
-class MeldingRetrieveAction(BaseRetrieveAction[T]):
+class MeldingRetrieveAction[T: Melding](BaseRetrieveAction[T]):
     """Action that retrieves a melding."""
 
 
-class MeldingUpdateAction(Generic[T, C, L, S], BaseUpdateAction[T]):
+class MeldingUpdateAction[T: Melding, C: Classification, L: Label, S: Source](BaseUpdateAction[T]):
     """Action that updates specific fields on a melding.
 
     A classification may only be assigned here while the melding is still in the melder's flow.
@@ -192,7 +183,7 @@ class MeldingUpdateAction(Generic[T, C, L, S], BaseUpdateAction[T]):
         return melding
 
 
-class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
+class MeldingUpdateActionMelder[T: Melding, C: Classification](BaseCRUDAction[T]):
     """Action that updates the melding and reclassifies it"""
 
     _verify_token: TokenVerifier[T]
@@ -236,7 +227,7 @@ class MeldingUpdateActionMelder(Generic[T, C], BaseCRUDAction[T]):
         return melding
 
 
-class MeldingAddContactInfoAction(BaseCRUDAction[T]):
+class MeldingAddContactInfoAction[T: Melding](BaseCRUDAction[T]):
     """Action that adds contact information to a melding."""
 
     _verify_token: TokenVerifier[T]
@@ -260,7 +251,7 @@ class MeldingAddContactInfoAction(BaseCRUDAction[T]):
         return melding
 
 
-class BaseStateTransitionAction(Generic[T], metaclass=ABCMeta):
+class BaseStateTransitionAction[T: Melding](metaclass=ABCMeta):
     """
     This action covers transitions that do not require the melding's token to be verified.
     Typically these actions are performed by authenticated users.
@@ -292,7 +283,7 @@ class BaseStateTransitionAction(Generic[T], metaclass=ABCMeta):
         return melding
 
 
-class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
+class BaseMeldingFormStateTransitionAction[T: Melding](metaclass=ABCMeta):
     """
     This action covers transitions that require the melding's token to be verified.
     This is the case for unauthenticated state transitions where a user submits a melding.
@@ -325,73 +316,73 @@ class BaseMeldingFormStateTransitionAction(Generic[T], metaclass=ABCMeta):
         return melding
 
 
-class MeldingAnswerQuestionsAction(BaseStateTransitionAction[T]):
+class MeldingAnswerQuestionsAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ANSWER_QUESTIONS
 
 
-class MeldingAddAttachmentsAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingAddAttachmentsAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_ATTACHMENTS
 
 
-class MeldingSubmitLocationAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingSubmitLocationAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT_LOCATION
 
 
-class MeldingContactInfoAddedAction(BaseMeldingFormStateTransitionAction[T]):
+class MeldingContactInfoAddedAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_CONTACT_INFO
 
 
-class MeldingSubmitAction(BaseStateTransitionAction[T]):
+class MeldingSubmitAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT
 
 
-class MeldingRequestProcessingAction(BaseStateTransitionAction[T]):
+class MeldingRequestProcessingAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.REQUEST_PROCESSING
 
 
-class MeldingProcessAction(BaseStateTransitionAction[T]):
+class MeldingProcessAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.PROCESS
 
 
-class MeldingPlanAction(BaseStateTransitionAction[T]):
+class MeldingPlanAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.PLAN
 
 
-class MeldingRequestReopenAction(BaseStateTransitionAction[T]):
+class MeldingRequestReopenAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.REQUEST_REOPEN
 
 
-class MeldingReopenAction(BaseStateTransitionAction[T]):
+class MeldingReopenAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.REOPEN
 
 
-class MeldingCancelAction(BaseStateTransitionAction[T]):
+class MeldingCancelAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.CANCEL
 
 
-class MeldingCompleteAction(Generic[T]):
+class MeldingCompleteAction[T: Melding](BaseStateTransitionAction[T]):
     _state_machine: BaseMeldingStateMachine[T]
     _repository: BaseMeldingRepository[T]
     _mailer: BaseMeldingCompleteMailer[T]
@@ -411,7 +402,7 @@ class MeldingCompleteAction(Generic[T]):
         if melding is None:
             raise NotFoundException()
 
-        await self._state_machine.transition(melding, MeldingTransitions.COMPLETE)
+        await self._state_machine.transition(melding, self.transition_name)
         await self._repository.save(melding)
 
         if mail_text is not None and melding.email is not None:
@@ -419,8 +410,12 @@ class MeldingCompleteAction(Generic[T]):
 
         return melding
 
+    @property
+    def transition_name(self) -> str:
+        return MeldingTransitions.COMPLETE
 
-class MeldingReclassifyAction(Generic[T, C, N, U]):
+
+class MeldingReclassifyAction[T: Melding, C: Classification, N: Note, U: User]:
     """Action that assigns a different classification to a melding from the backoffice.
 
     Unlike the melder's reclassification (see BaseReclassification) the data the melder supplied is
@@ -479,7 +474,7 @@ class MeldingReclassifyAction(Generic[T, C, N, U]):
 A = TypeVar("A", bound=Answer)
 
 
-class MelderMeldingListQuestionsAnswersAction(Generic[T, A]):
+class MelderMeldingListQuestionsAnswersAction[T: Melding, A: Answer]:
     _verify_token: TokenVerifier[T]
     _answer_repository: BaseAnswerRepository[A]
 
@@ -497,7 +492,7 @@ class MelderMeldingListQuestionsAnswersAction(Generic[T, A]):
         return await self._answer_repository.find_by_melding(melding_id)
 
 
-class MeldingListQuestionsAnswersAction(Generic[A]):
+class MeldingListQuestionsAnswersAction[A: Answer]:
     _answer_repository: BaseAnswerRepository[A]
 
     def __init__(
@@ -510,7 +505,7 @@ class MeldingListQuestionsAnswersAction(Generic[A]):
         return await self._answer_repository.find_by_melding(melding_id)
 
 
-class MeldingAnswerDeleteAction(Generic[T, A]):
+class MeldingAnswerDeleteAction[T: Melding, A: Answer]:
     _verify_token: TokenVerifier[T]
     _answer_repository: BaseAnswerRepository[A]
 
@@ -532,7 +527,7 @@ class MeldingAnswerDeleteAction(Generic[T, A]):
         await self._answer_repository.delete(answer_id)
 
 
-class MeldingSubmitActionMelder(BaseCRUDAction[T]):
+class MeldingSubmitActionMelder[T: Melding](BaseCRUDAction[T]):
     _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
     _verify_token: TokenVerifier[T]
@@ -583,7 +578,7 @@ class AssetData:
     subtype: str
 
 
-class MeldingAddAssetAction(Generic[T, AS, AT]):
+class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
     _verify_token: TokenVerifier[T]
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
@@ -639,7 +634,7 @@ class MeldingAddAssetAction(Generic[T, AS, AT]):
         return melding
 
 
-class MeldingDeleteAssetAction(Generic[T, AS]):
+class MeldingDeleteAssetAction[T: Melding, AS: Asset]:
     _verify_token: TokenVerifier[T]
     _asset_repository: BaseAssetRepository[AS]
     _relationship_manager: RelationshipManager[T, AS]

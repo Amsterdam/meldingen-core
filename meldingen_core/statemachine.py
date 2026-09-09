@@ -1,11 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Generic, TypeVar
 
 from meldingen_core.models import Melding
-
-T = TypeVar("T", bound=Melding)
 
 
 class BaseMeldingState(StrEnum):
@@ -66,7 +63,7 @@ class MeldingTransitions(StrEnum):
     RECLASSIFY = "reclassify"
 
 
-class BaseMeldingStateMachine(Generic[T], metaclass=ABCMeta):
+class BaseMeldingStateMachine[T: Melding](metaclass=ABCMeta):
     @abstractmethod
     async def transition(self, melding: T, transition_name: str) -> None: ...
 

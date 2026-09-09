@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.managers import RelationshipManager
@@ -7,11 +6,8 @@ from meldingen_core.models import Asset, Melding
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.token import TokenVerifier
 
-A = TypeVar("A", bound=Asset)
-M = TypeVar("M", bound=Melding)
 
-
-class MelderListAssetsAction(Generic[A, M]):
+class MelderListAssetsAction[A: Asset, M: Melding]:
     _verify_token: TokenVerifier[M]
     _relationship_manager: RelationshipManager[M, A]
 
@@ -25,7 +21,7 @@ class MelderListAssetsAction(Generic[A, M]):
         return await self._relationship_manager.get_related(melding)
 
 
-class ListAssetsAction(Generic[A, M]):
+class ListAssetsAction[A: Asset, M: Melding]:
     _melding_repository: BaseMeldingRepository[M]
     _relationship_manager: RelationshipManager[M, A]
 

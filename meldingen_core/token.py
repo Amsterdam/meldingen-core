@@ -1,12 +1,9 @@
+import datetime as dt
 from abc import ABCMeta, abstractmethod
-from datetime import datetime
-from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Melding
 from meldingen_core.repositories import BaseMeldingRepository
-
-T = TypeVar("T", bound=Melding)
 
 
 class BaseTokenGenerator(metaclass=ABCMeta):
@@ -27,7 +24,7 @@ class TokenExpiredException(TokenException): ...
 class InvalidStateException(TokenException): ...
 
 
-class TokenVerifier(Generic[T]):
+class TokenVerifier[T: Melding]:
     _repository: BaseMeldingRepository[T]
 
     def __init__(self, repository: BaseMeldingRepository[T]):
@@ -41,13 +38,13 @@ class TokenVerifier(Generic[T]):
         if token != melding.token:
             raise InvalidTokenException()
 
-        if melding.token_expires is not None and melding.token_expires < datetime.now():
+        if melding.token_expires is not None and melding.token_expires < dt.datetime.now(tz=dt.UTC):
             raise TokenExpiredException()
 
         return melding
 
 
-class BaseTokenInvalidator(Generic[T], metaclass=ABCMeta):
+class BaseTokenInvalidator[T: Melding](metaclass=ABCMeta):
     async def __call__(self, melding: T) -> T:
         if not melding.state in self.allowed_states:
             raise InvalidStateException()

@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod  # pragma: no cover
 from collections.abc import AsyncIterator
-from typing import Generic, TypeVar
 
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.models import Attachment
@@ -16,10 +15,7 @@ class BaseThumbnailGenerator(metaclass=ABCMeta):  # pragma: no cover
     async def __call__(self, image_path: str) -> tuple[str, str]: ...
 
 
-T = TypeVar("T", bound=Attachment)
-
-
-class BaseIngestor(Generic[T], metaclass=ABCMeta):  # pragma: no cover
+class BaseIngestor[T: Attachment](metaclass=ABCMeta):  # pragma: no cover
     _scan_for_malware: BaseMalwareScanner
 
     def __init__(self, scanner: BaseMalwareScanner):

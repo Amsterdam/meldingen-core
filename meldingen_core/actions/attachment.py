@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator, Sequence
 from enum import StrEnum
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from plugfs import filesystem
 from plugfs.filesystem import Filesystem
@@ -22,7 +22,7 @@ M = TypeVar("M", bound=Melding)
 U = TypeVar("U", bound=User)
 
 
-class BaseUploadAttachmentAction(Generic[A, M, U]):
+class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
     _create_attachment: BaseAttachmentFactory[A, M, U]
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
@@ -147,7 +147,7 @@ class AttachmentTypes(StrEnum):
     THUMBNAIL = "thumbnail"
 
 
-class BaseDownloadAttachmentAction(Generic[A]):
+class BaseDownloadAttachmentAction[A: Attachment]:
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
 
@@ -191,7 +191,7 @@ class BaseDownloadAttachmentAction(Generic[A]):
             raise NotFoundException("File not found") from exception
 
 
-class MelderDownloadAttachmentAction(Generic[A, M], BaseDownloadAttachmentAction[A]):
+class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAttachmentAction[A]):
     _verify_token: TokenVerifier[M]
 
     def __init__(
@@ -220,7 +220,7 @@ class DownloadAttachmentAction(BaseDownloadAttachmentAction[A]):
         return await self._get_data(await self._get_attachment(attachment_id), _type)
 
 
-class ListAttachmentsAction(Generic[A]):
+class ListAttachmentsAction[A: Attachment]:
     _attachment_repository: BaseAttachmentRepository[A]
 
     def __init__(self, attachment_repository: BaseAttachmentRepository[A]):
@@ -230,7 +230,7 @@ class ListAttachmentsAction(Generic[A]):
         return await self._attachment_repository.find_by_melding(melding_id)
 
 
-class MelderListAttachmentsAction(Generic[A, M]):
+class MelderListAttachmentsAction[A: Attachment, M: Melding]:
     _verify_token: TokenVerifier[M]
     _attachment_repository: BaseAttachmentRepository[A]
 
@@ -244,7 +244,7 @@ class MelderListAttachmentsAction(Generic[A, M]):
         return await self._attachment_repository.find_by_melding(melding_id)
 
 
-class BaseDeleteAttachmentAction(Generic[A]):
+class BaseDeleteAttachmentAction[A: Attachment]:
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
 
@@ -272,7 +272,7 @@ class BaseDeleteAttachmentAction(Generic[A]):
         await self._attachment_repository.delete(attachment.id)
 
 
-class MelderDeleteAttachmentAction(Generic[A, M], BaseDeleteAttachmentAction[A]):
+class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachmentAction[A]):
     _verify_token: TokenVerifier[M]
 
     def __init__(

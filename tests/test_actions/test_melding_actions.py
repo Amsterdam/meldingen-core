@@ -1,5 +1,5 @@
+import datetime as dt
 import logging
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -69,7 +69,7 @@ async def test_melding_create_action() -> None:
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
-        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
+        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), dt.timedelta(days=3)
     )
     melding = Melding("text")
 
@@ -87,7 +87,7 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
-        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), timedelta(days=3)
+        repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), dt.timedelta(days=3)
     )
     melding = Melding("text")
 
@@ -325,7 +325,9 @@ async def test_melding_update_action_refuses_classification_in_backoffice_state(
 async def test_melding_update_action_melder() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    repository.retrieve.return_value = Melding(
+        "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
+    )
     token_verifier = AsyncMock(TokenVerifier)
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
@@ -346,7 +348,9 @@ async def test_melding_update_action_melder() -> None:
 async def test_melding_update_action_melder_with_classification_not_found() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    repository.retrieve.return_value = Melding(
+        "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
+    )
     token_verifier = AsyncMock(TokenVerifier)
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     reclassifier = AsyncMock(BaseReclassification)
@@ -366,7 +370,9 @@ async def test_melding_update_action_melder_with_classification_not_found() -> N
 async def test_melding_add_contact_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    repository.retrieve.return_value = Melding(
+        "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
+    )
     token_verifier = AsyncMock(TokenVerifier)
 
     action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository, token_verifier)
@@ -940,11 +946,11 @@ async def test_submit_melding_melder() -> None:
 async def test_submit_melding_melder_without_email() -> None:
     repo_melding = Melding("melding text")
     (
-        state_machine,
-        repository,
-        token_invalidator,
+        _state_machine,
+        _repository,
+        _token_invalidator,
         confirmation_mailer,
-        melding,
+        _melding,
     ) = await assert_melding_submit_action_melder(repo_melding)
 
     confirmation_mailer.assert_not_awaited()
@@ -954,11 +960,11 @@ async def test_submit_melding_melder_without_email() -> None:
 async def test_submit_melding_melder_with_email_empty_string() -> None:
     repo_melding = Melding(text="melding text", email="")
     (
-        state_machine,
-        repository,
-        token_invalidator,
+        _state_machine,
+        _repository,
+        _token_invalidator,
         confirmation_mailer,
-        melding,
+        _melding,
     ) = await assert_melding_submit_action_melder(repo_melding)
 
     confirmation_mailer.assert_not_awaited()
@@ -968,11 +974,11 @@ async def test_submit_melding_melder_with_email_empty_string() -> None:
 async def test_submit_melding_melder_with_email() -> None:
     repo_melding = Melding(text="melding text", email="test@example.com")
     (
-        state_machine,
-        repository,
-        token_invalidator,
+        _state_machine,
+        _repository,
+        _token_invalidator,
         confirmation_mailer,
-        melding,
+        _melding,
     ) = await assert_melding_submit_action_melder(repo_melding)
 
     confirmation_mailer.assert_called_once_with(repo_melding)
