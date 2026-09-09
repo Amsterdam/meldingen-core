@@ -22,7 +22,6 @@ async def dummy_get_related(parent: DummyModel) -> list[DummyRelated]:
 
 
 class TestRelationshipManager:
-
     def test_can_instantiate_relationship_manager(self) -> None:
         repository = Mock()
         get_related = AsyncMock()

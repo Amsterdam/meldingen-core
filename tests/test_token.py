@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from typing import override
+import datetime as dt
 from unittest.mock import Mock
 
 import pytest
@@ -43,7 +42,7 @@ async def test_token_invalid() -> None:
 @pytest.mark.anyio
 async def test_token_expired() -> None:
     token = "123456"
-    melding = Melding("text", token=token, token_expires=datetime.now() - timedelta(days=1))
+    melding = Melding("text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=1))
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = melding
 
@@ -56,7 +55,11 @@ async def test_token_expired() -> None:
 @pytest.mark.anyio
 async def test_token_valid() -> None:
     token = "123456"
-    repo_melding = Melding("text", token=token, token_expires=datetime.now() + timedelta(days=1))
+    repo_melding = Melding(
+        "text",
+        token=token,
+        token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1),
+    )
 
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = repo_melding
@@ -70,7 +73,6 @@ async def test_token_valid() -> None:
 @pytest.mark.anyio
 async def test_invalidate_token() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]
@@ -86,7 +88,6 @@ async def test_invalidate_token() -> None:
 @pytest.mark.anyio
 async def test_invalidate_token_invalid_state() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]

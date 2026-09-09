@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any
 
 from meldingen_core.actions.base import (
     BaseCRUDAction,
@@ -11,10 +11,8 @@ from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseRepository
 from meldingen_core.wfs import BaseWfsProviderValidator
 
-AT = TypeVar("AT", bound=AssetType)
 
-
-class AssetTypeCreateAction(BaseCRUDAction[AT]):
+class AssetTypeCreateAction[AT: AssetType](BaseCRUDAction[AT]):
     _wfs_provider_validator: BaseWfsProviderValidator
 
     def __init__(self, repository: BaseRepository[AT], wfs_provider_validator: BaseWfsProviderValidator) -> None:
@@ -26,13 +24,13 @@ class AssetTypeCreateAction(BaseCRUDAction[AT]):
         await self._repository.save(obj)
 
 
-class AssetTypeRetrieveAction(BaseRetrieveAction[AT]): ...
+class AssetTypeRetrieveAction[AT: AssetType](BaseRetrieveAction[AT]): ...
 
 
-class AssetTypeListAction(BaseListAction[AT]): ...
+class AssetTypeListAction[AT: AssetType](BaseListAction[AT]): ...
 
 
-class AssetTypeUpdateAction(BaseCRUDAction[AT]):
+class AssetTypeUpdateAction[AT: AssetType](BaseCRUDAction[AT]):
     _wfs_provider_validator: BaseWfsProviderValidator
 
     def __init__(self, repository: BaseRepository[AT], wfs_provider_validator: BaseWfsProviderValidator) -> None:
@@ -54,4 +52,4 @@ class AssetTypeUpdateAction(BaseCRUDAction[AT]):
         return obj
 
 
-class AssetTypeDeleteAction(BaseDeleteAction[AT]): ...
+class AssetTypeDeleteAction[AT: AssetType](BaseDeleteAction[AT]): ...

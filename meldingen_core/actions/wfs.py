@@ -1,14 +1,13 @@
-from typing import AsyncIterator, Generic, Literal, TypeVar
+from collections.abc import AsyncIterator
+from typing import Literal
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseAssetTypeRepository
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter
 
-AT = TypeVar("AT", bound=AssetType)
 
-
-class WfsRetrieveAction(Generic[AT]):
+class WfsRetrieveAction[AT: AssetType]:
     _converter: AssetTypeToWfsProviderConverter
     _asset_type_repository: BaseAssetTypeRepository[AT]
 

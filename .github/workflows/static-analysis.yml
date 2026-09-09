@@ -1,42 +1,27 @@
 name: Static analysis
-on: [ pull_request ]
+on: [pull_request]
 permissions:
   contents: read
 
 jobs:
-  Black:
+  FormatAndLint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
-          python-version: "3.13"
+          python-version: '3.13'
 
       - name: Install the project dependencies
         run: uv sync --frozen
 
-      - name: black
-        run: uv run black . --check
-
-  iSort:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          version: "latest"
-          enable-cache: true
-          python-version: "3.13"
-
-      - name: Install the project dependencies
-        run: uv sync --frozen
-
-      - name: isort
-        run: uv run isort . --check
+      - name: Ruff check
+        run: uv run ruff check .
+      - name: Ruff format (check)
+        run: uv run ruff format --check .
 
   MyPy:
     runs-on: ubuntu-latest
@@ -45,9 +30,9 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
-          python-version: "3.13"
+          python-version: '3.13'
 
       - name: Install the project dependencies
         run: uv sync --frozen

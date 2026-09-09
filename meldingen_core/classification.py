@@ -1,11 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
-
-C = TypeVar("C", bound=Classification)
 
 
 class ClassificationNotFoundException(NotFoundException): ...
@@ -17,7 +14,7 @@ class BaseClassifierAdapter(metaclass=ABCMeta):
         """Accepts a text as input and returns the classification name."""
 
 
-class Classifier(Generic[C]):
+class Classifier[C: Classification]:
     _adapter: BaseClassifierAdapter
     _repository: BaseClassificationRepository[C]
 

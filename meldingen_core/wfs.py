@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import AsyncIterator
 from importlib import import_module
-from typing import AsyncIterator, Literal
+from typing import Literal
 
 from meldingen_core.models import AssetType, AssetTypeArguments
 

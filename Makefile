@@ -24,9 +24,9 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-format: ## Auto-fix formatting (black + isort)
-	$(core) uv run black .
-	$(core) uv run isort .
+format: ## Auto-fix formatting + linting (ruff)
+	$(core) uv run ruff check --fix .
+	$(core) uv run ruff format .
 
 typecheck: ## Run mypy type checking
 	$(core) sh -c "rm -rf .mypy_cache && uv run mypy --strict ."

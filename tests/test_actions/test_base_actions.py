@@ -260,5 +260,5 @@ async def test_base_delete_action_not_found(mocker: MockerFixture) -> None:
     action: BaseUpdateAction[DummyModel] = BaseUpdateAction(Mock(BaseRepository))
 
     mocker.patch.object(action._repository, "retrieve", return_value=None)
-    with pytest.raises(NotFoundException) as exc_info:
+    with pytest.raises(NotFoundException):
         await action(101, {"name": "new name"})

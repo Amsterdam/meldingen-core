@@ -1,9 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
 
 from meldingen_core.models import Melding
-
-M = TypeVar("M", bound=Melding)
 
 
 class MediaTypeNotAllowed(Exception): ...
@@ -28,7 +25,7 @@ class BaseMediaTypeIntegrityValidator(metaclass=ABCMeta):
         raises MediaTypeIntegrityError if not."""
 
 
-class BaseAttachmentLimitValidator(Generic[M], metaclass=ABCMeta):
+class BaseAttachmentLimitValidator[M: Melding](metaclass=ABCMeta):
     @abstractmethod
     async def __call__(self, melding: M) -> None:
         """Checks if the provided melding has reached the attachment limit, raises AttachmentLimitReachedException if so."""
