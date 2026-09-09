@@ -9,7 +9,6 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import ListAssetsAction
 from meldingen_core.actions.melding import (
     AssetData,
-    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAssetAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
@@ -59,7 +58,7 @@ from meldingen_core.statemachine import (
     MeldingStates,
     MeldingTransitions,
 )
-from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator, TokenVerifier
+from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator
 
 
 @pytest.mark.anyio
@@ -328,17 +327,16 @@ async def test_melding_update_action_melder() -> None:
     repository.retrieve.return_value = Melding(
         "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
     )
-    token_verifier = AsyncMock(TokenVerifier)
     classification = Classification(name="test")
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
     action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
-        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
+        repository, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
     text = "new text"
-    melding = await action(123, {"text": text}, token)
+    melding = await action(123, {"text": text})
 
     assert melding.text == text
     assert melding.classification == classification
@@ -351,16 +349,15 @@ async def test_melding_update_action_melder_with_classification_not_found() -> N
     repository.retrieve.return_value = Melding(
         "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
     )
-    token_verifier = AsyncMock(TokenVerifier)
     classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
     reclassifier = AsyncMock(BaseReclassification)
 
     action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
-        repository, token_verifier, classifier, Mock(BaseMeldingStateMachine), reclassifier
+        repository, classifier, Mock(BaseMeldingStateMachine), reclassifier
     )
 
     text = "new text"
-    melding = await action(123, {"text": text}, token)
+    melding = await action(123, {"text": text})
 
     assert melding.text == text
     assert melding.classification is None
@@ -373,13 +370,12 @@ async def test_melding_add_contact_action() -> None:
     repository.retrieve.return_value = Melding(
         "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
     )
-    token_verifier = AsyncMock(TokenVerifier)
 
-    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository)
 
     phone = "1234567"
     email = "user@test.com"
-    melding = await action(123, phone, email, token)
+    melding = await action(123, phone, email)
 
     assert melding.phone == phone
     assert melding.email == email
@@ -389,12 +385,11 @@ async def test_melding_add_contact_action() -> None:
 async def test_melding_add_contact_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
-    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository, token_verifier)
+    action: MeldingAddContactInfoAction[Melding] = MeldingAddContactInfoAction(repository)
 
     with pytest.raises(NotFoundException):
-        await action(123, "1234567", "user@test.com", "token")
+        await action(123, "1234567", "user@test.com")
 
 
 @pytest.mark.anyio
@@ -591,14 +586,10 @@ async def test_add_attachments_action() -> None:
     repo_melding = Melding("melding text")
     repository.retrieve.return_value = repo_melding
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = repo_melding
 
-    add_attachments: MeldingAddAttachmentsAction[Melding] = MeldingAddAttachmentsAction(
-        state_machine, repository, token_verifier
-    )
+    add_attachments: MeldingAddAttachmentsAction[Melding] = MeldingAddAttachmentsAction(state_machine, repository)
 
-    melding = await add_attachments(1, "token")
+    melding = await add_attachments(1)
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_ATTACHMENTS)
@@ -609,14 +600,13 @@ async def test_add_attachments_action() -> None:
 async def test_add_attachments_action_not_found() -> None:
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
     process: MeldingAddAttachmentsAction[Melding] = MeldingAddAttachmentsAction(
-        Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
+        Mock(BaseMeldingStateMachine), repository
     )
 
     with pytest.raises(NotFoundException):
-        await process(1, "token")
+        await process(1)
 
 
 def _reclassify_action(
@@ -814,14 +804,10 @@ async def test_submit_location_action() -> None:
     repo_melding = Melding("melding text")
     repository.retrieve.return_value = repo_melding
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = repo_melding
 
-    submit_location: MeldingSubmitLocationAction[Melding] = MeldingSubmitLocationAction(
-        state_machine, repository, token_verifier
-    )
+    submit_location: MeldingSubmitLocationAction[Melding] = MeldingSubmitLocationAction(state_machine, repository)
 
-    melding = await submit_location(1, "token")
+    melding = await submit_location(1)
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.SUBMIT_LOCATION)
@@ -830,16 +816,15 @@ async def test_submit_location_action() -> None:
 
 @pytest.mark.anyio
 async def test_submit_location_action_not_found() -> None:
-    repository = Mock(BaseMeldingRepository)
+    repository = AsyncMock(BaseMeldingRepository)
     repository.retrieve.return_value = None
-    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
     process: MeldingSubmitLocationAction[Melding] = MeldingSubmitLocationAction(
-        Mock(BaseMeldingStateMachine), Mock(BaseMeldingRepository), token_verifier
+        Mock(BaseMeldingStateMachine), repository
     )
 
     with pytest.raises(NotFoundException):
-        await process(1, "token")
+        await process(1)
 
 
 @pytest.mark.anyio
@@ -848,14 +833,10 @@ async def test_contact_info_added_action() -> None:
     repo_melding = Melding("melding text")
     repository.retrieve.return_value = repo_melding
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = repo_melding
 
-    add_contact_info: MeldingContactInfoAddedAction[Melding] = MeldingContactInfoAddedAction(
-        state_machine, repository, token_verifier
-    )
+    add_contact_info: MeldingContactInfoAddedAction[Melding] = MeldingContactInfoAddedAction(state_machine, repository)
 
-    melding = await add_contact_info(1, "token")
+    melding = await add_contact_info(1)
 
     assert melding == repo_melding
     state_machine.transition.assert_called_once_with(repo_melding, MeldingTransitions.ADD_CONTACT_INFO)
@@ -864,35 +845,16 @@ async def test_contact_info_added_action() -> None:
 
 @pytest.mark.anyio
 async def test_contact_info_added_action_not_found() -> None:
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = None
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = None
     state_machine = Mock(BaseMeldingStateMachine)
-    token_verifier: TokenVerifier[Melding] = TokenVerifier(repository)
 
     add_contact_info: MeldingContactInfoAddedAction[Melding] = MeldingContactInfoAddedAction(
-        state_machine, repository, token_verifier
+        state_machine, melding_repository
     )
 
     with pytest.raises(NotFoundException):
-        await add_contact_info(1, "token")
-
-
-@pytest.mark.anyio
-async def test_list_answers() -> None:
-    repository = Mock(BaseAnswerRepository)
-    repository.find_by_melding.return_value = []
-
-    repo_melding = Melding("melding text")
-    repository.retrieve.return_value = repo_melding
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = repo_melding
-
-    action: MelderMeldingListQuestionsAnswersAction[Melding, Answer] = MelderMeldingListQuestionsAnswersAction(
-        token_verifier, repository
-    )
-
-    answers = await action(1, "token")
-    assert answers == []
+        await add_contact_info(1)
 
 
 @pytest.mark.anyio
@@ -913,19 +875,18 @@ async def assert_melding_submit_action_melder(
     repo_melding: Melding,
 ) -> tuple[Mock, Mock, AsyncMock, AsyncMock, Melding]:
     state_machine = Mock(BaseMeldingStateMachine)
-    repository = Mock(BaseMeldingRepository)
-    token_verifier = AsyncMock(TokenVerifier)
+    repository = AsyncMock(BaseMeldingRepository)
+    repository.retrieve.return_value = repo_melding
 
-    token_verifier.return_value = repo_melding
     token_invalidator = AsyncMock(BaseTokenInvalidator)
 
     confirmation_mailer = AsyncMock(BaseMeldingConfirmationMailer)
 
     action: MeldingSubmitActionMelder[Melding] = MeldingSubmitActionMelder(
-        repository, state_machine, token_verifier, token_invalidator, confirmation_mailer
+        repository, state_machine, token_invalidator, confirmation_mailer
     )
 
-    melding = await action(1, "token")
+    melding = await action(1)
 
     assert melding == repo_melding
 
@@ -1019,12 +980,13 @@ async def test_add_asset_asset_type_not_found() -> None:
     asset_type_repository = Mock(BaseAssetTypeRepository)
     asset_type_repository.retrieve.return_value = None
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.find_by_external_id_and_asset_type_id.return_value = None
 
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1032,7 +994,7 @@ async def test_add_asset_asset_type_not_found() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1049,16 +1011,17 @@ async def test_add_asset_asset_does_not_yet_exist() -> None:
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.find_by_external_id_and_asset_type_id.return_value = None
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
     )
 
-    melding = await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+    melding = await action(123, AssetData("external_id", 456, "label", "subtype"))
     assert melding is not None
 
 
@@ -1073,16 +1036,17 @@ async def test_add_asset_asset_exists() -> None:
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
         relationship_manager,
     )
 
-    melding = await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+    melding = await action(123, AssetData("external_id", 456, "label", "subtype"))
     assert melding is not None
 
 
@@ -1097,9 +1061,10 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1107,7 +1072,7 @@ async def test_add_asset_asset_type_on_melding_does_not_exist() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1121,9 +1086,10 @@ async def test_add_asset_asset_type_does_not_exist() -> None:
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1131,7 +1097,7 @@ async def test_add_asset_asset_type_does_not_exist() -> None:
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1147,9 +1113,10 @@ async def test_add_asset_wrong_asset_type() -> None:
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1157,7 +1124,7 @@ async def test_add_asset_wrong_asset_type() -> None:
     )
 
     with pytest.raises(InvalidInputException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1172,9 +1139,10 @@ async def test_add_asset_already_linked() -> None:
     relationship_manager.add_relationship.side_effect = RelationshipExistsException("Relationship already exists")
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1182,7 +1150,7 @@ async def test_add_asset_already_linked() -> None:
     )
 
     with pytest.raises(RelationshipExistsException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1199,9 +1167,10 @@ async def test_add_asset_limit_exceeded() -> None:
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [Mock(Asset) for _ in range(5)]
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingAddAssetAction[Melding, Asset, AssetType] = MeldingAddAssetAction(
-        AsyncMock(TokenVerifier),
-        Mock(BaseMeldingRepository),
+        melding_repository,
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
@@ -1209,7 +1178,7 @@ async def test_add_asset_limit_exceeded() -> None:
     )
 
     with pytest.raises(LimitReachedException):
-        await action(123, AssetData("external_id", 456, "label", "subtype"), "token")
+        await action(123, AssetData("external_id", 456, "label", "subtype"))
 
 
 @pytest.mark.anyio
@@ -1247,14 +1216,16 @@ async def test_delete_asset_asset_does_not_exist() -> None:
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = None
 
+    melding_repository = Mock(BaseMeldingRepository)
+
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        AsyncMock(TokenVerifier),
+        melding_repository,
         asset_repository,
         AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, 456, "token")
+        await action(123, 456)
 
 
 @pytest.mark.anyio
@@ -1272,17 +1243,17 @@ async def test_delete_asset_asset_does_not_belong_to_melding() -> None:
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = asset
 
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = Melding("different melding")
+    melding_repository = AsyncMock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = Melding("different melding")
 
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        token_verifier,
+        melding_repository,
         asset_repository,
         AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, 456, "token")
+        await action(123, 456)
 
 
 @pytest.mark.anyio
@@ -1300,19 +1271,20 @@ async def test_delete_asset_asset_exists() -> None:
     melding.assets = [asset]
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.retrieve.return_value = asset
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = melding
+
+    melding_repository = AsyncMock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = melding
 
     relationship_manager = AsyncMock(RelationshipManager)
     relationship_manager.get_related.return_value = [asset]
 
     action: MeldingDeleteAssetAction[Melding, Asset] = MeldingDeleteAssetAction(
-        token_verifier,
+        melding_repository,
         asset_repository,
         relationship_manager,
     )
 
-    await action(123, 456, "token")
+    await action(123, 456)
 
     asset_repository.delete.assert_awaited_once_with(456)
 
@@ -1322,35 +1294,18 @@ async def test_delete_answer_not_found_for_melding() -> None:
     answer_repository = Mock(BaseAnswerRepository)
     answer_repository.find_by_id_and_melding = AsyncMock(return_value=None)
 
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = Melding("text")
+    melding_repository = AsyncMock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = Melding("text")
 
     action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
-        token_verifier,
+        melding_repository,
         answer_repository,
     )
 
     with pytest.raises(NotFoundException):
-        await action(123, 456, "token")
+        await action(123, 456)
 
     answer_repository.delete.assert_not_awaited()
-
-
-@pytest.mark.anyio
-async def test_delete_answer_invalid_token() -> None:
-    answer_repository = Mock(BaseAnswerRepository)
-
-    token_verifier = AsyncMock(TokenVerifier, side_effect=NotFoundException)
-
-    action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
-        token_verifier,
-        answer_repository,
-    )
-
-    with pytest.raises(NotFoundException):
-        await action(123, 456, "token")
-
-    answer_repository.delete.assert_not_called()
 
 
 @pytest.mark.anyio
@@ -1361,15 +1316,15 @@ async def test_delete_answer_answer_exists() -> None:
     answer_repository = Mock(BaseAnswerRepository)
     answer_repository.find_by_id_and_melding = AsyncMock(return_value=answer)
 
-    token_verifier = AsyncMock(TokenVerifier)
-    token_verifier.return_value = melding
+    melding_repository = AsyncMock(BaseMeldingRepository)
+    melding_repository.retrieve.return_value = melding
 
     action: MeldingAnswerDeleteAction[Melding, Answer] = MeldingAnswerDeleteAction(
-        token_verifier,
+        melding_repository,
         answer_repository,
     )
 
-    await action(123, 456, "token")
+    await action(123, 456)
 
     answer_repository.find_by_id_and_melding.assert_awaited_once_with(456, 123)
     answer_repository.delete.assert_awaited_once_with(456)
