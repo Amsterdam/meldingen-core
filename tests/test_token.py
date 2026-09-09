@@ -69,7 +69,6 @@ async def test_token_valid() -> None:
 @pytest.mark.anyio
 async def test_invalidate_token() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]
@@ -85,7 +84,6 @@ async def test_invalidate_token() -> None:
 @pytest.mark.anyio
 async def test_invalidate_token_invalid_state() -> None:
     class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
         @property
         def allowed_states(self) -> list[str]:
             return [MeldingStates.SUBMITTED]

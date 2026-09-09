@@ -11,7 +11,6 @@ class RelationshipExistsException(Exception):
     """Raised when relationship already exists between parent and related model."""
 
 
-
 class RelationshipManager(Generic[A, B]):
     """Abstraction to manage relationships between models when there is no ORM implemented"""
 

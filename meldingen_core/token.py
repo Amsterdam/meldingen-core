@@ -48,7 +48,6 @@ class TokenVerifier(Generic[T]):
 
 
 class BaseTokenInvalidator(Generic[T], metaclass=ABCMeta):
-
     async def __call__(self, melding: T) -> T:
         if not melding.state in self.allowed_states:
             raise InvalidStateException()
