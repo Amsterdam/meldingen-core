@@ -239,38 +239,7 @@ class MeldingAddContactInfoAction[T: Melding](BaseCRUDAction[T]):
 
 class BaseStateTransitionAction[T: Melding](metaclass=ABCMeta):
     """
-    This action covers transitions that do not require the melding's token to be verified.
-    Typically these actions are performed by authenticated users.
-    """
-
-    _state_machine: BaseMeldingStateMachine[T]
-    _repository: BaseMeldingRepository[T]
-
-    def __init__(
-        self,
-        state_machine: BaseMeldingStateMachine[T],
-        repository: BaseMeldingRepository[T],
-    ):
-        self._state_machine = state_machine
-        self._repository = repository
-
-    @property
-    @abstractmethod
-    def transition_name(self) -> str: ...
-
-    async def __call__(self, melding_id: int) -> T:
-        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
-
-        await self._state_machine.transition(melding, self.transition_name)
-        await self._repository.save(melding)
-
-        return melding
-
-
-class BaseMeldingFormStateTransitionAction[T: Melding](metaclass=ABCMeta):
-    """
-    This action covers transitions that require the melding's token to be verified.
-    This is the case for unauthenticated state transitions where a user submits a melding.
+    This action covers melding state transitions.
     """
 
     _state_machine: BaseMeldingStateMachine[T]
@@ -303,19 +272,19 @@ class MeldingAnswerQuestionsAction[T: Melding](BaseStateTransitionAction[T]):
         return MeldingTransitions.ANSWER_QUESTIONS
 
 
-class MeldingAddAttachmentsAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
+class MeldingAddAttachmentsAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_ATTACHMENTS
 
 
-class MeldingSubmitLocationAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
+class MeldingSubmitLocationAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.SUBMIT_LOCATION
 
 
-class MeldingContactInfoAddedAction[T: Melding](BaseMeldingFormStateTransitionAction[T]):
+class MeldingContactInfoAddedAction[T: Melding](BaseStateTransitionAction[T]):
     @property
     def transition_name(self) -> str:
         return MeldingTransitions.ADD_CONTACT_INFO
