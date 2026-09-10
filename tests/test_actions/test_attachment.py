@@ -35,14 +35,11 @@ async def _iterator() -> AsyncIterator[bytes]:
 
 class TestMelderDownloadAttachmentAction:
     @pytest.mark.anyio
-    async def test_attachment_melding_not_found(self) -> None:
+    async def test_attachment_not_found(self) -> None:
         attachment_repository = Mock(BaseAttachmentRepository)
-        attachment_repository.retrieve.return_value = Attachment(
-            id=1, original_filename="bla", original_media_type="image/png", melding=Melding(text="some text")
-        )
+        attachment_repository.retrieve.return_value = None
 
         melding_repository = AsyncMock(BaseMeldingRepository)
-        melding_repository.retrieve.return_value = None
 
         action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             melding_repository,
@@ -53,7 +50,7 @@ class TestMelderDownloadAttachmentAction:
         with pytest.raises(NotFoundException) as exception_info:
             await action(123, 456, AttachmentTypes.ORIGINAL)
 
-        assert str(exception_info.value) == "Repository item with id:123 not found"
+        assert str(exception_info.value) == "Attachment not found"
 
     @pytest.mark.anyio
     async def test_attachment_does_not_belong_to_melding(self) -> None:
@@ -64,9 +61,7 @@ class TestMelderDownloadAttachmentAction:
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
 
-        melding = Melding(text="another text")
         melding_repository = AsyncMock(BaseMeldingRepository)
-        melding_repository.retrieve.return_value = melding
 
         action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             melding_repository,
@@ -80,18 +75,22 @@ class TestMelderDownloadAttachmentAction:
         assert str(exception_info.value) == "Melding with id 123 does not have attachment with id 456"
 
     @pytest.mark.anyio
-    async def test_attachment_can_be_downloaded(self) -> None:
-        melding = Melding(text="some text")
+    @pytest.mark.parametrize("_type", AttachmentTypes)
+    async def test_can_handle_attachment_download(self, _type: AttachmentTypes) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
 
         attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
         attachment.file_path = "/path/to/file.ext"
         attachment.original_media_type = "image/png"
+        attachment.optimized_path = "/path/to/file-optimized.ext"
+        attachment.optimized_media_type = "image/webp"
+        attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+        attachment.thumbnail_media_type = "image/webp"
 
         attachment_repository = Mock(BaseAttachmentRepository)
         attachment_repository.retrieve.return_value = attachment
-
-        melding_repository = AsyncMock(BaseMeldingRepository)
-        melding_repository.retrieve.return_value = melding
 
         action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
             melding_repository,
@@ -99,7 +98,130 @@ class TestMelderDownloadAttachmentAction:
             Mock(Filesystem),
         )
 
-        await action(123, 456, AttachmentTypes.ORIGINAL)
+        await action(123, 456, _type)
+
+    @pytest.mark.anyio
+    async def test_optimized_path_none(self) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.OPTIMIZED)
+
+        assert str(exception_info.value) == "Optimized file not found"
+
+    @pytest.mark.anyio
+    async def test_optimized_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.optimized_path = "/path/to/file-optimized.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.OPTIMIZED)
+
+        assert str(exception_info.value) == "Optimized media type not found"
+
+    @pytest.mark.anyio
+    async def test_thumbnail_path_none(self) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.THUMBNAIL)
+
+        assert str(exception_info.value) == "Thumbnail file not found"
+
+    @pytest.mark.anyio
+    async def test_thumbnail_media_type_none(self) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+        attachment.thumbnail_path = "/path/to/file-thumbnail.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            Mock(Filesystem),
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.THUMBNAIL)
+
+        assert str(exception_info.value) == "Thumbnail media type not found"
+
+    @pytest.mark.anyio
+    async def test_file_not_found(self) -> None:
+        melding = Melding(text="text")
+        melding_repository = AsyncMock(BaseMeldingRepository)
+        melding_repository.retrieve.return_value = melding
+
+        attachment = Attachment(id=1, original_filename="bla", original_media_type="image/png", melding=melding)
+        attachment.file_path = "/path/to/file.ext"
+
+        attachment_repository = Mock(BaseAttachmentRepository)
+        attachment_repository.retrieve.return_value = attachment
+
+        file = Mock(File)
+        file.get_iterator.side_effect = filesystem.NotFoundException
+
+        filesystem_mock = Mock(Filesystem)
+        filesystem_mock.get_file.return_value = file
+
+        action: MelderDownloadAttachmentAction[Attachment, Melding] = MelderDownloadAttachmentAction(
+            melding_repository,
+            attachment_repository,
+            filesystem_mock,
+        )
+
+        with pytest.raises(NotFoundException) as exception_info:
+            await action(123, 456, AttachmentTypes.ORIGINAL)
+
+        assert str(exception_info.value) == "File not found"
 
 
 class TestDownloadAttachmentAction:
