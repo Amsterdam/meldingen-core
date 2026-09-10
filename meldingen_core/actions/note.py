@@ -5,6 +5,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.factories import BaseNoteFactory
 from meldingen_core.models import Melding, Note, User
 from meldingen_core.repositories import BaseMeldingRepository, BaseNoteRepository
+from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 
 
 class NoteCreateAction[N: Note, T: Melding, U: User]:
@@ -25,9 +26,7 @@ class NoteCreateAction[N: Note, T: Melding, U: User]:
         self._note_factory = note_factory
 
     async def __call__(self, melding_id: int, text: str, user: U) -> N:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         note = self._note_factory(text, melding, user)
         await self._note_repository.save(note)
@@ -72,9 +71,8 @@ class NoteListAction[N: Note, T: Melding]:
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
     ) -> Sequence[N]:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
+        # Just make sure the melding exists before listing its notes.
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         return await self._note_repository.find_by_melding(
             melding_id,

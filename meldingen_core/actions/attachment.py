@@ -9,7 +9,7 @@ from meldingen_core.factories import BaseAttachmentFactory
 from meldingen_core.image import BaseIngestor
 from meldingen_core.models import Attachment, Melding, User
 from meldingen_core.repositories import BaseAttachmentRepository, BaseMeldingRepository
-from meldingen_core.token import TokenVerifier
+from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from meldingen_core.validators import (
     BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,
@@ -17,7 +17,7 @@ from meldingen_core.validators import (
 )
 
 
-class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
+class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User | None]:
     _create_attachment: BaseAttachmentFactory[A, M, U]
     _attachment_repository: BaseAttachmentRepository[A]
     _filesystem: Filesystem
@@ -49,7 +49,7 @@ class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
         await self._validate_attachment_is_under_limit(melding)
 
     async def _save_attachment(
-        self, original_filename: str, melding: M, media_type: str, user: U | None, data: AsyncIterator[bytes]
+        self, original_filename: str, melding: M, media_type: str, user: U, data: AsyncIterator[bytes]
     ) -> A:
         attachment = self._create_attachment(original_filename, melding, media_type, user)
 
@@ -59,55 +59,18 @@ class BaseUploadAttachmentAction[A: Attachment, M: Melding, U: User]:
         return attachment
 
 
-class MelderUploadAttachmentAction[A: Attachment, M: Melding, U: User](BaseUploadAttachmentAction[A, M, U]):
-    _verify_token: TokenVerifier[M]
-
-    def __init__(
-        self,
-        token_verifier: TokenVerifier[M],
-        attachment_factory: BaseAttachmentFactory[A, M, U],
-        attachment_repository: BaseAttachmentRepository[A],
-        media_type_validator: BaseMediaTypeValidator,
-        media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
-        attachment_limit_validator: BaseAttachmentLimitValidator[M],
-        ingestor: BaseIngestor[A],
-    ):
-        self._verify_token = token_verifier
-        super().__init__(
-            attachment_factory,
-            attachment_repository,
-            media_type_validator,
-            media_type_integrity_validator,
-            attachment_limit_validator,
-            ingestor,
-        )
-
-    async def __call__(
-        self,
-        melding_id: int,
-        token: str,
-        original_filename: str,
-        media_type: str,
-        data_header: bytes,
-        data: AsyncIterator[bytes],
-    ) -> A:
-        melding = await self._verify_token(melding_id, token)
-        await self._validate_attachment(media_type, data_header, melding)
-        return await self._save_attachment(original_filename, melding, media_type, None, data)
-
-
-class UploadAttachmentAction[A: Attachment, M: Melding, U: User](BaseUploadAttachmentAction[A, M, U]):
+class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUploadAttachmentAction[A, M, U]):
     _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
+        melding_repository: BaseMeldingRepository[M],
         attachment_factory: BaseAttachmentFactory[A, M, U],
         attachment_repository: BaseAttachmentRepository[A],
         media_type_validator: BaseMediaTypeValidator,
         media_type_integrity_validator: BaseMediaTypeIntegrityValidator,
         attachment_limit_validator: BaseAttachmentLimitValidator[M],
         ingestor: BaseIngestor[A],
-        melding_repository: BaseMeldingRepository[M],
     ):
         super().__init__(
             attachment_factory,
@@ -128,10 +91,7 @@ class UploadAttachmentAction[A: Attachment, M: Melding, U: User](BaseUploadAttac
         data: AsyncIterator[bytes],
         user: U,
     ) -> A:
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException("Melding not found")
-
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
         await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
@@ -187,21 +147,21 @@ class BaseDownloadAttachmentAction[A: Attachment]:
 
 
 class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAttachmentAction[A]):
-    _verify_token: TokenVerifier[M]
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M],
+        melding_repository: BaseMeldingRepository[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._verify_token = token_verifier
         super().__init__(attachment_repository, filesystem)
+        self._melding_repository = melding_repository
 
     async def __call__(
-        self, melding_id: int, attachment_id: int, token: str, _type: AttachmentTypes
+        self, melding_id: int, attachment_id: int, _type: AttachmentTypes
     ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await self._verify_token(melding_id, token)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
@@ -226,15 +186,17 @@ class ListAttachmentsAction[A: Attachment]:
 
 
 class MelderListAttachmentsAction[A: Attachment, M: Melding]:
-    _verify_token: TokenVerifier[M]
+    _melding_repository: BaseMeldingRepository[M]
     _attachment_repository: BaseAttachmentRepository[A]
 
-    def __init__(self, token_verifier: TokenVerifier[M], attachment_repository: BaseAttachmentRepository[A]):
+    def __init__(
+        self, melding_repository: BaseMeldingRepository[M], attachment_repository: BaseAttachmentRepository[A]
+    ):
         self._attachment_repository = attachment_repository
-        self._verify_token = token_verifier
+        self._melding_repository = melding_repository
 
-    async def __call__(self, melding_id: int, token: str) -> Sequence[A]:
-        await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int) -> Sequence[A]:
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         return await self._attachment_repository.find_by_melding(melding_id)
 
@@ -268,19 +230,19 @@ class BaseDeleteAttachmentAction[A: Attachment]:
 
 
 class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachmentAction[A]):
-    _verify_token: TokenVerifier[M]
+    _melding_repository: BaseMeldingRepository[M]
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[M],
+        melding_repository: BaseMeldingRepository[M],
         attachment_repository: BaseAttachmentRepository[A],
         filesystem: Filesystem,
     ):
-        self._verify_token = token_verifier
+        self._melding_repository = melding_repository
         super().__init__(attachment_repository, filesystem)
 
-    async def __call__(self, melding_id: int, attachment_id: int, token: str) -> None:
-        melding = await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int, attachment_id: int) -> None:
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
