@@ -31,8 +31,7 @@ class TokenVerifier[T: Melding]:
         self._repository = repository
 
     async def __call__(self, melding_id: int, token: str) -> T:
-
-        melding = await retrieve_or_raise_not_found(self._repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._repository, melding_id, "Melding not found")
 
         if token != melding.token:
             raise InvalidTokenException()
