@@ -482,7 +482,7 @@ class TestMelderDeleteAttachmentAction:
         with pytest.raises(NotFoundException) as exception_info:
             await action(123, 456)
 
-        assert str(exception_info.value) == "Repository item with id:123 not found"
+        assert str(exception_info.value) == "Melding not found"
         attachment_repository.retrieve.assert_not_awaited()
 
     @pytest.mark.anyio

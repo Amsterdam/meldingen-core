@@ -17,6 +17,6 @@ class ListAssetsAction[A: Asset, M: Melding]:
         self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         return await self._relationship_manager.get_related(melding)

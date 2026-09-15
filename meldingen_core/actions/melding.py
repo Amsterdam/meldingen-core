@@ -394,7 +394,7 @@ class MeldingReclassifyAction[T: Melding, C: Classification, N: Note, U: User]:
         self._state_machine = state_machine
 
     async def __call__(self, melding_id: int, classification_id: int, reason: str, user: U) -> T:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         classification = await self._classification_repository.retrieve(classification_id)
         if classification is None:
@@ -446,7 +446,7 @@ class MeldingAnswerDeleteAction[M: Melding, A: Answer]:
     async def __call__(self, melding_id: int, answer_id: int) -> None:
 
         # Just ensure the melding exists before attempting to delete the answer.
-        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         answer = await self._answer_repository.find_by_id_and_melding(answer_id, melding_id)
         if answer is None:
@@ -524,7 +524,7 @@ class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
     async def __call__(self, melding_id: int, data: AssetData) -> T:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
 
@@ -571,7 +571,7 @@ class MeldingDeleteAssetAction[T: Melding, AS: Asset]:
         self._relationship_manager = relationship_manager
 
     async def __call__(self, melding_id: int, asset_id: int) -> None:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         asset = await self._asset_repository.retrieve(asset_id)
         if asset is None:

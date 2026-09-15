@@ -26,7 +26,7 @@ class NoteCreateAction[N: Note, T: Melding, U: User]:
         self._note_factory = note_factory
 
     async def __call__(self, melding_id: int, text: str, user: U) -> N:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         note = self._note_factory(text, melding, user)
         await self._note_repository.save(note)
@@ -72,7 +72,7 @@ class NoteListAction[N: Note, T: Melding]:
         sort_direction: SortingDirection | None = None,
     ) -> Sequence[N]:
         # Just make sure the melding exists before listing its notes.
-        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         return await self._note_repository.find_by_melding(
             melding_id,

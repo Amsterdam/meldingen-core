@@ -91,7 +91,7 @@ class UploadAttachmentAction[A: Attachment, M: Melding, U: User | None](BaseUplo
         data: AsyncIterator[bytes],
         user: U,
     ) -> A:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
         await self._validate_attachment(media_type, data_header, melding)
         return await self._save_attachment(original_filename, melding, media_type, user, data)
 
@@ -161,7 +161,7 @@ class MelderDownloadAttachmentAction[A: Attachment, M: Melding](BaseDownloadAtta
     async def __call__(
         self, melding_id: int, attachment_id: int, _type: AttachmentTypes
     ) -> tuple[AsyncIterator[bytes], str]:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
@@ -196,7 +196,7 @@ class MelderListAttachmentsAction[A: Attachment, M: Melding]:
         self._melding_repository = melding_repository
 
     async def __call__(self, melding_id: int) -> Sequence[A]:
-        await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         return await self._attachment_repository.find_by_melding(melding_id)
 
@@ -242,7 +242,7 @@ class MelderDeleteAttachmentAction[A: Attachment, M: Melding](BaseDeleteAttachme
         super().__init__(attachment_repository, filesystem)
 
     async def __call__(self, melding_id: int, attachment_id: int) -> None:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         attachment = await self._get_attachment(attachment_id)
         if attachment.melding != melding:
