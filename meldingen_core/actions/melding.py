@@ -525,7 +525,6 @@ class MeldingAnswerDeleteAction[T: Melding, A: Answer]:
 
 
 class MeldingSubmitActionMelder[T: Melding](BaseCRUDAction[T]):
-    _repository: BaseMeldingRepository[T]
     _state_machine: BaseMeldingStateMachine[T]
     _verify_token: TokenVerifier[T]
     _invalidate_token: BaseTokenInvalidator[T]
