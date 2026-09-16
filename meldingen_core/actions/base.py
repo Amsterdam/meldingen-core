@@ -7,24 +7,24 @@ from meldingen_core.filters import NameListFilters
 from meldingen_core.repositories import BaseRepository
 
 
-class BaseCRUDAction[T, R: BaseRepository = BaseRepository[T]]:
-    _repository: R
+class BaseCRUDAction[T]:
+    _repository: BaseRepository[T]
 
-    def __init__(self, repository: R) -> None:
+    def __init__(self, repository: BaseRepository[T]) -> None:
         self._repository = repository
 
 
-class BaseCreateAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
+class BaseCreateAction[T](BaseCRUDAction[T]):
     async def __call__(self, obj: T) -> None:
         await self._repository.save(obj)
 
 
-class BaseRetrieveAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
+class BaseRetrieveAction[T](BaseCRUDAction[T]):
     async def __call__(self, pk: int) -> T | None:
         return await self._repository.retrieve(pk=pk)
 
 
-class BaseListAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
+class BaseListAction[T](BaseCRUDAction[T]):
     async def __call__(
         self,
         limit: int | None = None,
@@ -44,7 +44,7 @@ class BaseListAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
         )
 
 
-class BaseUpdateAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
+class BaseUpdateAction[T](BaseCRUDAction[T]):
     async def __call__(self, pk: int, values: dict[str, Any]) -> T:
         obj = await self._repository.retrieve(pk=pk)
         if obj is None:
@@ -58,6 +58,6 @@ class BaseUpdateAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
         return obj
 
 
-class BaseDeleteAction[T, R: BaseRepository](BaseCRUDAction[T, R]):
+class BaseDeleteAction[T](BaseCRUDAction[T]):
     async def __call__(self, pk: int) -> None:
         await self._repository.delete(pk=pk)
