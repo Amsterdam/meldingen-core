@@ -54,7 +54,7 @@ class BaseMeldingRepository[M: Melding](BaseRepository[M], metaclass=ABCMeta):
     ) -> Sequence[M]: ...
 
 
-class BaseUserRepository(BaseRepository[User], metaclass=ABCMeta):
+class BaseUserRepository[U: User](BaseRepository[U], metaclass=ABCMeta):
     """Repository for User."""
 
 
@@ -66,23 +66,23 @@ class BaseClassificationRepository[C: Classification](BaseRepository[C], metacla
         """Find a classification by name or raise NotFoundException if not found."""
 
 
-class BaseFormRepository(BaseRepository[Form], metaclass=ABCMeta): ...
+class BaseFormRepository[F: Form](BaseRepository[F], metaclass=ABCMeta): ...
 
 
-class BaseQuestionRepository(BaseRepository[Question], metaclass=ABCMeta): ...
+class BaseQuestionRepository[Q: Question](BaseRepository[Q], metaclass=ABCMeta): ...
 
 
-class BaseAnswerRepository[Ans: Answer](BaseRepository[Ans], metaclass=ABCMeta):
-    @abstractmethod
-    async def find_by_melding(self, melding_id: int) -> Sequence[Ans]: ...
-
-    @abstractmethod
-    async def find_by_id_and_melding(self, answer_id: int, melding_id: int) -> Ans | None: ...
-
-
-class BaseAttachmentRepository[A: Attachment](BaseRepository[A], metaclass=ABCMeta):
+class BaseAnswerRepository[A: Answer](BaseRepository[A], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_melding(self, melding_id: int) -> Sequence[A]: ...
+
+    @abstractmethod
+    async def find_by_id_and_melding(self, answer_id: int, melding_id: int) -> A | None: ...
+
+
+class BaseAttachmentRepository[AT: Attachment](BaseRepository[AT], metaclass=ABCMeta):
+    @abstractmethod
+    async def find_by_melding(self, melding_id: int) -> Sequence[AT]: ...
 
 
 class BaseAssetTypeRepository[AT: AssetType](BaseRepository[AT], metaclass=ABCMeta):
