@@ -22,8 +22,9 @@ async def test_melding_not_found() -> None:
     repository.retrieve.return_value = None
 
     verify_token: TokenVerifier[Melding] = TokenVerifier(repository)
-    with pytest.raises(NotFoundException):
+    with pytest.raises(NotFoundException) as e:
         await verify_token(123, "")
+        assert str(e.value) == "Melding not found"
 
 
 @pytest.mark.anyio
