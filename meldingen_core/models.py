@@ -17,6 +17,9 @@ class AssetType:
 @dataclass
 class Classification:
     name: str
+    service_level_objective_text: str
+    service_level_objective_days: int
+    service_level_objective_day_type: str
     asset_type: AssetType | None = None
 
 
