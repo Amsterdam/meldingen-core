@@ -12,7 +12,14 @@ from meldingen_core.repositories import BaseClassificationRepository
 async def test_classifier() -> None:
     adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
     repository = Mock(BaseClassificationRepository)
-    repository.find_by_name = AsyncMock(return_value=Classification(name="classification_name"))
+    repository.find_by_name = AsyncMock(
+        return_value=Classification(
+            name="classification_name",
+            service_level_objective_day_type="work_days",
+            service_level_objective_days=5,
+            service_level_objective_text="Foo Bar",
+        )
+    )
 
     classify: Classifier[Classification] = Classifier(adapter, repository)
 

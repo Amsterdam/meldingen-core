@@ -63,7 +63,12 @@ from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator
 
 @pytest.mark.anyio
 async def test_melding_create_action() -> None:
-    classification = Classification(name="test")
+    classification = Classification(
+        name="test",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     classifier = AsyncMock(Classifier, return_value=classification)
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
@@ -225,12 +230,22 @@ async def test_melding_update_action_not_found() -> None:
 
 @pytest.mark.anyio
 async def test_melding_update_action_with_classification_id() -> None:
-    old_classification = Classification(name="old")
+    old_classification = Classification(
+        name="old",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     melding = Melding("text", classification=old_classification, state=MeldingStates.LOCATION_SUBMITTED)
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = melding
 
-    classification = Classification(name="new")
+    classification = Classification(
+        name="new",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     classification_repository = Mock(BaseClassificationRepository)
     classification_repository.retrieve = AsyncMock(return_value=classification)
 
@@ -257,7 +272,12 @@ async def test_melding_update_action_with_classification_id() -> None:
 async def test_melding_update_action_with_unchanged_classification_id() -> None:
     """Assigning the classification the melding already has leaves the melder's input and the state
     of the melding alone."""
-    classification = Classification(name="the one it already has")
+    classification = Classification(
+        name="the one it already has",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     melding = Melding("text", classification=classification, state=MeldingStates.LOCATION_SUBMITTED)
     repository = Mock(BaseMeldingRepository)
     repository.retrieve.return_value = melding
@@ -327,7 +347,12 @@ async def test_melding_update_action_melder() -> None:
     repository.retrieve.return_value = Melding(
         "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
     )
-    classification = Classification(name="test")
+    classification = Classification(
+        name="test",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     classifier = AsyncMock(Classifier, return_value=classification)
     reclassifier = AsyncMock(BaseReclassification)
 
@@ -623,8 +648,21 @@ def _reclassify_action(
 
 @pytest.mark.anyio
 async def test_reclassify_action() -> None:
-    melding = Melding("melding text", classification=Classification(name="old"))
-    classification = Classification(name="new")
+    melding = Melding(
+        "melding text",
+        classification=Classification(
+            name="old",
+            service_level_objective_day_type="work_days",
+            service_level_objective_days=5,
+            service_level_objective_text="Foo Bar",
+        ),
+    )
+    classification = Classification(
+        name="new",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
     user = User(id=1, username="behandelaar", email="behandelaar@example.com")
     note = Note(text="the reason", melding=melding, user=user)
 
@@ -706,8 +744,21 @@ async def test_reclassify_action_classification_not_found() -> None:
 async def test_reclassify_action_does_not_write_when_transition_is_refused() -> None:
     """A melding in a state that may not be reclassified leaves neither a changed melding nor a
     note behind, so the transition is attempted before anything is handed to a repository."""
-    melding = Melding("melding text", classification=Classification(name="old"))
-    classification = Classification(name="new")
+    melding = Melding(
+        "melding text",
+        classification=Classification(
+            name="old",
+            service_level_objective_day_type="work_days",
+            service_level_objective_days=5,
+            service_level_objective_text="Foo Bar",
+        ),
+    )
+    classification = Classification(
+        name="new",
+        service_level_objective_day_type="work_days",
+        service_level_objective_days=5,
+        service_level_objective_text="Foo Bar",
+    )
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve = AsyncMock(return_value=melding)
