@@ -31,7 +31,15 @@ class TestClassificationCreateAction:
         )
 
         with pytest.raises(NotFoundException):
-            await action(Classification("name"), 123)
+            await action(
+                Classification(
+                    name="name",
+                    service_level_objective_text="text",
+                    service_level_objective_days=5,
+                    service_level_objective_day_type="calendar_days",
+                ),
+                123,
+            )
 
     @pytest.mark.anyio
     async def test_can_create_classification_with_asset_type(self) -> None:
@@ -39,7 +47,15 @@ class TestClassificationCreateAction:
             Mock(BaseClassificationRepository), Mock(BaseAssetTypeRepository)
         )
 
-        await action(Classification("name"), 123)
+        await action(
+            Classification(
+                name="name",
+                service_level_objective_text="text",
+                service_level_objective_days=5,
+                service_level_objective_day_type="calendar_days",
+            ),
+            123,
+        )
 
 
 def test_can_instantiate_retrieve_action() -> None:
