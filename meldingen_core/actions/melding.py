@@ -63,12 +63,11 @@ class MeldingCreateAction[T: Melding, C: Classification](BaseCreateAction[T]):
         obj.token_expires = dt.datetime.now(tz=dt.UTC) + self._token_duration
 
         try:
-            classification = await self._classify(obj.text)
-            obj.classification = classification
-            await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
+            obj.classification = await self._classify(obj.text)
         except ClassificationNotFoundException:
             log.error("Classifier failed to find classification!")
 
+        await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
         await self._repository.save(obj)
 
 
