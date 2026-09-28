@@ -102,7 +102,9 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
     assert caplog.records[0].levelname == "ERROR"
     assert caplog.records[0].message == "Classifier failed to find classification!"
 
-    state_machine.transition.assert_not_awaited()
+    assert melding.classification is None
+    state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.CLASSIFY)
+    assert repository.save.await_count == 2
 
 
 def test_can_instantiate_melding_list_action() -> None:
