@@ -8,6 +8,7 @@ type AssetTypeArguments = dict[str, Any]
 
 @dataclass
 class AssetType:
+    id: int
     name: str
     class_name: str
     arguments: AssetTypeArguments
@@ -56,6 +57,7 @@ class Melding:
 
 @dataclass
 class Asset:
+    id: int
     external_id: str
     type: AssetType
     melding: Melding
