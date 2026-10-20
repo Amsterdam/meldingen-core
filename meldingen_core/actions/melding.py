@@ -510,6 +510,7 @@ class AssetDataV2:
     label: str
     subtype: str
 
+
 class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
@@ -531,7 +532,6 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
-
     async def __call__(self, melding_id: int, asset_type_id: int, data: list[AssetDataV2]) -> T:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
@@ -547,7 +547,6 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
 
         if asset_type_id is not melding_asset_type.id:
             raise InvalidInputException("The melding has a different asset type associated than the one being added")
-
 
         if len(data) >= asset_type.max_assets:
             raise LimitReachedException(
@@ -572,6 +571,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
             await self._asset_repository.save(asset)
 
         return melding
+
 
 # TODO remove after frontend uses set-assets endpoint
 class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
@@ -625,6 +625,7 @@ class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
         await self._melding_asset_relationship_manager.add_relationship(melding, asset)
 
         return melding
+
 
 # TODO remove after frontend uses set-assets endpoint
 class MeldingDeleteAssetAction[T: Melding, AS: Asset]:
