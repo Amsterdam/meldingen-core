@@ -1087,7 +1087,7 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
         relationship_manager,
     )
 
-    result = await action(123, 456, [AssetData("external_id", 456, label, subtype)])
+    result = await action(123, 456, [AssetDataV2("external_id", label, subtype)])
 
     assert result is melding
     assert asset.external_id == "external_id"
