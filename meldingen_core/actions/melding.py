@@ -556,11 +556,15 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         for input in data:
             current_assets = await self._melding_asset_relationship_manager.get_related(melding)
 
+            # Overwrite the current list of assets with the new list
+            current_assets.clear()
+
             asset = await self._asset_repository.find_by_external_id_and_asset_type_id(input.external_id, asset_type_id)
             if asset is None:
                 asset = self._create_asset(input.external_id, asset_type, melding, input.label, input.subtype)
             else:
-                # Label and subtype can change and should therefore be overwritten
+                # Label and subtype can change and should therefore be overwritten. \
+                # External_id should not change.
                 asset.label = input.label
                 asset.subtype = input.subtype
 
