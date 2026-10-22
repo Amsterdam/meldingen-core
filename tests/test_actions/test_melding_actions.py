@@ -1070,11 +1070,9 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
     asset_type_repository.find_by_melding.return_value = asset_type
     asset_type_repository.retrieve.return_value = asset_type
 
-    relationship_manager = AsyncMock(RelationshipManager)
-    relationship_manager.get_related.return_value = [asset]
-
     asset_repository = Mock(BaseAssetRepository)
     asset_repository.find_by_external_id_and_asset_type_id.return_value = asset
+    asset_repository.find_by_melding.return_value = [asset]
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve.return_value = melding
@@ -1084,7 +1082,6 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
-        relationship_manager,
     )
 
     result = await action(123, 456, [AssetDataV2("external_id", label, subtype)])
@@ -1094,8 +1091,8 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
     assert asset.type is asset_type
     assert asset.label == label
     assert asset.subtype == subtype
+    asset_repository.find_by_melding.assert_awaited_once_with(123)
     asset_repository.save.assert_awaited_once_with(asset)
-    relationship_manager.add_relationship.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -1111,7 +1108,6 @@ async def test_set_assets_melding_asset_type_not_found() -> None:
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
-        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException, match="Failed to find asset type for melding"):
@@ -1135,7 +1131,6 @@ async def test_set_assets_requested_asset_type_does_not_exist() -> None:
         Mock(BaseAssetRepository),
         asset_type_repository,
         Mock(BaseAssetFactory),
-        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(NotFoundException, match="Failed to find asset type with id 456"):
@@ -1161,7 +1156,6 @@ async def test_set_assets_requested_asset_type_does_not_match_melding() -> None:
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
-        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(InvalidInputException, match="different asset type"):
@@ -1186,7 +1180,6 @@ async def test_set_assets_limit_exceeded() -> None:
         asset_repository,
         asset_type_repository,
         Mock(BaseAssetFactory),
-        AsyncMock(RelationshipManager),
     )
 
     with pytest.raises(LimitReachedException, match="maximum number of assets"):
@@ -1214,10 +1207,8 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
 
     asset_factory = Mock(BaseAssetFactory, return_value=asset)
     asset_repository = Mock(BaseAssetRepository)
+    asset_repository.find_by_melding.return_value = []
     asset_repository.find_by_external_id_and_asset_type_id.return_value = None
-
-    relationship_manager = AsyncMock(RelationshipManager)
-    relationship_manager.get_related.return_value = []
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve.return_value = melding
@@ -1227,15 +1218,15 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
         asset_repository,
         asset_type_repository,
         asset_factory,
-        relationship_manager,
     )
 
     result = await action(123, 456, [AssetDataV2("external_id", "label", "subtype")])
 
     assert result is melding
+    assert asset_repository.find_by_melding.return_value == [asset]
+    asset_repository.find_by_melding.assert_awaited_once_with(123)
     asset_factory.assert_called_once_with("external_id", asset_type, melding, "label", "subtype")
     asset_repository.save.assert_awaited_once_with(asset)
-    relationship_manager.add_relationship.assert_not_awaited()
 
 
 @pytest.mark.anyio
