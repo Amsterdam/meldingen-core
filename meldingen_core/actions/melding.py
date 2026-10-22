@@ -563,7 +563,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
             if asset is None:
                 asset = self._create_asset(input.external_id, asset_type, melding, input.label, input.subtype)
             else:
-                # Label and subtype can change and should therefore be overwritten. \
+                # Label and subtype can change and should therefore be overwritten.
                 # External_id should not change.
                 asset.label = input.label
                 asset.subtype = input.subtype
