@@ -97,6 +97,9 @@ class BaseAssetRepository[AS: Asset](BaseRepository[AS], metaclass=ABCMeta):
     @abstractmethod
     async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> AS | None: ...
 
+    @abstractmethod
+    async def find_by_melding(self, melding_id: int) -> AS | None: ...
+
 
 class BaseLabelRepository[L: Label](BaseRepository[L], metaclass=ABCMeta):
     @abstractmethod

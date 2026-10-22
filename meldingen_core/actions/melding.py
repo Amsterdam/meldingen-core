@@ -516,21 +516,17 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
     _create_asset: BaseAssetFactory[AS, AT, T]
-    _melding_asset_relationship_manager: RelationshipManager[T, AS]
-
     def __init__(
         self,
         melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
-        melding_asset_relationship_manager: RelationshipManager[T, AS],
     ):
         self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
-        self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
     async def __call__(self, melding_id: int, asset_type_id: int, data: list[AssetDataV2]) -> T:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
@@ -553,11 +549,12 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
                 f"The given input exceeds the maximum number of assets allowed for asset type {asset_type.name}"
             )
 
-        for input in data:
-            current_assets = await self._melding_asset_relationship_manager.get_related(melding)
+        # Retrieve and empty the current assets, so we can overwrite them
+        current_assets = await self._asset_repository.find_by_melding(melding.id)
+        current_assets.clear()
+        assets_to_add: list[AS] = []
 
-            # Overwrite the current list of assets with the new list
-            current_assets.clear()
+        for input in data:
 
             asset = await self._asset_repository.find_by_external_id_and_asset_type_id(input.external_id, asset_type_id)
             if asset is None:
@@ -568,11 +565,13 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
                 asset.label = input.label
                 asset.subtype = input.subtype
 
-                # If the asset already exists, associate it with the melding if not already associated
-                if asset not in current_assets:
-                    await self._melding_asset_relationship_manager.add_relationship(melding, asset)
+            assets_to_add.append(asset)
 
             await self._asset_repository.save(asset)
+
+        # Ensure all new assets are associated with the melding
+        current_assets.extend(assets_to_add)
+        await self._melding_repository.save(melding)
 
         return melding
 
