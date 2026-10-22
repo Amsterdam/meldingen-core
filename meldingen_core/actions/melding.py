@@ -550,7 +550,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
             )
 
         # Retrieve and empty the current assets, so we can overwrite them
-        current_assets = await self._asset_repository.find_by_melding(melding.id)
+        current_assets = await self._asset_repository.find_by_melding(melding_id)
         current_assets.clear()
         assets_to_add: list[AS] = []
 
