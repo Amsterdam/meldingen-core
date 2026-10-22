@@ -95,10 +95,9 @@ class BaseAssetTypeRepository[AT: AssetType](BaseRepository[AT], metaclass=ABCMe
 
 class BaseAssetRepository[AS: Asset](BaseRepository[AS], metaclass=ABCMeta):
     @abstractmethod
-    async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> Sequence[AS] | None: ...
-
-    @abstractmethod
-    async def find_by_melding(self, melding_id: int) -> Sequence[AS]: ...
+    async def find_by_external_id_and_asset_type_id(
+        self, external_id: str, asset_type_id: int
+    ) -> Sequence[AS] | None: ...
 
 
 class BaseLabelRepository[L: Label](BaseRepository[L], metaclass=ABCMeta):

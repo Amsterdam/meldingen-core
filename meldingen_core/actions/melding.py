@@ -516,17 +516,21 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
     _asset_repository: BaseAssetRepository[AS]
     _asset_type_repository: BaseAssetTypeRepository[AT]
     _create_asset: BaseAssetFactory[AS, AT, T]
+    _melding_asset_relationship_manager: RelationshipManager[T, AS]
+
     def __init__(
         self,
         melding_repository: BaseMeldingRepository[T],
         asset_repository: BaseAssetRepository[AS],
         asset_type_repository: BaseAssetTypeRepository[AT],
         asset_factory: BaseAssetFactory[AS, AT, T],
+        melding_asset_relationship_manager: RelationshipManager[T, AS],
     ):
         self._melding_repository = melding_repository
         self._asset_repository = asset_repository
         self._asset_type_repository = asset_type_repository
         self._create_asset = asset_factory
+        self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
     async def __call__(self, melding_id: int, asset_type_id: int, data: list[AssetDataV2]) -> T:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
@@ -549,29 +553,24 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
                 f"The given input exceeds the maximum number of assets allowed for asset type {asset_type.name}"
             )
 
-        # Retrieve and empty the current assets, so we can overwrite them
-        current_assets = await self._asset_repository.find_by_melding(melding_id)
+        current_assets = await self._melding_asset_relationship_manager.get_related(melding)
         current_assets.clear()
         assets_to_add: list[AS] = []
 
         for input in data:
-
             asset = await self._asset_repository.find_by_external_id_and_asset_type_id(input.external_id, asset_type_id)
             if asset is None:
                 asset = self._create_asset(input.external_id, asset_type, melding, input.label, input.subtype)
             else:
                 # Label and subtype can change and should therefore be overwritten.
-                # External_id should not change.
+                # External_id does not change.
                 asset.label = input.label
                 asset.subtype = input.subtype
 
+            await self._asset_repository.save(asset)
             assets_to_add.append(asset)
 
-            await self._asset_repository.save(asset)
-
-        # Ensure all new assets are associated with the melding
-        current_assets.extend(assets_to_add)
-        await self._melding_repository.save(melding)
+        await self._melding_asset_relationship_manager.set_related(melding, assets_to_add)
 
         return melding
 
