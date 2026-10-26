@@ -1191,7 +1191,7 @@ async def test_set_assets_limit_exceeded() -> None:
     )
 
     with pytest.raises(LimitReachedException, match="maximum number of assets"):
-        await action(123, 456, [AssetDataV2("external_id", "label", "subtype")])
+        await action(123, 456, [AssetDataV2("external_id", "label", "subtype"), AssetDataV2("external_id2", "label2", "subtype2")])
 
     asset_repository.find_by_external_id_and_asset_type_id.assert_not_awaited()
 

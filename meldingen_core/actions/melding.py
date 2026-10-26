@@ -548,7 +548,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         if asset_type_id is not melding_asset_type.id:
             raise InvalidInputException("The melding has a different asset type associated than the one being added")
 
-        if len(data) >= asset_type.max_assets:
+        if len(data) > asset_type.max_assets:
             raise LimitReachedException(
                 f"The given input exceeds the maximum number of assets allowed for asset type {asset_type.name}"
             )
