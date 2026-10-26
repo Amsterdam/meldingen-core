@@ -1094,7 +1094,6 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
     assert asset.type is asset_type
     assert asset.label == label
     assert asset.subtype == subtype
-    asset_repository.save.assert_awaited_once_with(asset)
     relationship_manager.get_related.assert_awaited_once_with(melding)
     relationship_manager.set_related.assert_awaited_once_with(melding, [asset])
 
@@ -1191,7 +1190,11 @@ async def test_set_assets_limit_exceeded() -> None:
     )
 
     with pytest.raises(LimitReachedException, match="maximum number of assets"):
-        await action(123, 456, [AssetDataV2("external_id", "label", "subtype"), AssetDataV2("external_id2", "label2", "subtype2")])
+        await action(
+            123,
+            456,
+            [AssetDataV2("external_id", "label", "subtype"), AssetDataV2("external_id2", "label2", "subtype2")],
+        )
 
     asset_repository.find_by_external_id_and_asset_type_id.assert_not_awaited()
 
@@ -1235,7 +1238,6 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
 
     assert result is melding
     asset_factory.assert_called_once_with("external_id", asset_type, melding, "label", "subtype")
-    asset_repository.save.assert_awaited_once_with(asset)
     relationship_manager.get_related.assert_awaited_once_with(melding)
     relationship_manager.set_related.assert_awaited_once_with(melding, [asset])
 

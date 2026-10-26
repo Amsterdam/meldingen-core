@@ -567,9 +567,9 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
                 asset.label = input.label
                 asset.subtype = input.subtype
 
-            await self._asset_repository.save(asset)
             assets_to_add.append(asset)
 
+        # Set all the assets to the melding and create new assets if necessary
         await self._melding_asset_relationship_manager.set_related(melding, assets_to_add)
 
         return melding
