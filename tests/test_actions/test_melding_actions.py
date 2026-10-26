@@ -666,7 +666,7 @@ async def test_reclassify_action() -> None:
         service_level_objective_text="Foo Bar",
     )
     user = User(id=1, username="behandelaar", email="behandelaar@example.com")
-    note = Note(text="the reason", melding=melding, user=user)
+    note = Note(id=1, text="the reason", melding=melding, user=user)
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve = AsyncMock(return_value=melding)

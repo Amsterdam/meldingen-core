@@ -35,7 +35,7 @@ async def test_note_create_action() -> None:
 
     assert result is note
     melding_repository.retrieve.assert_awaited_once_with(123)
-    note_factory.assert_called_once_with("a note", melding, user)
+    note_factory.assert_called_once_with("a note", melding, user, None, None)
     note_repository.save.assert_awaited_once_with(note)
 
 
@@ -53,6 +53,48 @@ async def test_note_create_action_raises_not_found_when_melding_does_not_exist()
 
     with pytest.raises(NotFoundException):
         await action(123, "a note", user)
+
+    note_factory.assert_not_called()
+    note_repository.save.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_note_creation_with_parent_note() -> None:
+    melding = Melding(text="melding")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
+    parent_note = Note(id=1, text="parent note", melding=melding, user=user)
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=parent_note)
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+    note_factory = Mock(BaseNoteFactory, return_value=Mock(Note))
+
+    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(note_repository, melding_repository, note_factory)
+
+    result = await action(123, "a reply", user, parent_note_id=1)
+
+    note_factory.assert_called_once_with("a reply", melding, user, parent_note, parent_note.text)
+    note_repository.save.assert_awaited_once_with(result)
+
+
+@pytest.mark.anyio
+async def test_note_creation_raises_not_found_when_parent_note_is_not_found() -> None:
+    melding = Melding(text="melding")
+    user = User(id=1, username="behandelaar", email="behandelaar@example.com")
+
+    note_repository = Mock(BaseNoteRepository)
+    note_repository.save = AsyncMock()
+    note_repository.find_by_id_and_melding = AsyncMock(return_value=None)
+    melding_repository = Mock(BaseMeldingRepository)
+    melding_repository.retrieve = AsyncMock(return_value=melding)
+    note_factory = Mock(BaseNoteFactory)
+
+    action: NoteCreateAction[Note, Melding, User] = NoteCreateAction(note_repository, melding_repository, note_factory)
+
+    with pytest.raises(NotFoundException):
+        await action(123, "a reply", user, parent_note_id=456)
 
     note_factory.assert_not_called()
     note_repository.save.assert_not_awaited()

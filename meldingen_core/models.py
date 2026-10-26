@@ -107,9 +107,13 @@ class Attachment:
 
 @dataclass
 class Note:
+    id: int
     text: str
     melding: Melding
     user: User
     # Set on the note that records why a melding was reclassified, pointing at the classification
     # the melding was moved to. None for a note that was written by hand.
     classification: Classification | None = None
+    parent_note: "Note" | None = None
+    # The text of the parent note is stored separately to keep a snapshot of its content.
+    parent_note_text: str | None = None
