@@ -545,7 +545,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         if asset_type is None:
             raise NotFoundException(f"Failed to find asset type with id {asset_type_id}")
 
-        if asset_type_id is not melding_asset_type.id:
+        if asset_type_id != melding_asset_type.id:
             raise InvalidInputException("The melding has a different asset type associated than the one being added")
 
         if len(data) > asset_type.max_assets:
