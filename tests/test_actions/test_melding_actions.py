@@ -9,7 +9,6 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import ListAssetsAction
 from meldingen_core.actions.melding import (
     AssetData,
-    AssetInput,
     MeldingAddAssetAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
@@ -30,6 +29,7 @@ from meldingen_core.actions.melding import (
     MeldingRequestReopenAction,
     MeldingRetrieveAction,
     MeldingSetAssetsAction,
+    MeldingSetAssetsInput,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
     MeldingSubmitLocationAction,
@@ -1086,7 +1086,7 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
         relationship_manager,
     )
 
-    result = await action(123, 456, [AssetInput("external_id", label, subtype)])
+    result = await action(123, 456, [MeldingSetAssetsInput("external_id", label, subtype)])
 
     assert result is melding
     assert asset.external_id == "external_id"
@@ -1192,7 +1192,7 @@ async def test_set_assets_limit_exceeded() -> None:
         await action(
             123,
             456,
-            [AssetInput("external_id", "label", "subtype"), AssetInput("external_id2", "label2", "subtype2")],
+            [MeldingSetAssetsInput("external_id", "label", "subtype"), MeldingSetAssetsInput("external_id2", "label2", "subtype2")],
         )
 
     asset_repository.find_by_external_id_and_asset_type_id.assert_not_awaited()
@@ -1233,7 +1233,7 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
         relationship_manager,
     )
 
-    result = await action(123, 456, [AssetInput("external_id", "label", "subtype")])
+    result = await action(123, 456, [MeldingSetAssetsInput("external_id", "label", "subtype")])
 
     assert result is melding
     asset_factory.assert_called_once_with("external_id", asset_type, melding, "label", "subtype")

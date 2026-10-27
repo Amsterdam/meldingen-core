@@ -504,7 +504,7 @@ class AssetData:
 
 
 @dataclass
-class AssetInput:
+class MeldingSetAssetsInput:
     """The fields needed to create an asset when adding it to a melding"""
 
     external_id: str
@@ -533,7 +533,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
-    async def __call__(self, melding_id: int, asset_type_id: int, asset_input_list: list[AssetInput]) -> T:
+    async def __call__(self, melding_id: int, asset_type_id: int, asset_payload: list[MeldingSetAssetsInput]) -> T:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
@@ -547,14 +547,14 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         if asset_type_id != melding_asset_type.id:
             raise InvalidInputException("The melding has a different asset type associated than the one being added")
 
-        if len(asset_input_list) > asset_type.max_assets:
+        if len(asset_payload) > asset_type.max_assets:
             raise LimitReachedException(
                 f"The given input exceeds the maximum number of assets allowed for asset type {asset_type.name}"
             )
 
         assets_to_add: list[AS] = []
 
-        for input in asset_input_list:
+        for input in asset_payload:
             asset = await self._asset_repository.find_by_external_id_and_asset_type_id(input.external_id, asset_type_id)
             if asset is None:
                 asset = self._create_asset(input.external_id, asset_type, melding, input.label, input.subtype)
