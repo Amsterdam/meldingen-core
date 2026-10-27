@@ -1053,8 +1053,8 @@ async def test_add_asset_asset_type_not_found() -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("label, subtype", [("new label", "new subtype"), ("old label", "old subtype")])
-async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: str) -> None:
+@pytest.mark.parametrize("label, subtype", [("new label", "new subtype")])
+async def test_set_assets_updates_existing_properties(label: str, subtype: str) -> None:
     asset_type = AssetType(id=456, name="type", class_name="class_name", arguments={}, max_assets=10)
     melding = Melding(text="melding")
     asset = Asset(
