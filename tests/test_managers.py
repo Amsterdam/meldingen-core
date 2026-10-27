@@ -63,10 +63,7 @@ class TestRelationshipManager:
         related2 = DummyRelated()
 
         await manager.set_related(parent, [related1, related2])
-        assert related1 in parent.related
-        assert related2 in parent.related
-        assert parent.related.count(related1) == 1
-        assert parent.related.count(related2) == 1
+        assert parent.related == [related1, related2]
 
     @pytest.mark.anyio
     async def test_clear_related(self) -> None:

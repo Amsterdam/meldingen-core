@@ -9,7 +9,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import ListAssetsAction
 from meldingen_core.actions.melding import (
     AssetData,
-    AssetDataV2,
+    AssetInput,
     MeldingAddAssetAction,
     MeldingAddAttachmentsAction,
     MeldingAddContactInfoAction,
@@ -1074,7 +1074,6 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
     asset_repository.find_by_external_id_and_asset_type_id.return_value = asset
 
     relationship_manager = AsyncMock(RelationshipManager)
-    relationship_manager.get_related.return_value = [asset]
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve.return_value = melding
@@ -1087,14 +1086,14 @@ async def test_set_assets_existing_asset_is_always_saved(label: str, subtype: st
         relationship_manager,
     )
 
-    result = await action(123, 456, [AssetDataV2("external_id", label, subtype)])
+    result = await action(123, 456, [AssetInput("external_id", label, subtype)])
 
     assert result is melding
     assert asset.external_id == "external_id"
     assert asset.type is asset_type
     assert asset.label == label
     assert asset.subtype == subtype
-    relationship_manager.get_related.assert_awaited_once_with(melding)
+
     relationship_manager.set_related.assert_awaited_once_with(melding, [asset])
 
 
@@ -1193,7 +1192,7 @@ async def test_set_assets_limit_exceeded() -> None:
         await action(
             123,
             456,
-            [AssetDataV2("external_id", "label", "subtype"), AssetDataV2("external_id2", "label2", "subtype2")],
+            [AssetInput("external_id", "label", "subtype"), AssetInput("external_id2", "label2", "subtype2")],
         )
 
     asset_repository.find_by_external_id_and_asset_type_id.assert_not_awaited()
@@ -1234,11 +1233,11 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
         relationship_manager,
     )
 
-    result = await action(123, 456, [AssetDataV2("external_id", "label", "subtype")])
+    result = await action(123, 456, [AssetInput("external_id", "label", "subtype")])
 
     assert result is melding
     asset_factory.assert_called_once_with("external_id", asset_type, melding, "label", "subtype")
-    relationship_manager.get_related.assert_awaited_once_with(melding)
+
     relationship_manager.set_related.assert_awaited_once_with(melding, [asset])
 
 
