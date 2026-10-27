@@ -116,4 +116,4 @@ class Note:
     classification: Classification | None = None
     parent_note: "Note" | None = None
     # The text of the parent note is stored separately to keep a snapshot of its content.
-    parent_note_text: str | None = None
+    parent_note_text_snapshot: str | None = None
