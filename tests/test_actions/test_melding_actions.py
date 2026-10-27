@@ -1192,7 +1192,10 @@ async def test_set_assets_limit_exceeded() -> None:
         await action(
             123,
             456,
-            [MeldingSetAssetsInput("external_id", "label", "subtype"), MeldingSetAssetsInput("external_id2", "label2", "subtype2")],
+            [
+                MeldingSetAssetsInput("external_id", "label", "subtype"),
+                MeldingSetAssetsInput("external_id2", "label2", "subtype2"),
+            ],
         )
 
     asset_repository.find_by_external_id_and_asset_type_id.assert_not_awaited()
