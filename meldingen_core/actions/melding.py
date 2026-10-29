@@ -504,7 +504,7 @@ class AssetData:
 
 
 @dataclass
-class MeldingSetAssetsInput:
+class MeldingAssetsPayload:
     """The fields needed to create an asset when adding it to a melding"""
 
     external_id: str
@@ -533,7 +533,7 @@ class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
         self._create_asset = asset_factory
         self._melding_asset_relationship_manager = melding_asset_relationship_manager
 
-    async def __call__(self, melding_id: int, asset_type_id: int, asset_payload: list[MeldingSetAssetsInput]) -> T:
+    async def __call__(self, melding_id: int, asset_type_id: int, asset_payload: list[MeldingAssetsPayload]) -> T:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
         melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)

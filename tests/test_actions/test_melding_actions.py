@@ -29,7 +29,7 @@ from meldingen_core.actions.melding import (
     MeldingRequestReopenAction,
     MeldingRetrieveAction,
     MeldingSetAssetsAction,
-    MeldingSetAssetsInput,
+    MeldingAssetsPayload,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
     MeldingSubmitLocationAction,
@@ -1086,7 +1086,7 @@ async def test_set_assets_updates_existing_properties(label: str, subtype: str) 
         relationship_manager,
     )
 
-    result = await action(123, 456, [MeldingSetAssetsInput("external_id", label, subtype)])
+    result = await action(123, 456, [MeldingAssetsPayload("external_id", label, subtype)])
 
     assert result is melding
     assert asset.external_id == "external_id"
@@ -1193,8 +1193,8 @@ async def test_set_assets_limit_exceeded() -> None:
             123,
             456,
             [
-                MeldingSetAssetsInput("external_id", "label", "subtype"),
-                MeldingSetAssetsInput("external_id2", "label2", "subtype2"),
+                MeldingAssetsPayload("external_id", "label", "subtype"),
+                MeldingAssetsPayload("external_id2", "label2", "subtype2"),
             ],
         )
 
@@ -1236,7 +1236,7 @@ async def test_set_assets_creates_and_saves_new_asset() -> None:
         relationship_manager,
     )
 
-    result = await action(123, 456, [MeldingSetAssetsInput("external_id", "label", "subtype")])
+    result = await action(123, 456, [MeldingAssetsPayload("external_id", "label", "subtype")])
 
     assert result is melding
     asset_factory.assert_called_once_with("external_id", asset_type, melding, "label", "subtype")
