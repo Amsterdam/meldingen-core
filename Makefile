@@ -31,10 +31,10 @@ lintl: ## Lint code (ruff)
 	uv run ruff check --fix .
 
 format: ## Auto-fix formatting
-	$(dc) uv run ruff format .
+	$(core) uv run ruff format .
 
 lint: ## Lint code (ruff)
-	$(dc) uv run ruff check --fix .
+	$(core) uv run ruff check --fix .
 
 typecheck: ## Run mypy type checking
 	$(core) sh -c "rm -rf .mypy_cache && uv run mypy --strict ."
