@@ -27,11 +27,9 @@ class RelationshipManager[A, B]:
         self,
         repository: BaseRepository[A],
         get_related: Callable[[A], Awaitable[list[B]]],
-        save_related: Callable[[A, list[B]], Awaitable[None]],
     ) -> None:
         self._repository = repository
         self._get_related = get_related
-        self._save_related = save_related
 
     async def add_relationship(self, model_a: A, model_b: B) -> A:
         """Add a relationship between model_a and model_b if it doesn't already exist."""
@@ -42,7 +40,6 @@ class RelationshipManager[A, B]:
 
         related_items.append(model_b)
         await self._repository.save(model_a)
-        await self._save_related(model_a, related_items)
 
         return model_a
 
@@ -56,6 +53,6 @@ class RelationshipManager[A, B]:
         current_related.clear()
         current_related.extend(related_items)
 
-        await self._save_related(model_a, related_items)
+        await self._repository.save(model_a)
 
         return model_a
