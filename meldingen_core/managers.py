@@ -14,6 +14,7 @@ class RelationshipManager[A, B]:
     The meldingen FastAPI implementation uses the cascade save-update strategy for managing relationships between models.
     This means that when a parent model is saved, any changes to its related models are also persisted automatically.
     Therefore only a model_a.save() would suffice.
+    This may not be the case for other implementations, so for longevity we may need to rework this class to be more abstract and adaptable to different ORM strategies.
     """
 
     _repository: BaseRepository[A]
