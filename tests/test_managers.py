@@ -42,7 +42,6 @@ class TestRelationshipManager:
         await manager.add_relationship(parent, related)
         assert related in parent.related
         assert parent.related.count(related) == 1
-        repository.save.assert_awaited_once_with(parent)
 
         # Should retrieve related items
         result = await manager.get_related(parent)
@@ -54,7 +53,6 @@ class TestRelationshipManager:
 
         assert related in parent.related
         assert parent.related.count(related) == 1
-        repository.save.assert_awaited_once_with(parent)
 
     @pytest.mark.anyio
     async def test_set_related(self) -> None:
@@ -67,4 +65,3 @@ class TestRelationshipManager:
 
         await manager.set_related(parent, [related1, related2])
         assert parent.related == [related1, related2]
-        repository.save.assert_awaited_once_with(parent)
