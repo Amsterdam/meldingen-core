@@ -18,7 +18,9 @@ class RelationshipManager[A, B]:
 
     _repository: BaseRepository[A]
     _get_related: Callable[[A], Awaitable[list[B]]]  # Function to get related B items for a given A
-    _save_related: Callable[[A, list[B]], Awaitable[None]] # Function to save related B items for a given A (can include updated fields of B aswell)
+    _save_related: Callable[
+        [A, list[B]], Awaitable[None]
+    ]  # Function to save related B items for a given A (can include updated fields of B aswell)
 
     def __init__(
         self,
