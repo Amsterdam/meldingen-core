@@ -62,7 +62,7 @@ def test_wfs_provider_factory_raises_when_class_name_invalid() -> None:
     factory = AssetTypeToWfsProviderConverter()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "invalid_value", {}, 3))
+        factory(AssetType(1, "asset_type_name", "invalid_value", {}, 3))
 
     assert str(exception_info.value) == "class_name 'invalid_value' does not contain full path to class"
 
@@ -71,7 +71,7 @@ def test_wfs_provider_factory_raises_when_module_name_invalid() -> None:
     factory = AssetTypeToWfsProviderConverter()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "invalid_module_name.Test", {}, 3))
+        factory(AssetType(1, "asset_type_name", "invalid_module_name.Test", {}, 3))
 
     assert str(exception_info.value) == "Failed to find module 'invalid_module_name'"
 
@@ -80,7 +80,7 @@ def test_wfs_provider_factory_raises_when_class_does_not_exist() -> None:
     factory = AssetTypeToWfsProviderConverter()
 
     with pytest.raises(InvalidWfsProviderException) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.Test", {}, 3))
+        factory(AssetType(1, "asset_type_name", "tests.test_wfs.Test", {}, 3))
 
     assert str(exception_info.value) == "Failed to find class 'Test' in module 'tests.test_wfs'"
 
@@ -89,7 +89,7 @@ def test_wfs_provider_factory_raises_when_arguments_are_invalid() -> None:
     factory = AssetTypeToWfsProviderConverter()
 
     with pytest.raises(ValueError) as exception_info:
-        factory(AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}, 3))
+        factory(AssetType(1, "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {}, 3))
 
     assert str(exception_info.value) == "Missing 'base_url' in arguments"
 
@@ -100,7 +100,7 @@ def test_wfs_provider_factory_raises_when_class_does_not_extend_base() -> None:
     with pytest.raises(InvalidWfsProviderException) as exception_info:
         factory(
             AssetType(
-                "asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+                1, "asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
             )
         )
 
@@ -113,7 +113,11 @@ def test_wfs_provider_factory_raises_when_class_does_not_produce_base() -> None:
     with pytest.raises(InvalidWfsProviderException) as exception_info:
         factory(
             AssetType(
-                "asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+                1,
+                "asset_type_name",
+                "tests.test_wfs.InvalidWfsProviderFactory",
+                {"base_url": "www.thisisabaseurl.com"},
+                3,
             )
         )
 
@@ -128,7 +132,7 @@ def test_wfs_provider_factory_can_produce_provider_from_factory() -> None:
 
     provider = factory(
         AssetType(
-            "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
+            1, "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.thisisabaseurl.com"}, 3
         )
     )
 
@@ -140,6 +144,7 @@ def test_wfs_provider_factory_can_produce_provider_from_factory_with_too_many_ar
 
     provider = factory(
         AssetType(
+            1,
             "asset_type_name",
             "tests.test_wfs.ValidWfsProviderFactory",
             {"base_url": "www.thisisabaseurl.com", "extra_argument": "this extra argument is ignored"},
@@ -155,7 +160,7 @@ async def test_validator_raises_when_class_name_invalid() -> None:
     validator = BaseWfsProviderValidator()
 
     with pytest.raises(InvalidWfsProviderException):
-        await validator(AssetType("asset_type_name", "invalid_value", {}, 3))
+        await validator(AssetType(1, "asset_type_name", "invalid_value", {}, 3))
 
 
 @pytest.mark.anyio
@@ -163,7 +168,7 @@ async def test_validator_raises_when_module_name_invalid() -> None:
     validator = BaseWfsProviderValidator()
 
     with pytest.raises(InvalidWfsProviderException):
-        await validator(AssetType("asset_type_name", "invalid_module_name.Test", {}, 3))
+        await validator(AssetType(1, "asset_type_name", "invalid_module_name.Test", {}, 3))
 
 
 @pytest.mark.anyio
@@ -171,7 +176,7 @@ async def test_validator_raises_when_class_does_not_exist() -> None:
     validator = BaseWfsProviderValidator()
 
     with pytest.raises(InvalidWfsProviderException):
-        await validator(AssetType("asset_type_name", "tests.test_wfs.Test", {}, 3))
+        await validator(AssetType(1, "asset_type_name", "tests.test_wfs.Test", {}, 3))
 
 
 @pytest.mark.anyio
@@ -180,7 +185,7 @@ async def test_validator_raises_when_class_does_not_extend_base() -> None:
 
     with pytest.raises(InvalidWfsProviderException):
         await validator(
-            AssetType("asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.example.com"}, 3)
+            AssetType(1, "asset_type_name", "tests.test_wfs.EmptyProviderFactory", {"base_url": "www.example.com"}, 3)
         )
 
 
@@ -190,7 +195,9 @@ async def test_validator_raises_when_class_does_not_produce_base() -> None:
 
     with pytest.raises(InvalidWfsProviderException):
         await validator(
-            AssetType("asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.example.com"}, 3)
+            AssetType(
+                1, "asset_type_name", "tests.test_wfs.InvalidWfsProviderFactory", {"base_url": "www.example.com"}, 3
+            )
         )
 
 
@@ -199,5 +206,5 @@ async def test_validator_passes_for_valid_provider() -> None:
     validator = BaseWfsProviderValidator()
 
     await validator(
-        AssetType("asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.example.com"}, 3)
+        AssetType(1, "asset_type_name", "tests.test_wfs.ValidWfsProviderFactory", {"base_url": "www.example.com"}, 3)
     )

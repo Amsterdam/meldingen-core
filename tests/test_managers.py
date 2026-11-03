@@ -51,5 +51,17 @@ class TestRelationshipManager:
         with pytest.raises(RelationshipExistsException):
             await manager.add_relationship(parent, related)
 
-            assert related in parent.related
-            assert parent.related.count(related) == 1
+        assert related in parent.related
+        assert parent.related.count(related) == 1
+
+    @pytest.mark.anyio
+    async def test_set_related(self) -> None:
+        repository: BaseRepository[DummyModel] = MagicMock(BaseRepository)
+        manager: RelationshipManager[DummyModel, DummyRelated] = RelationshipManager(repository, dummy_get_related)
+        parent = DummyModel()
+        parent.related.append(DummyRelated())
+        related1 = DummyRelated()
+        related2 = DummyRelated()
+
+        await manager.set_related(parent, [related1, related2])
+        assert parent.related == [related1, related2]

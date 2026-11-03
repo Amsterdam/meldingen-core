@@ -491,6 +491,8 @@ class MeldingSubmitActionMelder[T: Melding](BaseCRUDAction[T]):
         return MeldingTransitions.SUBMIT
 
 
+# TODO replace AssetData with AssetDataV2 once the frontend uses the set-assets endpoint
+# Ticket SIG-7815
 @dataclass
 class AssetData:
     """The fields needed to create an asset when adding it to a melding."""
@@ -501,6 +503,77 @@ class AssetData:
     subtype: str
 
 
+@dataclass
+class MeldingAssetsPayload:
+    """The fields needed to create an asset when adding it to a melding"""
+
+    external_id: str
+    label: str
+    subtype: str
+
+
+class MeldingSetAssetsAction[T: Melding, AS: Asset, AT: AssetType]:
+    _melding_repository: BaseMeldingRepository[T]
+    _asset_repository: BaseAssetRepository[AS]
+    _asset_type_repository: BaseAssetTypeRepository[AT]
+    _create_asset: BaseAssetFactory[AS, AT, T]
+    _melding_asset_relationship_manager: RelationshipManager[T, AS]
+
+    def __init__(
+        self,
+        melding_repository: BaseMeldingRepository[T],
+        asset_repository: BaseAssetRepository[AS],
+        asset_type_repository: BaseAssetTypeRepository[AT],
+        asset_factory: BaseAssetFactory[AS, AT, T],
+        melding_asset_relationship_manager: RelationshipManager[T, AS],
+    ):
+        self._melding_repository = melding_repository
+        self._asset_repository = asset_repository
+        self._asset_type_repository = asset_type_repository
+        self._create_asset = asset_factory
+        self._melding_asset_relationship_manager = melding_asset_relationship_manager
+
+    async def __call__(self, melding_id: int, asset_type_id: int, asset_payload: list[MeldingAssetsPayload]) -> T:
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
+
+        melding_asset_type = await self._asset_type_repository.find_by_melding(melding_id)
+        if melding_asset_type is None:
+            raise NotFoundException("Failed to find asset type for melding")
+
+        asset_type = await retrieve_or_raise_not_found(
+            self._asset_type_repository, asset_type_id, f"Failed to find asset type with id {asset_type_id}"
+        )
+
+        if asset_type_id != melding_asset_type.id:
+            raise InvalidInputException("The melding has a different asset type associated than the one being added")
+
+        if len(asset_payload) > asset_type.max_assets:
+            raise LimitReachedException(
+                f"The given input exceeds the maximum number of assets allowed for asset type {asset_type.name}"
+            )
+
+        assets_to_add: list[AS] = []
+
+        for input in asset_payload:
+            asset = await self._asset_repository.find_by_external_id_and_asset_type_id(input.external_id, asset_type_id)
+            if asset is None:
+                asset = self._create_asset(input.external_id, asset_type, melding, input.label, input.subtype)
+            else:
+                # Label and subtype can change and should therefore be overwritten.
+                # External_id does not change.
+                asset.label = input.label
+                asset.subtype = input.subtype
+
+            assets_to_add.append(asset)
+
+        # Set all the assets to the melding and save new assets if they do not already exist
+        await self._melding_asset_relationship_manager.set_related(melding, assets_to_add)
+
+        return melding
+
+
+# TODO remove after frontend uses set-assets endpoint
+# Ticket SIG-7815
 class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
@@ -554,6 +627,8 @@ class MeldingAddAssetAction[T: Melding, AS: Asset, AT: AssetType]:
         return melding
 
 
+# TODO remove after frontend uses set-assets endpoint
+# Ticket SIG-7815
 class MeldingDeleteAssetAction[T: Melding, AS: Asset]:
     _melding_repository: BaseMeldingRepository[T]
     _asset_repository: BaseAssetRepository[AS]
