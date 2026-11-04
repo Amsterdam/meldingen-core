@@ -61,11 +61,10 @@ class MeldingCreateAction[T: Melding, C: Classification](BaseCreateAction[T]):
 
         obj.token = await self._generate_token()
         obj.token_expires = dt.datetime.now(tz=dt.UTC) + self._token_duration
+        classification, classifier_adapter_result_initial = await self._classify(obj.text)
 
-        try:
-            obj.classification = await self._classify(obj.text)
-        except ClassificationNotFoundException:
-            log.error("Classifier failed to find classification!")
+        obj.classification = classification
+        obj.classifier_adapter_result_initial = classifier_adapter_result_initial
 
         await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
         await self._repository.save(obj)
@@ -208,7 +207,7 @@ class MeldingUpdateActionMelder[T: Melding, C: Classification](BaseCRUDAction[T]
             setattr(melding, key, value)
 
         try:
-            classification = await self._classify(melding.text)
+            classification, _orig_classifier_result = await self._classify(melding.text)
         except ClassificationNotFoundException:
             log.error("Classifier failed to find classification!")
             classification = None

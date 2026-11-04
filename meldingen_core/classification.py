@@ -1,45 +1,69 @@
+import logging
 from abc import ABCMeta, abstractmethod
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
 
+log = logging.getLogger(__name__)
+
 
 class ClassificationNotFoundException(NotFoundException): ...
 
 
-class ClassificationAdapterFailedException(Exception): ...
-
-
 class BaseClassifierAdapter(metaclass=ABCMeta):
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
     @abstractmethod
     async def __call__(self, text: str) -> str | None:
         """Accepts a text as input and returns the classification name."""
 
 
 class Classifier[C: Classification]:
-    _adapter: BaseClassifierAdapter
+    _adapters: list[BaseClassifierAdapter]
     _repository: BaseClassificationRepository[C]
 
     def __init__(
         self,
-        adapter: BaseClassifierAdapter,
+        adapters: list[BaseClassifierAdapter],
         repository: BaseClassificationRepository[C],
+        classification_default: C,
     ):
-        self._adapter = adapter
+        self._adapters = adapters
         self._repository = repository
+        self._classification_default = classification_default
 
-    async def __call__(self, text: str) -> C:
-        name = None
-        try:
-            name = await self._adapter(text)
-        except Exception as exception:
-            raise ClassificationAdapterFailedException(str(exception)) from exception
+    async def __call__(self, text: str) -> tuple[C, str | None]:
+        classifier_result = None
+        classification = None
 
-        if name is None:
-            raise ClassificationNotFoundException("Adapter returned None as classification")
+        for adapter in self._adapters:
+            try:
+                classifier_result = await adapter(text)
+                if classifier_result is not None:
+                    # Adapters found a classification, break the loop. Use the first result found.
+                    break
+                else:
+                    log.info("Classification adapter: '%s' returned None", adapter.name)
+            except Exception as e:  # noqa: BLE001
+                log.error("Classification adapter: '%s' failed: %s", adapter.name, e)
 
-        try:
-            return await self._repository.find_by_name(name)
-        except NotFoundException as exception:
-            raise ClassificationNotFoundException(f"Classification '{name}' not found in repository") from exception
+        if classifier_result is None:
+            log.error(
+                "Classification adapter(s) did not return a valid classification, using fallback '%s'",
+                self._classification_default.name,
+            )
+        else:
+            try:
+                classification = await self._repository.find_by_name(classifier_result)
+            except NotFoundException:
+                log.error(
+                    "Classification with classification name '%s' does not exist, using fallback '%s'",
+                    classifier_result,
+                    self._classification_default.name,
+                )
+
+        return classification or self._classification_default, classifier_result
