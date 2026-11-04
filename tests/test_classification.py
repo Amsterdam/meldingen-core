@@ -12,12 +12,6 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
 from meldingen_core.repositories import BaseClassificationRepository
 
-props = {
-    "service_level_objective_day_type": "work_days",
-    "service_level_objective_days": 5,
-    "service_level_objective_text": "Foo Bar",
-}
-
 classification_default_name = "default_classification_name"
 
 classification_default = Classification(
@@ -29,12 +23,16 @@ classification_default = Classification(
 
 valid_classification = Classification(
     name="classification_name",
-    **props,
+    service_level_objective_day_type="work_days",
+    service_level_objective_days=5,
+    service_level_objective_text="Foo Bar",
 )
 
 classification_fallback_custom = Classification(
     name="classification_fallback_custom_name",
-    **props,
+    service_level_objective_day_type="work_days",
+    service_level_objective_days=5,
+    service_level_objective_text="Foo Bar",
 )
 
 
