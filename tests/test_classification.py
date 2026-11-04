@@ -94,8 +94,14 @@ async def test_classifier_multiple_adapters_raises_and_returns_default(caplog: L
     assert classification.name == "default_classification_name"
     assert classifier_adapter_result_initial == None
     messages = [record.message for record in caplog.records]
-    assert "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 1' failed: Adapter 1 failed" in messages
-    assert "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 2' failed: Adapter 2 failed" in messages
+    assert (
+        "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 1' failed with error 'Adapter 1 failed'."
+        in messages
+    )
+    assert (
+        "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 2' failed with error 'Adapter 2 failed'."
+        in messages
+    )
 
 
 @pytest.mark.anyio
@@ -152,7 +158,8 @@ async def test_classifier_multiple_adapters_first_fails_then_returns_second_clas
     assert classification.name == "classification_fallback_custom_name"
     assert classifier_adapter_result_initial == "classification_fallback_custom_name"
     assert any(
-        record.message == "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 1' failed: Adapter 1 failed"
+        record.message
+        == "CLASSIFIER_ADAPTER_FAILED: Classification adapter: 'LLM Model 1' failed with error 'Adapter 1 failed'."
         for record in caplog.records
     )
 
