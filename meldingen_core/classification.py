@@ -1,3 +1,4 @@
+import enum
 import logging
 from abc import ABCMeta, abstractmethod
 
@@ -9,6 +10,12 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationNotFoundException(NotFoundException): ...
+
+
+class ClassifierErrorCodes(enum.Enum):
+    CLASSIFIER_ADAPTER_FAILED = "CLASSIFIER_ADAPTER_FAILED"
+    CLASSIFIER_ADAPTER_RETURNED_NONE = "CLASSIFIER_ADAPTER_RETURNED_NONE"
+    CLASSIFIER_CLASSIFICATION_NOT_FOUND = "CLASSIFIER_CLASSIFICATION_NOT_FOUND"
 
 
 class BaseClassifierAdapter(metaclass=ABCMeta):
@@ -47,13 +54,23 @@ class Classifier[C: Classification]:
                     # Adapters found a classification, break the loop. Use the first result found.
                     break
                 else:
-                    log.info("Classification adapter: '%s' returned None", adapter.name)
+                    log.error(
+                        "%s: Classification adapter: '%s' returned None",
+                        ClassifierErrorCodes.CLASSIFIER_ADAPTER_RETURNED_NONE.value,
+                        adapter.name,
+                    )
             except Exception as e:  # noqa: BLE001
-                log.error("Classification adapter: '%s' failed: %s", adapter.name, e)
+                log.error(
+                    "%s: Classification adapter: '%s' failed with error '%s'.",
+                    ClassifierErrorCodes.CLASSIFIER_ADAPTER_FAILED.value,
+                    adapter.name,
+                    str(e),
+                )
 
         if classifier_result is None:
             log.error(
-                "Classification adapter(s) did not return a valid classification, using fallback '%s'",
+                "%s: Classification adapter(s) did not return a valid classification, using fallback '%s'",
+                ClassifierErrorCodes.CLASSIFIER_ADAPTER_RETURNED_NONE.value,
                 self._classification_default_name,
             )
         else:
@@ -61,10 +78,12 @@ class Classifier[C: Classification]:
                 classification = await self._repository.find_by_name(classifier_result)
             except NotFoundException:
                 log.error(
-                    "Classification with classification name '%s' does not exist, using fallback '%s'",
+                    "%s: Classification with classification name '%s' does not exist, using fallback '%s'",
+                    ClassifierErrorCodes.CLASSIFIER_CLASSIFICATION_NOT_FOUND.value,
                     classifier_result,
                     self._classification_default_name,
                 )
+
         if not classification:
             classification = await self._repository.find_by_name(self._classification_default_name)
 
