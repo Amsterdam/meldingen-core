@@ -8,6 +8,9 @@ from meldingen_core.repositories import BaseClassificationRepository
 class ClassificationNotFoundException(NotFoundException): ...
 
 
+class ClassificationAdapterFailedException(Exception): ...
+
+
 class BaseClassifierAdapter(metaclass=ABCMeta):
     @abstractmethod
     async def __call__(self, text: str) -> str | None:
@@ -18,16 +21,25 @@ class Classifier[C: Classification]:
     _adapter: BaseClassifierAdapter
     _repository: BaseClassificationRepository[C]
 
-    def __init__(self, adapter: BaseClassifierAdapter, repository: BaseClassificationRepository[C]):
+    def __init__(
+        self,
+        adapter: BaseClassifierAdapter,
+        repository: BaseClassificationRepository[C],
+    ):
         self._adapter = adapter
         self._repository = repository
 
     async def __call__(self, text: str) -> C:
-        name = await self._adapter(text)
+        name = None
+        try:
+            name = await self._adapter(text)
+        except Exception as exception:
+            raise ClassificationAdapterFailedException(str(exception)) from exception
+
         if name is None:
-            raise ClassificationNotFoundException(text)
+            raise ClassificationNotFoundException("Adapter returned None as classification")
 
         try:
             return await self._repository.find_by_name(name)
         except NotFoundException as exception:
-            raise ClassificationNotFoundException() from exception
+            raise ClassificationNotFoundException(f"Classification '{name}' not found in repository") from exception
