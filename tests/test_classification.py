@@ -18,9 +18,13 @@ props = {
     "service_level_objective_text": "Foo Bar",
 }
 
-default_classification = Classification(
-    name="default_classification_name",
-    **props,
+classification_default_name = "default_classification_name"
+
+classification_default = Classification(
+    name=classification_default_name,
+    service_level_objective_day_type="work_days",
+    service_level_objective_days=5,
+    service_level_objective_text="Foo Bar",
 )
 
 valid_classification = Classification(
@@ -40,7 +44,7 @@ async def test_classifier() -> None:
     repository = Mock(BaseClassificationRepository)
     repository.find_by_name = AsyncMock(return_value=valid_classification)
 
-    classify: Classifier[Classification] = Classifier([adapter], repository, default_classification)
+    classify: Classifier[Classification] = Classifier([adapter], repository, classification_default_name)
 
     classification, classifier_adapter_result_initial = await classify("text")
 
@@ -57,12 +61,13 @@ async def test_classifier_adapter_raises_and_returns_default(caplog: LogCaptureF
     adapter.name = "LLM Model 1"
 
     repository = Mock(BaseClassificationRepository)
+    repository.find_by_name = AsyncMock(return_value=classification_default)
 
-    classify: Classifier[Classification] = Classifier([adapter], repository, default_classification)
+    classify: Classifier[Classification] = Classifier([adapter], repository, classification_default_name)
     with caplog.at_level(logging.ERROR):
         classification, classifier_adapter_result_initial = await classify("text")
 
-    assert classification.name == "default_classification_name"
+    assert classification.name == classification_default_name
     assert classifier_adapter_result_initial == None
     assert any(
         record.message == "Classification adapter: 'LLM Model 1' failed: Adapter failed" for record in caplog.records
@@ -80,7 +85,8 @@ async def test_classifier_multiple_adapters_raises_and_returns_default(caplog: L
     adapter2.name = "LLM Model 2"
 
     repository = Mock(BaseClassificationRepository)
-    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, default_classification)
+    repository.find_by_name = AsyncMock(return_value=classification_default)
+    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, classification_default_name)
 
     with caplog.at_level(logging.ERROR):
         classification, classifier_adapter_result_initial = await classify("text")
@@ -103,7 +109,7 @@ async def test_classifier_multiple_adapters_returns_second_classification(caplog
     repository = Mock(BaseClassificationRepository)
     repository.find_by_name = AsyncMock(return_value=valid_classification)
 
-    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, default_classification)
+    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, classification_default_name)
 
     with caplog.at_level(logging.INFO):
         classification, classifier_adapter_result_initial = await classify("text")
@@ -135,7 +141,7 @@ async def test_classifier_multiple_adapters_first_fails_then_returns_second_clas
     repository = Mock(BaseClassificationRepository)
     repository.find_by_name = AsyncMock(return_value=classification_fallback_custom)
 
-    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, default_classification)
+    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, classification_default_name)
 
     with caplog.at_level(logging.ERROR):
         classification, classifier_adapter_result_initial = await classify("text")
@@ -153,16 +159,16 @@ async def test_classifier_classification_not_found(caplog: LogCaptureFixture) ->
     adapter.name = "LLM Model 1"
 
     repository = Mock(BaseClassificationRepository)
-    repository.find_by_name = AsyncMock(side_effect=NotFoundException())
-    classify: Classifier[Classification] = Classifier([adapter], repository, default_classification)
+    repository.find_by_name = AsyncMock(side_effect=[NotFoundException(), classification_default])
+    classify: Classifier[Classification] = Classifier([adapter], repository, classification_default_name)
 
     with caplog.at_level(logging.ERROR):
         classification, classifier_adapter_result_initial = await classify("text")
 
-    assert classification.name == "default_classification_name"
+    assert classification.name == classification_default_name
     assert classifier_adapter_result_initial == "classification_name"
     assert any(
-        record.message == "Classification with classification name 'classification_name' does not exist, "
-        "using fallback 'default_classification_name'"
+        record.message == f"Classification with classification name 'classification_name' does not exist, "
+        f"using fallback '{classification_default_name}'"
         for record in caplog.records
     )

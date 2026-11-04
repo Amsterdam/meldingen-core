@@ -89,18 +89,26 @@ async def test_melding_create_action() -> None:
 
 @pytest.mark.anyio
 async def test_melding_create_action_with_unusable_classifier_result() -> None:
-    classification_default = Classification(
-        name="default_fallback_classification",
-        service_level_objective_day_type="work_days",
-        service_level_objective_days=5,
-        service_level_objective_text="Foo Bar",
-    )
+
+    classification_default_name = "default_fallback_classification"
 
     adapter = AsyncMock(BaseClassifierAdapter, name="LLM Model 1", return_value="BlaBlaBla not usable")
     classification_repository = Mock(BaseClassificationRepository)
-    classification_repository.find_by_name = AsyncMock(return_value=None)
+    classification_repository.find_by_name = AsyncMock(
+        side_effect=[
+            None,
+            Classification(
+                name=classification_default_name,
+                service_level_objective_day_type="work_days",
+                service_level_objective_days=5,
+                service_level_objective_text="Foo Bar",
+            ),
+        ]
+    )
 
-    classifier: Classifier[Classification] = Classifier([adapter], classification_repository, classification_default)
+    classifier: Classifier[Classification] = Classifier(
+        [adapter], classification_repository, classification_default_name
+    )
 
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
@@ -114,7 +122,8 @@ async def test_melding_create_action_with_unusable_classifier_result() -> None:
 
     assert repository.save.await_count == 2
     state_machine.transition.assert_awaited_once()
-    assert melding.classification == classification_default
+    assert melding.classification is not None
+    assert melding.classification.name == classification_default_name
     assert melding.classifier_adapter_result_initial == "BlaBlaBla not usable"
 
 

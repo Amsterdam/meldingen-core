@@ -30,11 +30,11 @@ class Classifier[C: Classification]:
         self,
         adapters: list[BaseClassifierAdapter],
         repository: BaseClassificationRepository[C],
-        classification_default: C,
+        classification_default_name: str,
     ):
         self._adapters = adapters
         self._repository = repository
-        self._classification_default = classification_default
+        self._classification_default_name = classification_default_name
 
     async def __call__(self, text: str) -> tuple[C, str | None]:
         classifier_result = None
@@ -54,7 +54,7 @@ class Classifier[C: Classification]:
         if classifier_result is None:
             log.error(
                 "Classification adapter(s) did not return a valid classification, using fallback '%s'",
-                self._classification_default.name,
+                self._classification_default_name,
             )
         else:
             try:
@@ -63,7 +63,9 @@ class Classifier[C: Classification]:
                 log.error(
                     "Classification with classification name '%s' does not exist, using fallback '%s'",
                     classifier_result,
-                    self._classification_default.name,
+                    self._classification_default_name,
                 )
+        if not classification:
+            classification = await self._repository.find_by_name(self._classification_default_name)
 
-        return classification or self._classification_default, classifier_result
+        return classification, classifier_result
