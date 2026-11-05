@@ -34,7 +34,7 @@ async def test_note_create_action() -> None:
     result = await action(123, "a note", user)
 
     assert result is note
-    melding_repository.retrieve.assert_awaited_once_with(123)
+    melding_repository.retrieve.assert_awaited_once_with(pk=123)
     note_factory.assert_called_once_with("a note", melding, user)
     note_repository.save.assert_awaited_once_with(note)
 
@@ -108,7 +108,7 @@ async def test_note_list_action() -> None:
     result = await action(123)
 
     assert result is notes
-    melding_repository.retrieve.assert_awaited_once_with(123)
+    melding_repository.retrieve.assert_awaited_once_with(pk=123)
     note_repository.find_by_melding.assert_awaited_once_with(123, sort_attribute_name=None, sort_direction=None)
 
 

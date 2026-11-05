@@ -558,7 +558,7 @@ class TestMelderDeleteAttachmentAction:
 
         await action(123, 456)
 
-        melding_repository.retrieve.assert_awaited_once_with(123)
+        melding_repository.retrieve.assert_awaited_once_with(pk=123)
         attachment_repository.retrieve.assert_awaited_once_with(456)
         filesystem_mock.delete.assert_awaited_once_with(attachment.file_path)
         attachment_repository.delete.assert_awaited_once_with(attachment.id)
@@ -591,7 +591,7 @@ class TestUploadAttachmentAction:
 
         attachment = await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
 
-        melding_repository.retrieve.assert_awaited_once_with(melding_id)
+        melding_repository.retrieve.assert_awaited_once_with(pk=melding_id)
         attachment_repository.save.assert_awaited_once_with(attachment)
 
     @pytest.mark.anyio
@@ -626,7 +626,7 @@ class TestUploadAttachmentAction:
         with pytest.raises(AttachmentLimitReachedException):
             await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
 
-        melding_repository.retrieve.assert_awaited_once_with(melding_id)
+        melding_repository.retrieve.assert_awaited_once_with(pk=melding_id)
         attachment_limit_validator.assert_awaited_once_with(melding)
         ingestor.assert_not_awaited()
         attachment_repository.save.assert_not_awaited()
@@ -658,5 +658,5 @@ class TestUploadAttachmentAction:
         with pytest.raises(NotFoundException):
             await action(melding_id, "original_filename.ext", "image/png", b"test", iterator, user)
 
-        melding_repository.retrieve.assert_awaited_once_with(melding_id)
+        melding_repository.retrieve.assert_awaited_once_with(pk=melding_id)
         attachment_repository.save.assert_not_awaited()
