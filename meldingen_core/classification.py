@@ -16,6 +16,7 @@ class ClassifierErrorCodes(enum.Enum):
     CLASSIFIER_ADAPTER_FAILED = "CLASSIFIER_ADAPTER_FAILED"
     CLASSIFIER_ADAPTER_RETURNED_NONE = "CLASSIFIER_ADAPTER_RETURNED_NONE"
     CLASSIFIER_CLASSIFICATION_NOT_FOUND = "CLASSIFIER_CLASSIFICATION_NOT_FOUND"
+    CLASSIFIER_ADAPTERS_NO_RESULT = "CLASSIFIER_ADAPTERS_NO_RESULT"
 
 
 class BaseClassifierAdapter(metaclass=ABCMeta):
@@ -70,7 +71,7 @@ class Classifier[C: Classification]:
         if classifier_result is None:
             log.error(
                 "%s: Classification adapter(s) did not return a valid classification, using fallback '%s'",
-                ClassifierErrorCodes.CLASSIFIER_ADAPTER_RETURNED_NONE.value,
+                ClassifierErrorCodes.CLASSIFIER_ADAPTERS_NO_RESULT.value,
                 self._classification_default_name,
             )
         else:

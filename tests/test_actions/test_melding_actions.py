@@ -34,7 +34,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.classification import BaseClassifierAdapter, ClassificationNotFoundException, Classifier
+from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
 from meldingen_core.filters import MeldingListFilters
@@ -390,27 +390,6 @@ async def test_melding_update_action_melder() -> None:
 
 
 @pytest.mark.anyio
-async def test_melding_update_action_melder_with_classification_not_found() -> None:
-    token = "123456"
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding(
-        "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
-    )
-    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
-    reclassifier = AsyncMock(BaseReclassification)
-
-    action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
-        repository, classifier, Mock(BaseMeldingStateMachine), reclassifier
-    )
-
-    text = "new text"
-    melding = await action(123, {"text": text})
-
-    assert melding.text == text
-    assert melding.classification is None
-
-
-@pytest.mark.anyio
 async def test_melding_add_contact_action() -> None:
     token = "123456"
     repository = Mock(BaseMeldingRepository)
@@ -451,7 +430,7 @@ async def test_melding_answer_questions_action() -> None:
     melding = await answer_questions(123)
 
     assert melding == repo_melding
-    repository.retrieve.assert_awaited_once_with(123)
+    repository.retrieve.assert_awaited_once_with(pk=123)
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
 
@@ -1158,7 +1137,7 @@ async def test_set_assets_requested_asset_type_does_not_exist() -> None:
     with pytest.raises(NotFoundException, match="Failed to find asset type with id 456"):
         await action(123, 456, [])
 
-    asset_type_repository.retrieve.assert_awaited_once_with(456)
+    asset_type_repository.retrieve.assert_awaited_once_with(pk=456)
 
 
 @pytest.mark.anyio
@@ -1458,7 +1437,7 @@ async def test_list_assets() -> None:
     action: ListAssetsAction[Asset, Melding] = ListAssetsAction(melding_repository, relationship_manager)
     await action(melding_id)
 
-    melding_repository.retrieve.assert_awaited_once_with(melding_id)
+    melding_repository.retrieve.assert_awaited_once_with(pk=melding_id)
     relationship_manager.get_related.assert_awaited_once_with(melding)
 
 

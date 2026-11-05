@@ -105,6 +105,35 @@ async def test_classifier_multiple_adapters_raises_and_returns_default(caplog: L
 
 
 @pytest.mark.anyio
+async def test_classifier_adapters_no_result_returns_default(caplog: LogCaptureFixture) -> None:
+    adapter1 = AsyncMock(BaseClassifierAdapter, return_value=None)
+    adapter1.name = "LLM Model 1"
+
+    adapter2 = AsyncMock(BaseClassifierAdapter, return_value=None)
+    adapter2.name = "LLM Model 2"
+
+    repository = Mock(BaseClassificationRepository)
+    repository.find_by_name = AsyncMock(return_value=classification_default)
+    classify: Classifier[Classification] = Classifier([adapter1, adapter2], repository, classification_default_name)
+
+    with caplog.at_level(logging.ERROR):
+        classification, classifier_adapter_result_initial = await classify("text")
+
+    assert classification is classification_default
+    assert classifier_adapter_result_initial is None
+    adapter1.assert_awaited_once_with("text")
+    adapter2.assert_awaited_once_with("text")
+    repository.find_by_name.assert_awaited_once_with(classification_default_name)
+    assert any(
+        record.levelno == logging.ERROR
+        and record.message
+        == "CLASSIFIER_ADAPTERS_NO_RESULT: Classification adapter(s) did not return a valid classification, "
+        f"using fallback '{classification_default_name}'"
+        for record in caplog.records
+    )
+
+
+@pytest.mark.anyio
 async def test_classifier_multiple_adapters_returns_second_classification(caplog: LogCaptureFixture) -> None:
     adapter1 = AsyncMock(BaseClassifierAdapter, return_value=None)
     adapter1.name = "LLM Model 1"
