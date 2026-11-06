@@ -668,7 +668,7 @@ async def test_reclassify_action() -> None:
         service_level_objective_text="Foo Bar",
     )
     user = User(id=1, username="behandelaar", email="behandelaar@example.com")
-    note = Note(text="the reason", melding=melding, user=user)
+    note = Note(id=1, text="the reason", melding=melding, user=user)
 
     melding_repository = Mock(BaseMeldingRepository)
     melding_repository.retrieve = AsyncMock(return_value=melding)
@@ -689,7 +689,7 @@ async def test_reclassify_action() -> None:
     assert melding.classification is classification
     state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.RECLASSIFY)
 
-    note_factory.assert_called_once_with("the reason", melding, user)
+    note_factory.assert_called_once_with("the reason", melding, user, None)
     assert note.classification is classification
     note_repository.save.assert_awaited_once_with(note)
     melding_repository.save.assert_awaited_once_with(melding)

@@ -25,10 +25,17 @@ class NoteCreateAction[N: Note, T: Melding, U: User]:
         self._melding_repository = melding_repository
         self._note_factory = note_factory
 
-    async def __call__(self, melding_id: int, text: str, user: U) -> N:
+    async def __call__(self, melding_id: int, text: str, user: U, parent_note_id: int | None = None) -> N:
         melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
 
-        note = self._note_factory(text, melding, user)
+        parent_note: N | None = None
+
+        if parent_note_id is not None:
+            parent_note = await self._note_repository.find_by_id_and_melding(parent_note_id, melding_id)
+            if parent_note is None:
+                raise NotFoundException("Parent note not found")
+
+        note = self._note_factory(text, melding, user, parent_note)
         await self._note_repository.save(note)
 
         return note
