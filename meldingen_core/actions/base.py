@@ -3,7 +3,7 @@ from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import NameListFilters
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.repositories import BaseRepository
 
 
@@ -24,14 +24,14 @@ class BaseRetrieveAction[T](BaseCRUDAction[T]):
         return await self._repository.retrieve(pk=pk)
 
 
-class BaseListAction[T](BaseCRUDAction[T]):
+class BaseListAction[T, F: RepositoryFilters = RepositoryFilters](BaseCRUDAction[T]):
     async def __call__(
         self,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: NameListFilters | None = None,
+        filters: F | None = None,
         apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         return await self._repository.list(
