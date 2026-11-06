@@ -17,7 +17,7 @@ class UserUpdateAction[T: User](BaseUpdateAction[T]):
     """Action that updates a user."""
 
 
-class UserListAction[T: User, F: RepositoryFilters](BaseListAction[T, F]):
+class UserListAction[T: User, F: RepositoryFilters = RepositoryFilters](BaseListAction[T, F]):
     """Action that retrieves a list of users."""
 
 
