@@ -35,7 +35,7 @@ async def test_note_create_action() -> None:
 
     assert result is note
     melding_repository.retrieve.assert_awaited_once_with(123)
-    note_factory.assert_called_once_with("a note", melding, user, None, None)
+    note_factory.assert_called_once_with("a note", melding, user, None)
     note_repository.save.assert_awaited_once_with(note)
 
 
@@ -75,7 +75,7 @@ async def test_note_creation_with_parent_note() -> None:
 
     result = await action(123, "a reply", user, parent_note_id=1)
 
-    note_factory.assert_called_once_with("a reply", melding, user, parent_note, parent_note.text)
+    note_factory.assert_called_once_with("a reply", melding, user, parent_note)
     note_repository.save.assert_awaited_once_with(result)
 
 
