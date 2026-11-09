@@ -674,7 +674,7 @@ async def test_reclassify_action() -> None:
     assert melding.classification is classification
     state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.RECLASSIFY)
 
-    note_factory.assert_called_once_with(text="the reason", melding=melding, user=user)
+    note_factory.assert_called_once_with(text="the reason", melding=melding, user=user, parent_note=None)
     assert note.classification is classification
     note_repository.save.assert_awaited_once_with(note)
     melding_repository.save.assert_awaited_once_with(melding)
