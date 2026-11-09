@@ -38,6 +38,7 @@ class Source:
 class Melding:
     text: str
     classification: Classification | None = None
+    classifier_adapter_result_initial: str | None = None
     attachments: Sequence["Attachment"] = field(default_factory=list)
     token: str | None = None
     token_expires: datetime | None = None
