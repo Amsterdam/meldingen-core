@@ -7,6 +7,7 @@ from _pytest.logging import LogCaptureFixture
 from meldingen_core.classification import (
     BaseClassifierAdapter,
     Classifier,
+    FallbackClassificationNotFoundException,
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.models import Classification
@@ -213,3 +214,19 @@ async def test_classifier_classification_not_found(caplog: LogCaptureFixture) ->
         f"using fallback '{classification_default_name}'"
         for record in caplog.records
     )
+
+
+@pytest.mark.anyio
+async def test_classifier_fallback_classification_not_found(caplog: LogCaptureFixture) -> None:
+    adapter = AsyncMock(BaseClassifierAdapter, return_value="classification_name")
+    adapter.name = "LLM Model 1"
+
+    repository = Mock(BaseClassificationRepository)
+    repository.find_by_name = AsyncMock(side_effect=[NotFoundException(), NotFoundException()])
+    classify: Classifier[Classification] = Classifier([adapter], repository, classification_default_name)
+
+    with pytest.raises(FallbackClassificationNotFoundException):
+        classification, classifier_adapter_result_initial = await classify("text")
+
+        assert classification is None
+        assert classifier_adapter_result_initial == "classification_name"

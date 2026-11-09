@@ -9,7 +9,7 @@ from meldingen_core.repositories import BaseClassificationRepository
 log = logging.getLogger(__name__)
 
 
-class ClassificationNotFoundException(NotFoundException): ...
+class FallbackClassificationNotFoundException(NotFoundException): ...
 
 
 class ClassifierErrorCodes(enum.Enum):
@@ -86,6 +86,11 @@ class Classifier[C: Classification]:
                 )
 
         if not classification:
-            classification = await self._repository.find_by_name(self._classification_default_name)
+            try:
+                classification = await self._repository.find_by_name(self._classification_default_name)
+            except NotFoundException:
+                raise FallbackClassificationNotFoundException(
+                    f"Fallback classification '{self._classification_default_name}' not found."
+                )
 
         return classification, classifier_result
