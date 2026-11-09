@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 
 from meldingen_core import SortingDirection
-from meldingen_core.filters import MeldingListFilters, NameListFilters
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.models import (
     Answer,
     Asset,
@@ -24,13 +24,13 @@ class BaseRepository[T](metaclass=ABCMeta):
     async def save(self, obj: T) -> None: ...
 
     @abstractmethod
-    async def list(
+    async def list[F: RepositoryFilters](
         self,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: NameListFilters | None = None,
+        filters: F | None = None,
         apply_visibility_filters: bool = True,
     ) -> Sequence[T]: ...
 
@@ -42,16 +42,7 @@ class BaseRepository[T](metaclass=ABCMeta):
 
 
 class BaseMeldingRepository[M: Melding](BaseRepository[M], metaclass=ABCMeta):
-    @abstractmethod
-    async def list_meldingen(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-        filters: MeldingListFilters | None = None,
-    ) -> Sequence[M]: ...
+    """Repository for Melding."""
 
 
 class BaseUserRepository[U: User](BaseRepository[U], metaclass=ABCMeta):

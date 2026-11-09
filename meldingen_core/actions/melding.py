@@ -7,10 +7,10 @@ from typing import Any, cast, override
 
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
-from meldingen_core.classification import Classifier
+from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
-from meldingen_core.filters import MeldingListFilters
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipManager
@@ -70,30 +70,8 @@ class MeldingCreateAction[T: Melding, C: Classification](BaseCreateAction[T]):
         await self._repository.save(obj)
 
 
-class MeldingListAction[T: Melding]:
+class MeldingListAction[T: Melding, F: RepositoryFilters](BaseListAction[T, F]):
     """Action that retrieves a list of meldingen."""
-
-    _repository: BaseMeldingRepository[T]
-
-    def __init__(self, repository: BaseMeldingRepository[T]) -> None:
-        self._repository = repository
-
-    async def __call__(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-        filters: MeldingListFilters | None = None,
-    ) -> Sequence[T]:
-        return await self._repository.list_meldingen(
-            limit=limit,
-            offset=offset,
-            sort_attribute_name=sort_attribute_name,
-            sort_direction=sort_direction,
-            filters=filters,
-        )
 
 
 class MeldingRetrieveAction[T: Melding](BaseRetrieveAction[T]):

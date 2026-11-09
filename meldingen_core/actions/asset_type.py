@@ -7,6 +7,7 @@ from meldingen_core.actions.base import (
     BaseRetrieveAction,
 )
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.models import AssetType
 from meldingen_core.repositories import BaseRepository
 from meldingen_core.wfs import BaseWfsProviderValidator
@@ -27,7 +28,7 @@ class AssetTypeCreateAction[AT: AssetType](BaseCRUDAction[AT]):
 class AssetTypeRetrieveAction[AT: AssetType](BaseRetrieveAction[AT]): ...
 
 
-class AssetTypeListAction[AT: AssetType](BaseListAction[AT]): ...
+class AssetTypeListAction[AT: AssetType, F: RepositoryFilters = RepositoryFilters](BaseListAction[AT, F]): ...
 
 
 class AssetTypeUpdateAction[AT: AssetType](BaseCRUDAction[AT]):
