@@ -391,7 +391,7 @@ class MeldingReclassifyAction[T: Melding, C: Classification, N: Note, U: User]:
 
         melding.classification = classification
 
-        note = self._create_note(reason, melding, user)
+        note = self._create_note(text=reason, melding=melding, user=user, parent_note=None)
         note.classification = classification
 
         # The melding is saved last on purpose. Both changes belong to one reclassification, so they
