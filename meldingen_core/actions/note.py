@@ -35,7 +35,7 @@ class NoteCreateAction[N: Note, T: Melding, U: User]:
             if parent_note is None:
                 raise NotFoundException("Parent note not found")
 
-        note = self._note_factory(text, melding, user, parent_note)
+        note = self._note_factory(text=text, melding=melding, user=user, parent_note=parent_note)
         await self._note_repository.save(note)
 
         return note
