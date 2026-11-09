@@ -5,7 +5,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from meldingen_core.actions.base import BaseCreateAction, BaseCRUDAction, BaseRetrieveAction, BaseUpdateAction
+from meldingen_core.actions.base import (
+    BaseCreateAction,
+    BaseCRUDAction,
+    BaseListAction,
+    BaseRetrieveAction,
+    BaseUpdateAction,
+)
 from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
