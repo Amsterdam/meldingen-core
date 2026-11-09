@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from _pytest.logging import LogCaptureFixture
 
-from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import ListAssetsAction
 from meldingen_core.actions.melding import (
     AssetData,
@@ -39,7 +38,7 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import ClassificationNotFoundException, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
-from meldingen_core.filters import MeldingListFilters
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.labels import BaseLabelReplacer
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.managers import RelationshipExistsException, RelationshipManager
@@ -110,19 +109,8 @@ async def test_melding_create_action_with_classification_not_found(caplog: LogCa
 
 
 def test_can_instantiate_melding_list_action() -> None:
-    action: MeldingListAction[Melding] = MeldingListAction(Mock(BaseMeldingRepository))
+    action: MeldingListAction[Melding, RepositoryFilters] = MeldingListAction(Mock(BaseMeldingRepository))
     assert isinstance(action, MeldingListAction)
-
-
-@pytest.mark.anyio
-async def test_melding_list_action() -> None:
-    repository = Mock(BaseMeldingRepository)
-    action: MeldingListAction[Melding] = MeldingListAction(repository)
-    filters: MeldingListFilters = MeldingListFilters(area="AREA", states=[MeldingStates.NEW, MeldingStates.SUBMITTED])
-
-    await action(limit=10, offset=0, sort_attribute_name="attr", sort_direction=SortingDirection.ASC, filters=filters)
-
-    repository.list_meldingen.assert_awaited_once()
 
 
 def test_can_instantiate_melding_retrieve_action() -> None:

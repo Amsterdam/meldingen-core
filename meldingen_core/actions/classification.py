@@ -8,6 +8,7 @@ from meldingen_core.actions.base import (
     BaseUpdateAction,
 )
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.models import AssetType, Classification
 from meldingen_core.repositories import BaseAssetTypeRepository, BaseRepository
 
@@ -32,7 +33,7 @@ class ClassificationCreateAction[T: Classification, AT: AssetType](BaseCreateAct
         await super().__call__(obj)
 
 
-class ClassificationListAction[T: Classification](BaseListAction[T]): ...
+class ClassificationListAction[T: Classification, F: RepositoryFilters = RepositoryFilters](BaseListAction[T, F]): ...
 
 
 class ClassificationRetrieveAction[T: Classification](BaseRetrieveAction[T]): ...
