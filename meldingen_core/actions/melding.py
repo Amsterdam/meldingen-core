@@ -12,7 +12,7 @@ from meldingen_core.actions.base import (
     BaseRetrieveAction,
     BaseUpdateAction,
 )
-from meldingen_core.classification import ClassificationNotFoundException, Classifier
+from meldingen_core.classification import Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
 from meldingen_core.filters import RepositoryFilters
@@ -66,11 +66,10 @@ class MeldingCreateAction[T: Melding, C: Classification](BaseCreateAction[T]):
 
         obj.token = await self._generate_token()
         obj.token_expires = dt.datetime.now(tz=dt.UTC) + self._token_duration
+        classification, classifier_adapter_result_initial = await self._classify(obj.text)
 
-        try:
-            obj.classification = await self._classify(obj.text)
-        except ClassificationNotFoundException:
-            log.error("Classifier failed to find classification!")
+        obj.classification = classification
+        obj.classifier_adapter_result_initial = classifier_adapter_result_initial
 
         await self._state_machine.transition(obj, MeldingTransitions.CLASSIFY)
         await self._repository.save(obj)
@@ -136,9 +135,11 @@ class MeldingUpdateAction[T: Melding, C: Classification, L: Label, S: Source](Ba
                     f"Melding with id {pk} has reached the backoffice and may not be classified this way"
                 )
 
-            classification = await self._classification_repository.retrieve(pk=classification_id)
-            if classification is None:
-                raise NotFoundException(f"Failed to find classification with id {classification_id}")
+            classification = await retrieve_or_raise_not_found(
+                self._classification_repository,
+                classification_id,
+                f"Failed to find classification with id {classification_id}",
+            )
 
         for key, value in values.items():
             setattr(melding, key, value)
@@ -147,14 +148,16 @@ class MeldingUpdateAction[T: Melding, C: Classification, L: Label, S: Source](Ba
             melding = await self._replace_labels(melding, label_ids)
 
         if source_id is not None:
-            source = await self._source_repository.retrieve(pk=source_id)
-            if source is None:
-                raise NotFoundException(f"Failed to find source with id {source_id}")
+            source = await retrieve_or_raise_not_found(
+                self._source_repository, source_id, f"Failed to find source with id {source_id}"
+            )
             melding.source = source
 
         # Assigning the classification the melding already has is not a reclassification: it neither
         # invalidates the melder's input nor sends the melding back to the classified state.
         if classification is not None and melding.classification != classification:
+            # This does not actually classify the melding, just handles the side effects of a reclassification.
+            # Make changes to the melding that are part of the reclassification before saving it.
             await self._reclassify(melding, cast(C | None, melding.classification), classification)
             melding.classification = classification
             await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
@@ -190,14 +193,14 @@ class MeldingUpdateActionMelder[T: Melding, C: Classification](BaseCRUDAction[T]
         for key, value in values.items():
             setattr(melding, key, value)
 
-        try:
-            classification = await self._classify(melding.text)
-        except ClassificationNotFoundException:
-            log.error("Classifier failed to find classification!")
-            classification = None
+        new_classification, classifier_adapter_result = await self._classify(melding.text)
 
-        await self._reclassifier(melding, old_classification, classification)
-        melding.classification = classification
+        # The reclassifier is called before the melding is saved, so it can make changes to the melding
+        # that are part of the reclassification. This does not actually classify the melding,
+        # just handles the side effects of a reclassification.
+        await self._reclassifier(melding, old_classification, new_classification)
+        melding.classification = new_classification
+        melding.classifier_adapter_result_initial = classifier_adapter_result
 
         await self._state_machine.transition(melding, MeldingTransitions.CLASSIFY)
         await self._repository.save(melding)
