@@ -668,7 +668,7 @@ async def test_reclassify_action() -> None:
         melding_repository, classification_repository, note_repository, note_factory, state_machine
     )
 
-    result = await action(1, 2, "the reason", user)
+    result = await action(melding_id=1, classification_id=2, reason="the reason", user=user)
 
     assert result is melding
     assert melding.classification is classification
