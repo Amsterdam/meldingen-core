@@ -1,9 +1,7 @@
 import datetime as dt
-import logging
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from _pytest.logging import LogCaptureFixture
 
 from meldingen_core.actions.asset import ListAssetsAction
 from meldingen_core.actions.melding import (
@@ -35,7 +33,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.classification import ClassificationNotFoundException, Classifier
+from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.factories import BaseAssetFactory, BaseNoteFactory
 from meldingen_core.filters import RepositoryFilters
@@ -70,7 +68,8 @@ async def test_melding_create_action() -> None:
         service_level_objective_days=5,
         service_level_objective_text="Foo Bar",
     )
-    classifier = AsyncMock(Classifier, return_value=classification)
+    classifier_adapter_result_initial = "test"
+    classifier = AsyncMock(Classifier, return_value=(classification, classifier_adapter_result_initial))
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
     action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
@@ -84,28 +83,47 @@ async def test_melding_create_action() -> None:
     classifier.assert_awaited_once()
     state_machine.transition.assert_awaited_once()
     assert melding.classification == classification
+    assert melding.classifier_adapter_result_initial == classifier_adapter_result_initial
 
 
 @pytest.mark.anyio
-async def test_melding_create_action_with_classification_not_found(caplog: LogCaptureFixture) -> None:
-    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
+async def test_melding_create_action_with_unusable_classifier_result() -> None:
+
+    classification_default_name = "default_fallback_classification"
+
+    adapter = AsyncMock(BaseClassifierAdapter, name="LLM Model 1", return_value="BlaBlaBla not usable")
+    classification_repository = Mock(BaseClassificationRepository)
+    classification_repository.find_by_name = AsyncMock(
+        side_effect=[
+            None,
+            Classification(
+                name=classification_default_name,
+                service_level_objective_day_type="work_days",
+                service_level_objective_days=5,
+                service_level_objective_text="Foo Bar",
+            ),
+        ]
+    )
+
+    classifier: Classifier[Classification] = Classifier(
+        [adapter], classification_repository, classification_default_name
+    )
+
     state_machine = Mock(BaseMeldingStateMachine)
     repository = Mock(BaseMeldingRepository)
+
     action: MeldingCreateAction[Melding, Classification] = MeldingCreateAction(
         repository, classifier, state_machine, AsyncMock(BaseTokenGenerator), dt.timedelta(days=3)
     )
     melding = Melding("text")
 
-    with caplog.at_level(logging.ERROR):
-        await action(melding)
+    await action(melding)
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == "ERROR"
-    assert caplog.records[0].message == "Classifier failed to find classification!"
-
-    assert melding.classification is None
-    state_machine.transition.assert_awaited_once_with(melding, MeldingTransitions.CLASSIFY)
     assert repository.save.await_count == 2
+    state_machine.transition.assert_awaited_once()
+    assert melding.classification is not None
+    assert melding.classification.name == classification_default_name
+    assert melding.classifier_adapter_result_initial == "BlaBlaBla not usable"
 
 
 def test_can_instantiate_melding_list_action() -> None:
@@ -345,7 +363,7 @@ async def test_melding_update_action_melder() -> None:
         service_level_objective_days=5,
         service_level_objective_text="Foo Bar",
     )
-    classifier = AsyncMock(Classifier, return_value=classification)
+    classifier = AsyncMock(Classifier, return_value=(classification, "original_classifier_result"))
     reclassifier = AsyncMock(BaseReclassification)
 
     action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
@@ -357,27 +375,6 @@ async def test_melding_update_action_melder() -> None:
 
     assert melding.text == text
     assert melding.classification == classification
-
-
-@pytest.mark.anyio
-async def test_melding_update_action_melder_with_classification_not_found() -> None:
-    token = "123456"
-    repository = Mock(BaseMeldingRepository)
-    repository.retrieve.return_value = Melding(
-        "text", token=token, token_expires=dt.datetime.now(tz=dt.UTC) + dt.timedelta(days=1)
-    )
-    classifier = AsyncMock(Classifier, side_effect=ClassificationNotFoundException)
-    reclassifier = AsyncMock(BaseReclassification)
-
-    action: MeldingUpdateActionMelder[Melding, Classification] = MeldingUpdateActionMelder(
-        repository, classifier, Mock(BaseMeldingStateMachine), reclassifier
-    )
-
-    text = "new text"
-    melding = await action(123, {"text": text})
-
-    assert melding.text == text
-    assert melding.classification is None
 
 
 @pytest.mark.anyio
@@ -421,7 +418,7 @@ async def test_melding_answer_questions_action() -> None:
     melding = await answer_questions(123)
 
     assert melding == repo_melding
-    repository.retrieve.assert_awaited_once_with(123)
+    repository.retrieve.assert_awaited_once_with(pk=123)
     state_machine.transition.assert_awaited_once_with(repo_melding, MeldingTransitions.ANSWER_QUESTIONS)
     repository.save.assert_awaited_once_with(repo_melding)
 
@@ -1128,7 +1125,7 @@ async def test_set_assets_requested_asset_type_does_not_exist() -> None:
     with pytest.raises(NotFoundException, match="Failed to find asset type with id 456"):
         await action(123, 456, [])
 
-    asset_type_repository.retrieve.assert_awaited_once_with(456)
+    asset_type_repository.retrieve.assert_awaited_once_with(pk=456)
 
 
 @pytest.mark.anyio
@@ -1428,7 +1425,7 @@ async def test_list_assets() -> None:
     action: ListAssetsAction[Asset, Melding] = ListAssetsAction(melding_repository, relationship_manager)
     await action(melding_id)
 
-    melding_repository.retrieve.assert_awaited_once_with(melding_id)
+    melding_repository.retrieve.assert_awaited_once_with(pk=melding_id)
     relationship_manager.get_related.assert_awaited_once_with(melding)
 
 
